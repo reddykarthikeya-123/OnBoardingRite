@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, CheckCircle2, Layers, FileText, Copy, Folder, ChevronDown, ChevronRight, Info, AlertCircle } from 'lucide-react';
 import { Badge, Card, CardBody } from '../../../../components/ui';
-import { mockTemplates, mockProjects } from '../../../../data';
+import { templatesApi, projectsApi } from '../../../../services/api';
 import type { ProjectFormData } from '../ProjectSetupWizard';
 import type { ChecklistTemplate, Project } from '../../../../types';
 
@@ -18,18 +18,42 @@ export function TemplateSelectionStep({ data, onUpdate }: TemplateSelectionStepP
     );
     const [searchQuery, setSearchQuery] = useState('');
     const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+    const [templates, setTemplates] = useState<ChecklistTemplate[]>([]);
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [, setIsLoading] = useState(true);
 
-    const filteredTemplates = mockTemplates.filter((template) =>
+    // Load templates and projects from API
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                setIsLoading(true);
+                const [templatesData, projectsData] = await Promise.all([
+                    templatesApi.list(),
+                    projectsApi.list()
+                ]);
+                setTemplates((templatesData as any).items || templatesData || []);
+                setProjects((projectsData.items || projectsData || []).filter((p: any) =>
+                    p.taskGroups?.length > 0 || p.task_groups?.length > 0
+                ));
+            } catch (error) {
+                console.error('Failed to load data:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        loadData();
+    }, []);
+
+    const filteredTemplates = templates.filter((template: any) =>
         template.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const filteredProjects = mockProjects.filter((project) =>
-        project.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        project.taskGroups.length > 0
+    const filteredProjects = projects.filter((project: any) =>
+        project.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const selectedTemplate = mockTemplates.find((t) => t.id === data.templateId);
-    const selectedProject = mockProjects.find((p) => p.id === data.sourceProjectId);
+    const selectedTemplate = templates.find((t: any) => t.id === data.templateId);
+    const selectedProject = projects.find((p: any) => p.id === data.sourceProjectId);
 
     const handleSelectOption = (option: SourceOption) => {
         setSourceOption(option);
@@ -45,7 +69,7 @@ export function TemplateSelectionStep({ data, onUpdate }: TemplateSelectionStepP
             templateId: template.id,
             templateName: template.name,
             sourceProjectId: undefined,
-            taskGroups: template.taskGroups
+            taskGroups: template.taskGroups as any
         });
     };
 
@@ -54,7 +78,7 @@ export function TemplateSelectionStep({ data, onUpdate }: TemplateSelectionStepP
             templateId: '',
             templateName: `Copy of ${project.name}`,
             sourceProjectId: project.id,
-            taskGroups: project.taskGroups
+            taskGroups: project.taskGroups as any
         });
     };
 
@@ -280,11 +304,11 @@ export function TemplateSelectionStep({ data, onUpdate }: TemplateSelectionStepP
 
                                         {expandedGroups.has(group.id) && (
                                             <div className="template-preview-tasks">
-                                                {group.tasks.map((taskId, index) => (
-                                                    <div key={taskId} className="template-preview-task">
+                                                {group.tasks.map((task: any, index: number) => (
+                                                    <div key={typeof task === 'string' ? task : task.id || index} className="template-preview-task">
                                                         <span className="template-preview-task-num">{index + 1}</span>
                                                         <span className="template-preview-task-name">
-                                                            Task {taskId.replace('task-', '#')}
+                                                            {typeof task === 'string' ? `Task ${task.replace('task-', '#')}` : task.name || 'Task'}
                                                         </span>
                                                     </div>
                                                 ))}

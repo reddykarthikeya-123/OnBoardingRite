@@ -5,6 +5,7 @@ import { Button, Stepper } from '../../../components/ui';
 import type { StepperStep } from '../../../components/ui';
 import { PPMProjectSelectionStep } from './wizard/PPMProjectSelectionStep';
 import { TemplateSelectionStep } from './wizard/TemplateSelectionStep';
+import { projectsApi } from '../../../services/api';
 import type { ProjectContact } from '../../../types';
 
 const WIZARD_STEPS: StepperStep[] = [
@@ -90,17 +91,37 @@ export function ProjectSetupWizard() {
     const handleFinish = async () => {
         setIsSubmitting(true);
 
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        try {
+            // Call API to create the project
+            const projectPayload = {
+                name: formData.name,
+                description: formData.description,
+                client_id: formData.clientId,
+                client_name: formData.clientName,
+                location: formData.location,
+                start_date: formData.startDate,
+                end_date: formData.endDate || null,
+                is_dod: formData.isDOD,
+                is_odrisa: formData.isODRISA,
+                template_id: formData.templateId || null,
+                source_project_id: formData.sourceProjectId || null,
+                ppm_project_id: formData.ppmProjectId,
+                project_manager: formData.projectManager,
+                safety_lead: formData.safetyLead,
+                site_contact: formData.siteContact,
+                task_groups: formData.taskGroups
+            };
 
-        // In a real app, this would call an API to create the project
-        console.log('Creating onboarding project with data:', formData);
+            const result = await projectsApi.create(projectPayload);
+            const newProjectId = result.id;
 
-        // Generate a mock project ID and navigate to dashboard
-        const newProjectId = `project-${Date.now()}`;
-
-        setIsSubmitting(false);
-        navigate(`/projects/${newProjectId}/dashboard`);
+            navigate(`/projects/${newProjectId}/dashboard`);
+        } catch (error) {
+            console.error('Failed to create project:', error);
+            alert('Failed to create project. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const canProceed = (): boolean => {
