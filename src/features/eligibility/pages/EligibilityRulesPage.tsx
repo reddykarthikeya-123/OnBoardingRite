@@ -1,34 +1,53 @@
-import { useState } from 'react';
-import { Plus, Search, Filter, Pencil, Trash2, Copy } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Search, Filter, Pencil, Trash2, Copy, Loader2 } from 'lucide-react';
 import { Card, Button, Badge } from '../../../components/ui';
 import { EligibilityCriteriaModal } from '../components';
 import type { EligibilityCriteria } from '../../../types';
-import { mockEligibilityCriteria, generateId } from '../../../data';
+import { eligibilityApi } from '../../../services/api';
+
+// API List item type (simplified)
+interface EligibilityListItem {
+    id: string;
+    name: string;
+    description: string;
+    isActive: boolean;
+    ruleCount: number;
+    createdAt: string;
+    updatedAt: string;
+}
 
 /**
  * Eligibility Rules page - manages named, reusable eligibility rules
  */
 export function EligibilityRulesPage() {
-    const [rules, setRules] = useState<EligibilityCriteria[]>([...mockEligibilityCriteria]);
+    const [rules, setRules] = useState<EligibilityListItem[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [editingRule, setEditingRule] = useState<EligibilityCriteria | undefined>(undefined);
 
-    // Filter rules by search
+    // Load rules from API
+    useEffect(() => {
+        loadRules();
+    }, []);
+
+    const loadRules = async () => {
+        try {
+            setIsLoading(true);
+            const data = await eligibilityApi.list();
+            setRules(data || []);
+        } catch (error) {
+            console.error('Failed to load eligibility rules:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Filter rules by search (client-side for quick filter)
     const filteredRules = rules.filter(rule =>
         rule.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (rule.description || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
-
-    // Count rules recursively
-    const countRules = (group: typeof rules[0]['rootGroup']): number => {
-        return group.rules.reduce((count, rule) => {
-            if (rule.type === 'GROUP') {
-                return count + countRules(rule);
-            }
-            return count + 1;
-        }, 0);
-    };
 
     // Open modal to create new rule
     const handleCreateNew = () => {
@@ -36,43 +55,82 @@ export function EligibilityRulesPage() {
         setShowModal(true);
     };
 
-    // Open modal to edit existing rule
-    const handleEdit = (rule: EligibilityCriteria) => {
-        setEditingRule(rule);
-        setShowModal(true);
+    // Open modal to edit existing rule - fetch full details
+    const handleEdit = async (rule: EligibilityListItem) => {
+        try {
+            const fullRule = await eligibilityApi.get(rule.id);
+            setEditingRule(fullRule);
+            setShowModal(true);
+        } catch (error) {
+            console.error('Failed to load rule details:', error);
+            alert('Failed to load rule details.');
+        }
     };
 
     // Save rule (create or update)
-    const handleSave = (criteria: EligibilityCriteria) => {
-        if (editingRule) {
-            // Update existing
-            setRules(prev => prev.map(r => r.id === criteria.id ? criteria : r));
-        } else {
-            // Add new
-            setRules(prev => [...prev, { ...criteria, id: generateId('rule') }]);
+    const handleSave = async (criteria: EligibilityCriteria) => {
+        try {
+            if (editingRule) {
+                // Update existing
+                await eligibilityApi.update(criteria.id, {
+                    name: criteria.name,
+                    description: criteria.description,
+                    isActive: criteria.isActive,
+                    rootGroup: criteria.rootGroup
+                });
+            } else {
+                // Create new
+                await eligibilityApi.create({
+                    name: criteria.name,
+                    description: criteria.description,
+                    rootGroup: criteria.rootGroup
+                });
+            }
+            setShowModal(false);
+            setEditingRule(undefined);
+            loadRules(); // Refresh list
+        } catch (error) {
+            console.error('Failed to save rule:', error);
+            alert('Failed to save rule.');
         }
-        setShowModal(false);
-        setEditingRule(undefined);
     };
 
     // Delete rule
-    const handleDelete = (ruleId: string) => {
+    const handleDelete = async (ruleId: string) => {
         if (confirm('Are you sure you want to delete this rule?')) {
-            setRules(prev => prev.filter(r => r.id !== ruleId));
+            try {
+                await eligibilityApi.delete(ruleId);
+                loadRules(); // Refresh list
+            } catch (error) {
+                console.error('Failed to delete rule:', error);
+                alert('Failed to delete rule.');
+            }
         }
     };
 
-    // Duplicate rule
-    const handleDuplicate = (rule: EligibilityCriteria) => {
-        const duplicated: EligibilityCriteria = {
-            ...rule,
-            id: generateId('rule'),
-            name: `${rule.name} (Copy)`,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-        };
-        setRules(prev => [...prev, duplicated]);
+    // Duplicate rule - fetch full, create copy
+    const handleDuplicate = async (rule: EligibilityListItem) => {
+        try {
+            const fullRule = await eligibilityApi.get(rule.id);
+            await eligibilityApi.create({
+                name: `${fullRule.name} (Copy)`,
+                description: fullRule.description,
+                rootGroup: fullRule.rootGroup
+            });
+            loadRules(); // Refresh list
+        } catch (error) {
+            console.error('Failed to duplicate rule:', error);
+            alert('Failed to duplicate rule.');
+        }
     };
+
+    if (isLoading) {
+        return (
+            <div className="page-enter flex items-center justify-center" style={{ minHeight: '400px' }}>
+                <Loader2 className="animate-spin" size={32} />
+            </div>
+        );
+    }
 
     return (
         <div className="page-enter">
@@ -169,7 +227,7 @@ export function EligibilityRulesPage() {
                                         {rule.isActive ? 'Active' : 'Inactive'}
                                     </Badge>
                                     <span className="eligibility-rule-card-count">
-                                        {countRules(rule.rootGroup)} {countRules(rule.rootGroup) === 1 ? 'rule' : 'rules'}
+                                        {rule.ruleCount} {rule.ruleCount === 1 ? 'rule' : 'rules'}
                                     </span>
                                 </div>
                             </div>
