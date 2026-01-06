@@ -1506,10 +1506,7 @@ select {
 }
 
 .sidebar-logo-icon {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600));
-  border-radius: var(--radius-lg);
+  /* Removed background and border-radius */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -13815,4 +13812,12 @@ span.col-name {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
+}
+
+.sidebar-logo-img {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+  border-radius: 8px;
+  /* Round the corners of the white background */
 }

@@ -7,7 +7,6 @@ import {
     FolderKanban,
     Users,
     Settings,
-    Zap,
     Filter,
     PanelLeftClose,
     PanelLeft
@@ -79,7 +78,7 @@ export function Sidebar() {
             <div className="sidebar-header">
                 <div className="sidebar-logo">
                     <div className="sidebar-logo-icon">
-                        <Zap size={24} color="white" />
+                        <img src="/src/assets/logo.png" alt="OnboardRite" className="sidebar-logo-img" />
                     </div>
                     <div className="sidebar-logo-text">
                         OnboardRite
