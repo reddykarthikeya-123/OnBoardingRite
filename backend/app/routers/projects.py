@@ -7,7 +7,7 @@ import json
 import uuid as uuid_lib
 
 from app.core.database import get_db
-from app.models.models import Project, ProjectContact, ProjectAssignment, parse_json_field
+from app.models.models import Project, ProjectContact, ProjectAssignment, TeamMember, parse_json_field
 from app.schemas.dashboard import ProjectFlags
 from app.schemas.projects import (
     ProjectListResponse, ProjectListItem, ProjectStats, ContactInfo,
@@ -190,3 +190,49 @@ def get_project_details(project_id: str, db: Session = Depends(get_db)):
             pending=total_members - completed - in_progress
         )
     )
+
+@router.get("/{project_id}/members")
+def get_project_members(project_id: str, db: Session = Depends(get_db)):
+    """Get all team members assigned to a project with their progress"""
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Get assignments with team member info
+    assignments = db.query(ProjectAssignment).filter(
+        ProjectAssignment.project_id == project_id
+    ).all()
+    
+    members = []
+    for assignment in assignments:
+        tm = assignment.team_member
+        if not tm:
+            continue
+            
+        # Get task instances for this assignment
+        task_instances = []
+        for ti in assignment.task_instances:
+            task_instances.append({
+                "taskId": str(ti.task_id),
+                "status": ti.status,
+                "startedAt": ti.started_at.isoformat() if ti.started_at else None,
+                "completedAt": ti.completed_at.isoformat() if ti.completed_at else None
+            })
+        
+        members.append({
+            "id": str(tm.id),
+            "firstName": tm.first_name,
+            "lastName": tm.last_name,
+            "email": tm.email,
+            "phone": tm.phone,
+            "trade": assignment.trade,
+            "category": assignment.category,
+            "status": assignment.status,
+            "progressPercentage": float(assignment.progress_percentage or 0),
+            "totalTasks": assignment.total_tasks or 0,
+            "completedTasks": assignment.completed_tasks or 0,
+            "assignedAt": assignment.assigned_at.isoformat() if assignment.assigned_at else None,
+            "taskInstances": task_instances
+        })
+    
+    return members

@@ -4,6 +4,7 @@ import { MobileLayout } from './components/layout/MobileLayout';
 
 // Feature Pages
 import { DashboardPage } from './features/dashboard/pages/DashboardPage';
+import { ApiTestPage } from './features/dashboard/pages/ApiTestPage';
 import { ProjectsPage } from './features/projects/pages/ProjectsPage';
 import { ProjectDetailPage } from './features/projects/pages/ProjectDetailPage';
 import { ProjectEditPage } from './features/projects/pages/ProjectEditPage';
@@ -38,6 +39,7 @@ function App() {
             {/* HR Portal - Desktop Layout */}
             <Route path="/" element={<Layout><Navigate to="/dashboard" replace /></Layout>} />
             <Route path="/dashboard" element={<Layout><DashboardPage /></Layout>} />
+            <Route path="/api-test" element={<Layout><ApiTestPage /></Layout>} />
             <Route path="/projects" element={<Layout><ProjectsPage /></Layout>} />
             <Route path="/projects/new" element={<Layout><ProjectSetupWizard /></Layout>} />
             <Route path="/projects/:projectId" element={<Layout><ProjectDetailPage /></Layout>} />
