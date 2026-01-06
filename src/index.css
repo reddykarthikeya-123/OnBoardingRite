@@ -13701,3 +13701,99 @@ span.col-name {
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
 }
+
+/* ========================================
+   TEAM MEMBERS PAGE
+   ======================================== */
+
+.team-members-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--spacing-4);
+}
+
+.team-member-card {
+  transition: all var(--transition-fast);
+}
+
+.team-member-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.team-member-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-4);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.team-member-card-actions {
+  display: flex;
+  gap: var(--spacing-1);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.team-member-card:hover .team-member-card-actions {
+  opacity: 1;
+}
+
+.team-member-card-body {
+  padding: var(--spacing-4);
+}
+
+.team-member-card-name {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-2);
+}
+
+.team-member-card-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-3);
+}
+
+.team-member-detail {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.team-member-detail svg {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+/* Stats Row */
+.stats-row {
+  display: flex;
+  gap: var(--spacing-4);
+}
+
+.stat-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-4) var(--spacing-5);
+  min-width: 140px;
+}
+
+.stat-value {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary-600);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-top: var(--spacing-1);
+}

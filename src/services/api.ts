@@ -212,5 +212,39 @@ export const tasksApi = {
     }),
 };
 
+// Team Members API
+export const teamMembersApi = {
+    list: (params?: { search?: string }) => {
+        const query = params?.search ? `?search=${encodeURIComponent(params.search)}` : '';
+        return fetchApi<Array<{
+            id: string;
+            employeeId: string;
+            firstName: string;
+            lastName: string;
+            email: string;
+            phone: string;
+            city: string;
+            state: string;
+            createdAt: string;
+        }>>(`/team-members/${query}`);
+    },
+
+    get: (id: string) => fetchApi<any>(`/team-members/${id}`),
+
+    create: (data: any) => fetchApi<any>('/team-members/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+    }),
+
+    update: (id: string, data: any) => fetchApi<any>(`/team-members/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+    }),
+
+    delete: (id: string) => fetchApi<{ message: string }>(`/team-members/${id}`, {
+        method: 'DELETE',
+    }),
+};
+
 export { API_BASE_URL };
 

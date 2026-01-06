@@ -14,6 +14,7 @@ import { TemplatesPage } from './features/templates/pages/TemplatesPage';
 import { TemplateDetailPage } from './features/templates/pages/TemplateDetailPage';
 import { TaskLibraryPage } from './features/tasks/pages/TaskLibraryPage';
 import { EligibilityRulesPage } from './features/eligibility/pages/EligibilityRulesPage';
+import { TeamMembersPage } from './features/team/pages/TeamMembersPage';
 
 // Candidate Portal Pages (V1)
 import { CandidateHomePage } from './features/candidate/pages/CandidateHomePage';
@@ -49,6 +50,7 @@ function App() {
             <Route path="/templates/:templateId" element={<Layout><TemplateDetailPage /></Layout>} />
             <Route path="/tasks" element={<Layout><TaskLibraryPage /></Layout>} />
             <Route path="/eligibility-rules" element={<Layout><EligibilityRulesPage /></Layout>} />
+            <Route path="/team-members" element={<Layout><TeamMembersPage /></Layout>} />
 
             {/* Candidate Portal V1 - Mobile Layout */}
             <Route path="/candidate" element={<MobileLayout><CandidateHomePage /></MobileLayout>} />
