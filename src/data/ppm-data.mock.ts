@@ -1,0 +1,591 @@
+import type { PPMProject, Requisition, Candidate, Employee } from '../types';
+
+// Mock PPM Projects (synced from external system)
+export const mockPPMProjects: PPMProject[] = [
+    {
+        id: 'ppm-001',
+        name: 'Marathon Galveston Bay Refinery Turnaround',
+        description: 'Major turnaround project at Marathon Galveston Bay Refinery. Expected 150+ personnel over 3-week duration.',
+        clientId: 'client-001',
+        clientName: 'Marathon Petroleum',
+        location: 'Galveston, TX',
+        startDate: '2025-01-15',
+        endDate: '2025-02-05',
+        projectManager: {
+            id: 'pm-001',
+            name: 'James Wilson',
+            email: 'james.wilson@marathon.com',
+            phone: '(713) 555-0101',
+            title: 'Senior Project Manager'
+        },
+        siteLead: {
+            id: 'sl-001',
+            name: 'Robert Chen',
+            email: 'robert.chen@marathon.com',
+            phone: '(713) 555-0103',
+            title: 'Site Superintendent'
+        },
+        safetyLead: {
+            id: 'sf-001',
+            name: 'Maria Garcia',
+            email: 'maria.garcia@starcon.com',
+            phone: '(713) 555-0102',
+            title: 'Safety Director'
+        },
+        syncedAt: '2025-01-10T00:00:00Z',
+        externalId: 'PPM-2025-001'
+    },
+    {
+        id: 'ppm-002',
+        name: 'ExxonMobil Baytown Complex Maintenance',
+        description: 'Scheduled maintenance shutdown at ExxonMobil Baytown Complex. Focus on heat exchanger and reactor vessel work.',
+        clientId: 'client-002',
+        clientName: 'ExxonMobil',
+        location: 'Baytown, TX',
+        startDate: '2025-01-20',
+        endDate: '2025-02-15',
+        projectManager: {
+            id: 'pm-002',
+            name: 'Patricia Brown',
+            email: 'patricia.brown@exxonmobil.com',
+            phone: '(281) 555-0201',
+            title: 'Project Manager'
+        },
+        siteLead: {
+            id: 'sl-002',
+            name: 'Michael Torres',
+            email: 'michael.torres@exxonmobil.com',
+            phone: '(281) 555-0203',
+            title: 'Site Lead'
+        },
+        safetyLead: {
+            id: 'sf-002',
+            name: 'David Martinez',
+            email: 'david.martinez@starcon.com',
+            phone: '(281) 555-0202',
+            title: 'Safety Lead'
+        },
+        syncedAt: '2025-01-12T00:00:00Z',
+        externalId: 'PPM-2025-002'
+    },
+    {
+        id: 'ppm-003',
+        name: 'Shell Deer Park Catalyst Change',
+        description: 'Catalyst change-out project at Shell Deer Park. Specialized work requiring experienced operators.',
+        clientId: 'client-003',
+        clientName: 'Shell',
+        location: 'Deer Park, TX',
+        startDate: '2025-02-01',
+        endDate: '2025-02-25',
+        projectManager: {
+            id: 'pm-003',
+            name: 'Thomas Lee',
+            email: 'thomas.lee@shell.com',
+            phone: '(713) 555-0401',
+            title: 'Project Manager'
+        },
+        safetyLead: {
+            id: 'sf-003',
+            name: 'Jennifer White',
+            email: 'jennifer.white@shell.com',
+            phone: '(713) 555-0402',
+            title: 'Safety Lead'
+        },
+        syncedAt: '2025-01-14T00:00:00Z',
+        externalId: 'PPM-2025-003'
+    },
+    {
+        id: 'ppm-004',
+        name: 'Chevron Pasadena Revamp Project',
+        description: 'Major unit revamp at Chevron Pasadena refinery. Extended project with phased workforce deployment.',
+        clientId: 'client-004',
+        clientName: 'Chevron',
+        location: 'Pasadena, TX',
+        startDate: '2025-03-01',
+        endDate: '2025-05-31',
+        projectManager: {
+            id: 'pm-004',
+            name: 'Amanda Clark',
+            email: 'amanda.clark@chevron.com',
+            phone: '(713) 555-0501',
+            title: 'Senior Project Manager'
+        },
+        siteLead: {
+            id: 'sl-004',
+            name: 'Kevin Johnson',
+            email: 'kevin.johnson@chevron.com',
+            phone: '(713) 555-0503',
+            title: 'Site Superintendent'
+        },
+        safetyLead: {
+            id: 'sf-004',
+            name: 'Laura Martinez',
+            email: 'laura.martinez@chevron.com',
+            phone: '(713) 555-0502',
+            title: 'Safety Manager'
+        },
+        syncedAt: '2025-01-15T00:00:00Z',
+        externalId: 'PPM-2025-004'
+    },
+    {
+        id: 'ppm-005',
+        name: 'DOD Naval Shipyard Support',
+        description: 'Contractor support for naval shipyard maintenance operations. Requires security clearance and DOD compliance.',
+        clientId: 'client-005',
+        clientName: 'US Navy',
+        location: 'Norfolk, VA',
+        startDate: '2025-02-15',
+        endDate: '2025-04-30',
+        projectManager: {
+            id: 'pm-005',
+            name: 'Commander Lisa Anderson',
+            email: 'lisa.anderson@navy.mil',
+            phone: '(757) 555-0301',
+            title: 'Project Officer'
+        },
+        siteLead: {
+            id: 'sl-005',
+            name: 'Chief Peterson',
+            email: 'peterson@navy.mil',
+            phone: '(757) 555-0303',
+            title: 'Chief Petty Officer'
+        },
+        syncedAt: '2025-01-08T00:00:00Z',
+        externalId: 'PPM-2025-005'
+    }
+];
+
+// Mock Requisitions
+export const mockRequisitions: Requisition[] = [
+    {
+        id: 'req-001',
+        ppmProjectId: 'ppm-001',
+        requisitionNumber: 'REQ-2025-0001',
+        title: 'Welding Team - Marathon Galveston',
+        department: 'Operations',
+        status: 'OPEN',
+        lineItems: [
+            {
+                id: 'rli-001',
+                requisitionId: 'req-001',
+                positionTitle: 'Senior Welder',
+                trade: 'WELDER',
+                quantity: 5,
+                filledCount: 2,
+                candidates: [
+                    {
+                        id: 'cand-001',
+                        requisitionLineItemId: 'rli-001',
+                        firstName: 'John',
+                        lastName: 'Smith',
+                        email: 'john.smith@email.com',
+                        phone: '(713) 555-1001',
+                        location: 'Houston, TX',
+                        trade: 'WELDER',
+                        experience: '8 years',
+                        availability: 'Immediate',
+                        status: 'AVAILABLE'
+                    },
+                    {
+                        id: 'cand-002',
+                        requisitionLineItemId: 'rli-001',
+                        firstName: 'Maria',
+                        lastName: 'Rodriguez',
+                        email: 'maria.rodriguez@email.com',
+                        phone: '(713) 555-1002',
+                        location: 'Galveston, TX',
+                        trade: 'WELDER',
+                        experience: '12 years',
+                        availability: 'Immediate',
+                        status: 'AVAILABLE'
+                    },
+                    {
+                        id: 'cand-003',
+                        requisitionLineItemId: 'rli-001',
+                        firstName: 'James',
+                        lastName: 'Williams',
+                        email: 'james.williams@email.com',
+                        phone: '(713) 555-1003',
+                        location: 'Texas City, TX',
+                        trade: 'WELDER',
+                        experience: '6 years',
+                        availability: '2 weeks',
+                        status: 'AVAILABLE'
+                    },
+                    {
+                        id: 'cand-004',
+                        requisitionLineItemId: 'rli-001',
+                        firstName: 'Robert',
+                        lastName: 'Johnson',
+                        email: 'robert.johnson@email.com',
+                        phone: '(713) 555-1004',
+                        location: 'Houston, TX',
+                        trade: 'WELDER',
+                        experience: '15 years',
+                        availability: 'Immediate',
+                        status: 'SELECTED'
+                    },
+                    {
+                        id: 'cand-005',
+                        requisitionLineItemId: 'rli-001',
+                        firstName: 'Patricia',
+                        lastName: 'Brown',
+                        email: 'patricia.brown@email.com',
+                        phone: '(713) 555-1005',
+                        location: 'League City, TX',
+                        trade: 'WELDER',
+                        experience: '10 years',
+                        availability: 'Immediate',
+                        status: 'SELECTED'
+                    }
+                ]
+            },
+            {
+                id: 'rli-002',
+                requisitionId: 'req-001',
+                positionTitle: 'Junior Welder',
+                trade: 'WELDER',
+                quantity: 10,
+                filledCount: 4,
+                candidates: [
+                    {
+                        id: 'cand-006',
+                        requisitionLineItemId: 'rli-002',
+                        firstName: 'Michael',
+                        lastName: 'Davis',
+                        email: 'michael.davis@email.com',
+                        phone: '(713) 555-2001',
+                        location: 'Houston, TX',
+                        trade: 'WELDER',
+                        experience: '2 years',
+                        availability: 'Immediate',
+                        status: 'AVAILABLE'
+                    },
+                    {
+                        id: 'cand-007',
+                        requisitionLineItemId: 'rli-002',
+                        firstName: 'Jennifer',
+                        lastName: 'Miller',
+                        email: 'jennifer.miller@email.com',
+                        phone: '(713) 555-2002',
+                        location: 'Pasadena, TX',
+                        trade: 'WELDER',
+                        experience: '3 years',
+                        availability: 'Immediate',
+                        status: 'AVAILABLE'
+                    },
+                    {
+                        id: 'cand-008',
+                        requisitionLineItemId: 'rli-002',
+                        firstName: 'David',
+                        lastName: 'Wilson',
+                        email: 'david.wilson@email.com',
+                        phone: '(713) 555-2003',
+                        location: 'Baytown, TX',
+                        trade: 'WELDER',
+                        experience: '1 year',
+                        availability: '1 week',
+                        status: 'AVAILABLE'
+                    }
+                ]
+            }
+        ],
+        createdAt: '2025-01-05T00:00:00Z',
+        updatedAt: '2025-01-14T00:00:00Z'
+    },
+    {
+        id: 'req-002',
+        ppmProjectId: 'ppm-001',
+        requisitionNumber: 'REQ-2025-0002',
+        title: 'Pipefitting Team - Marathon Galveston',
+        department: 'Operations',
+        status: 'OPEN',
+        lineItems: [
+            {
+                id: 'rli-003',
+                requisitionId: 'req-002',
+                positionTitle: 'Pipefitter',
+                trade: 'PIPEFITTER',
+                quantity: 8,
+                filledCount: 3,
+                candidates: [
+                    {
+                        id: 'cand-009',
+                        requisitionLineItemId: 'rli-003',
+                        firstName: 'Carlos',
+                        lastName: 'Garcia',
+                        email: 'carlos.garcia@email.com',
+                        phone: '(713) 555-3001',
+                        location: 'Houston, TX',
+                        trade: 'PIPEFITTER',
+                        experience: '7 years',
+                        availability: 'Immediate',
+                        status: 'AVAILABLE'
+                    },
+                    {
+                        id: 'cand-010',
+                        requisitionLineItemId: 'rli-003',
+                        firstName: 'Linda',
+                        lastName: 'Martinez',
+                        email: 'linda.martinez@email.com',
+                        phone: '(713) 555-3002',
+                        location: 'Deer Park, TX',
+                        trade: 'PIPEFITTER',
+                        experience: '5 years',
+                        availability: 'Immediate',
+                        status: 'AVAILABLE'
+                    },
+                    {
+                        id: 'cand-011',
+                        requisitionLineItemId: 'rli-003',
+                        firstName: 'Steven',
+                        lastName: 'Anderson',
+                        email: 'steven.anderson@email.com',
+                        phone: '(713) 555-3003',
+                        location: 'Texas City, TX',
+                        trade: 'PIPEFITTER',
+                        experience: '9 years',
+                        availability: '2 weeks',
+                        status: 'AVAILABLE'
+                    }
+                ]
+            }
+        ],
+        createdAt: '2025-01-06T00:00:00Z',
+        updatedAt: '2025-01-14T00:00:00Z'
+    },
+    {
+        id: 'req-003',
+        ppmProjectId: 'ppm-002',
+        requisitionNumber: 'REQ-2025-0003',
+        title: 'Operations Team - ExxonMobil Baytown',
+        department: 'Operations',
+        status: 'OPEN',
+        lineItems: [
+            {
+                id: 'rli-004',
+                requisitionId: 'req-003',
+                positionTitle: 'Equipment Operator',
+                trade: 'OPERATOR',
+                quantity: 6,
+                filledCount: 2,
+                candidates: [
+                    {
+                        id: 'cand-012',
+                        requisitionLineItemId: 'rli-004',
+                        firstName: 'Thomas',
+                        lastName: 'Jackson',
+                        email: 'thomas.jackson@email.com',
+                        phone: '(281) 555-4001',
+                        location: 'Baytown, TX',
+                        trade: 'OPERATOR',
+                        experience: '10 years',
+                        availability: 'Immediate',
+                        status: 'AVAILABLE'
+                    },
+                    {
+                        id: 'cand-013',
+                        requisitionLineItemId: 'rli-004',
+                        firstName: 'Nancy',
+                        lastName: 'White',
+                        email: 'nancy.white@email.com',
+                        phone: '(281) 555-4002',
+                        location: 'Mont Belvieu, TX',
+                        trade: 'OPERATOR',
+                        experience: '6 years',
+                        availability: 'Immediate',
+                        status: 'AVAILABLE'
+                    }
+                ]
+            },
+            {
+                id: 'rli-005',
+                requisitionId: 'req-003',
+                positionTitle: 'Rigger',
+                trade: 'RIGGER',
+                quantity: 4,
+                filledCount: 1,
+                candidates: [
+                    {
+                        id: 'cand-014',
+                        requisitionLineItemId: 'rli-005',
+                        firstName: 'Daniel',
+                        lastName: 'Harris',
+                        email: 'daniel.harris@email.com',
+                        phone: '(281) 555-5001',
+                        location: 'Baytown, TX',
+                        trade: 'RIGGER',
+                        experience: '8 years',
+                        availability: 'Immediate',
+                        status: 'AVAILABLE'
+                    },
+                    {
+                        id: 'cand-015',
+                        requisitionLineItemId: 'rli-005',
+                        firstName: 'Betty',
+                        lastName: 'Clark',
+                        email: 'betty.clark@email.com',
+                        phone: '(281) 555-5002',
+                        location: 'Houston, TX',
+                        trade: 'RIGGER',
+                        experience: '4 years',
+                        availability: '1 week',
+                        status: 'AVAILABLE'
+                    }
+                ]
+            }
+        ],
+        createdAt: '2025-01-08T00:00:00Z',
+        updatedAt: '2025-01-14T00:00:00Z'
+    }
+];
+
+// Mock Employees (for direct add)
+export const mockEmployees: Employee[] = [
+    {
+        id: 'emp-001',
+        firstName: 'Sarah',
+        lastName: 'Johnson',
+        email: 'sarah.johnson@company.com',
+        phone: '(713) 555-8001',
+        location: 'Houston, TX',
+        department: 'Operations',
+        position: 'Senior Welder',
+        employeeNumber: 'EMP-001'
+    },
+    {
+        id: 'emp-002',
+        firstName: 'Michael',
+        lastName: 'Thompson',
+        email: 'michael.thompson@company.com',
+        phone: '(713) 555-8002',
+        location: 'Houston, TX',
+        department: 'Operations',
+        position: 'Pipefitter',
+        employeeNumber: 'EMP-002'
+    },
+    {
+        id: 'emp-003',
+        firstName: 'Emily',
+        lastName: 'Davis',
+        email: 'emily.davis@company.com',
+        phone: '(713) 555-8003',
+        location: 'Baytown, TX',
+        department: 'Operations',
+        position: 'Equipment Operator',
+        employeeNumber: 'EMP-003'
+    },
+    {
+        id: 'emp-004',
+        firstName: 'William',
+        lastName: 'Brown',
+        email: 'william.brown@company.com',
+        phone: '(713) 555-8004',
+        location: 'Pasadena, TX',
+        department: 'Safety',
+        position: 'Safety Coordinator',
+        employeeNumber: 'EMP-004'
+    },
+    {
+        id: 'emp-005',
+        firstName: 'Jessica',
+        lastName: 'Wilson',
+        email: 'jessica.wilson@company.com',
+        phone: '(713) 555-8005',
+        location: 'Texas City, TX',
+        department: 'Operations',
+        position: 'Electrician',
+        employeeNumber: 'EMP-005'
+    }
+];
+
+// Mock Ex-Employees (for rehire)
+export const mockExEmployees: Employee[] = [
+    {
+        id: 'ex-emp-001',
+        firstName: 'Marcus',
+        lastName: 'Rivera',
+        email: 'marcus.rivera@email.com',
+        phone: '(713) 555-9001',
+        location: 'Houston, TX',
+        department: 'Operations (Former)',
+        position: 'Lead Welder',
+        employeeNumber: 'EX-EMP-001'
+    },
+    {
+        id: 'ex-emp-002',
+        firstName: 'Angela',
+        lastName: 'Chen',
+        email: 'angela.chen@email.com',
+        phone: '(713) 555-9002',
+        location: 'Galveston, TX',
+        department: 'Operations (Former)',
+        position: 'Senior Pipefitter',
+        employeeNumber: 'EX-EMP-002'
+    },
+    {
+        id: 'ex-emp-003',
+        firstName: 'Derek',
+        lastName: 'Washington',
+        email: 'derek.washington@email.com',
+        phone: '(281) 555-9003',
+        location: 'Baytown, TX',
+        department: 'Operations (Former)',
+        position: 'Crane Operator',
+        employeeNumber: 'EX-EMP-003'
+    },
+    {
+        id: 'ex-emp-004',
+        firstName: 'Samantha',
+        lastName: 'Lee',
+        email: 'samantha.lee@email.com',
+        phone: '(713) 555-9004',
+        location: 'Deer Park, TX',
+        department: 'Safety (Former)',
+        position: 'Safety Technician',
+        employeeNumber: 'EX-EMP-004'
+    }
+];
+
+// Helper functions
+export const getPPMProjectById = (id: string): PPMProject | undefined => {
+    return mockPPMProjects.find(project => project.id === id);
+};
+
+export const getRequisitionsByPPMProject = (ppmProjectId: string): Requisition[] => {
+    return mockRequisitions.filter(req => req.ppmProjectId === ppmProjectId);
+};
+
+export const getAllCandidatesFromRequisitions = (requisitions: Requisition[]): Candidate[] => {
+    return requisitions.flatMap(req =>
+        req.lineItems.flatMap(lineItem => lineItem.candidates)
+    );
+};
+
+export const searchEmployees = (query: string): Employee[] => {
+    const lowerQuery = query.toLowerCase();
+    return mockEmployees.filter(emp =>
+        emp.firstName.toLowerCase().includes(lowerQuery) ||
+        emp.lastName.toLowerCase().includes(lowerQuery) ||
+        emp.email.toLowerCase().includes(lowerQuery) ||
+        emp.employeeNumber.toLowerCase().includes(lowerQuery)
+    );
+};
+
+export const searchExEmployees = (query: string): Employee[] => {
+    const lowerQuery = query.toLowerCase();
+    return mockExEmployees.filter(emp =>
+        emp.firstName.toLowerCase().includes(lowerQuery) ||
+        emp.lastName.toLowerCase().includes(lowerQuery) ||
+        emp.email.toLowerCase().includes(lowerQuery) ||
+        emp.employeeNumber.toLowerCase().includes(lowerQuery)
+    );
+};
+
+export const searchAllWorkers = (query: string): { employees: Employee[]; exEmployees: Employee[] } => {
+    return {
+        employees: searchEmployees(query),
+        exEmployees: searchExEmployees(query)
+    };
+};
+

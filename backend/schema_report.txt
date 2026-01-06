@@ -1,0 +1,199 @@
+Table: OR_CHECKLIST_TEMPLATES
+--------------------------------------------------
+ID                             VARCHAR2        50
+NAME                           VARCHAR2        255
+DESCRIPTION                    CLOB            4000
+CLIENT_ID                      VARCHAR2        50
+CLIENT_NAME                    VARCHAR2        255
+VERSION                        NUMBER          22
+IS_ACTIVE                      NUMBER          22
+ELIGIBILITY_CRITERIA_ID        VARCHAR2        50
+CREATED_AT                     TIMESTAMP(6)    11
+UPDATED_AT                     TIMESTAMP(6)    11
+CREATED_BY                     VARCHAR2        100
+
+Table: OR_COMMENTS
+--------------------------------------------------
+ID                             VARCHAR2        50
+TEXT                           CLOB            4000
+AUTHOR_ID                      VARCHAR2        50
+AUTHOR_NAME                    VARCHAR2        100
+AUTHOR_ROLE                    VARCHAR2        50
+IS_VISIBLE_TO_MEMBER           NUMBER          22
+CREATED_AT                     TIMESTAMP(6)    11
+UPDATED_AT                     TIMESTAMP(6)    11
+TEAM_MEMBER_ID                 VARCHAR2        50
+TASK_INSTANCE_ID               VARCHAR2        50
+PROJECT_ID                     VARCHAR2        50
+
+Table: OR_ELIGIBILITY_CRITERIA
+--------------------------------------------------
+ID                             VARCHAR2        50
+NAME                           VARCHAR2        255
+DESCRIPTION                    CLOB            4000
+IS_ACTIVE                      NUMBER          22
+ROOT_GROUP_JSON                CLOB            4000
+CREATED_AT                     TIMESTAMP(6)    11
+UPDATED_AT                     TIMESTAMP(6)    11
+
+Table: OR_PPM_CANDIDATES
+--------------------------------------------------
+ID                             VARCHAR2        50
+REQ_LINE_ITEM_ID               VARCHAR2        50
+FIRST_NAME                     VARCHAR2        100
+LAST_NAME                      VARCHAR2        100
+EMAIL                          VARCHAR2        100
+PHONE                          VARCHAR2        50
+LOCATION                       VARCHAR2        100
+TRADE                          VARCHAR2        50
+EXPERIENCE                     VARCHAR2        100
+AVAILABILITY                   VARCHAR2        100
+STATUS                         VARCHAR2        50
+
+Table: OR_PPM_PROJECTS
+--------------------------------------------------
+ID                             VARCHAR2        50
+NAME                           VARCHAR2        255
+DESCRIPTION                    CLOB            4000
+CLIENT_ID                      VARCHAR2        50
+CLIENT_NAME                    VARCHAR2        255
+LOCATION                       VARCHAR2        255
+START_DATE                     DATE            7
+END_DATE                       DATE            7
+PROJECT_MANAGER_JSON           CLOB            4000
+SITE_LEAD_JSON                 CLOB            4000
+SAFETY_LEAD_JSON               CLOB            4000
+SYNCED_AT                      TIMESTAMP(6)    11
+EXTERNAL_ID                    VARCHAR2        50
+
+Table: OR_PPM_REQUISITIONS
+--------------------------------------------------
+ID                             VARCHAR2        50
+PPM_PROJECT_ID                 VARCHAR2        50
+REQUISITION_NUMBER             VARCHAR2        50
+TITLE                          VARCHAR2        255
+DEPARTMENT                     VARCHAR2        100
+STATUS                         VARCHAR2        50
+CREATED_AT                     TIMESTAMP(6)    11
+UPDATED_AT                     TIMESTAMP(6)    11
+
+Table: OR_PPM_REQ_LINE_ITEMS
+--------------------------------------------------
+ID                             VARCHAR2        50
+REQUISITION_ID                 VARCHAR2        50
+POSITION_TITLE                 VARCHAR2        255
+TRADE                          VARCHAR2        50
+QUANTITY                       NUMBER          22
+FILLED_COUNT                   NUMBER          22
+
+Table: OR_PROFILES
+--------------------------------------------------
+ID                             VARCHAR2        50
+NAME                           VARCHAR2        100
+EMAIL                          VARCHAR2        100
+PHONE                          VARCHAR2        50
+ROLE                           VARCHAR2        50
+CREATED_AT                     TIMESTAMP(6)    11
+
+Table: OR_PROJECTS
+--------------------------------------------------
+ID                             VARCHAR2        50
+NAME                           VARCHAR2        255
+DESCRIPTION                    CLOB            4000
+CLIENT_ID                      VARCHAR2        50
+CLIENT_NAME                    VARCHAR2        255
+STATUS                         VARCHAR2        50
+LOCATION                       VARCHAR2        255
+START_DATE                     DATE            7
+END_DATE                       DATE            7
+PROJECT_MANAGER_JSON           CLOB            4000
+SAFETY_LEAD_JSON               CLOB            4000
+SITE_CONTACT_JSON              CLOB            4000
+IS_DOD                         NUMBER          22
+IS_ODRISA                      NUMBER          22
+TEMPLATE_ID                    VARCHAR2        50
+TEMPLATE_NAME                  VARCHAR2        255
+TOTAL_TEAM_MEMBERS             NUMBER          22
+COMPLETED_ONBOARDING           NUMBER          22
+IN_PROGRESS                    NUMBER          22
+CREATED_AT                     TIMESTAMP(6)    11
+UPDATED_AT                     TIMESTAMP(6)    11
+
+Table: OR_PROJECT_SETTINGS
+--------------------------------------------------
+PROJECT_ID                     VARCHAR2        50
+IS_DOD                         NUMBER          22
+IS_ODRISA                      NUMBER          22
+DISA_OWNER_ID                  VARCHAR2        50
+PER_DIEM_RULES_JSON            CLOB            4000
+MILEAGE_RULES_JSON             CLOB            4000
+DISPATCH_SHEET_JSON            CLOB            4000
+
+Table: OR_TASKS
+--------------------------------------------------
+ID                             VARCHAR2        50
+NAME                           VARCHAR2        255
+DESCRIPTION                    CLOB            4000
+TASK_TYPE                      VARCHAR2        50
+CATEGORY                       VARCHAR2        50
+IS_REQUIRED                    NUMBER          22
+CONFIGURATION_JSON             CLOB            4000
+CREATED_AT                     TIMESTAMP(6)    11
+UPDATED_AT                     TIMESTAMP(6)    11
+
+Table: OR_TASK_GROUPS
+--------------------------------------------------
+ID                             VARCHAR2        50
+NAME                           VARCHAR2        255
+DESCRIPTION                    CLOB            4000
+CATEGORY                       VARCHAR2        50
+SORT_ORDER                     NUMBER          22
+ELIGIBILITY_CRITERIA_ID        VARCHAR2        50
+TEMPLATE_ID                    VARCHAR2        50
+PROJECT_ID                     VARCHAR2        50
+
+Table: OR_TASK_GROUP_ITEMS
+--------------------------------------------------
+TASK_GROUP_ID                  VARCHAR2        50
+TASK_ID                        VARCHAR2        50
+SORT_ORDER                     NUMBER          22
+
+Table: OR_TASK_INSTANCES
+--------------------------------------------------
+ID                             VARCHAR2        50
+TASK_ID                        VARCHAR2        50
+TEAM_MEMBER_ID                 VARCHAR2        50
+PROJECT_ID                     VARCHAR2        50
+STATUS                         VARCHAR2        50
+ASSIGNED_TO                    VARCHAR2        50
+RESULT_JSON                    CLOB            4000
+NOTES                          CLOB            4000
+WAIVED_UNTIL                   DATE            7
+WAIVED_BY                      VARCHAR2        50
+WAIVED_REASON                  CLOB            4000
+STARTED_AT                     TIMESTAMP(6)    11
+COMPLETED_AT                   TIMESTAMP(6)    11
+DUE_DATE                       DATE            7
+CREATED_AT                     TIMESTAMP(6)    11
+UPDATED_AT                     TIMESTAMP(6)    11
+
+Table: OR_TEAM_MEMBERS
+--------------------------------------------------
+ID                             VARCHAR2        50
+FIRST_NAME                     VARCHAR2        100
+LAST_NAME                      VARCHAR2        100
+EMAIL                          VARCHAR2        100
+PHONE                          VARCHAR2        50
+SSN                            VARCHAR2        20
+PROJECT_ID                     VARCHAR2        50
+PROJECT_NAME                   VARCHAR2        255
+STATUS                         VARCHAR2        50
+CATEGORY                       VARCHAR2        50
+TRADE                          VARCHAR2        50
+ASSIGNED_PROCESSOR_ID          VARCHAR2        50
+ASSIGNED_PROCESSOR_NAME        VARCHAR2        255
+TOTAL_TASKS                    NUMBER          22
+COMPLETED_TASKS                NUMBER          22
+PROGRESS_PERCENTAGE            NUMBER          22
+CREATED_AT                     TIMESTAMP(6)    11
+UPDATED_AT                     TIMESTAMP(6)    11

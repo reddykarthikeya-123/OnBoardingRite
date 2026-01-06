@@ -1,0 +1,58 @@
+import type { ChecklistComment } from '../types';
+
+// Mock checklist-level comments
+export const mockChecklistComments: ChecklistComment[] = [
+    {
+        id: 'cc-001',
+        teamMemberId: 'tm-001',
+        projectId: 'project-001',
+        text: 'John is progressing well. Need to follow up on the drug test results.',
+        authorId: 'hr-001',
+        authorName: 'Sarah Johnson',
+        authorRole: 'HR_LEAD',
+        isVisibleToMember: false,
+        createdAt: '2025-01-10T10:30:00Z',
+    },
+    {
+        id: 'cc-002',
+        teamMemberId: 'tm-001',
+        projectId: 'project-001',
+        text: 'Background check came back clear. Good to proceed with remaining tasks.',
+        authorId: 'hr-001',
+        authorName: 'Sarah Johnson',
+        authorRole: 'HR_LEAD',
+        isVisibleToMember: true,
+        createdAt: '2025-01-12T14:15:00Z',
+    },
+    {
+        id: 'cc-003',
+        teamMemberId: 'tm-003',
+        projectId: 'project-001',
+        text: 'James needs additional time for safety training due to scheduling conflicts.',
+        authorId: 'hr-002',
+        authorName: 'Mike Chen',
+        authorRole: 'PROCESSOR',
+        isVisibleToMember: true,
+        createdAt: '2025-01-11T09:00:00Z',
+    },
+    {
+        id: 'cc-004',
+        teamMemberId: 'tm-006',
+        projectId: 'project-001',
+        text: 'Michael has a blocked task - missing TWIC card documentation. Contacted candidate.',
+        authorId: 'hr-001',
+        authorName: 'Sarah Johnson',
+        authorRole: 'HR_LEAD',
+        isVisibleToMember: false,
+        createdAt: '2025-01-13T11:45:00Z',
+    },
+];
+
+// Helper functions
+export const getChecklistCommentsByMember = (teamMemberId: string): ChecklistComment[] => {
+    return mockChecklistComments.filter(c => c.teamMemberId === teamMemberId);
+};
+
+export const getChecklistCommentsByProject = (projectId: string): ChecklistComment[] => {
+    return mockChecklistComments.filter(c => c.projectId === projectId);
+};

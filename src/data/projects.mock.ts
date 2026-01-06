@@ -1,0 +1,180 @@
+import type { Project } from '../types';
+import { mockTemplates } from './templates.mock';
+
+export const mockProjects: Project[] = [
+    {
+        id: 'project-001',
+        name: 'Marathon Galveston Turnaround',
+        description: 'Major turnaround project at Marathon Galveston Bay Refinery. Expected 150+ personnel over 3-week duration.',
+        clientId: 'client-001',
+        clientName: 'Marathon Petroleum',
+        status: 'ACTIVE',
+        location: 'Galveston, TX',
+        startDate: '2025-01-15',
+        endDate: '2025-02-05',
+        projectManager: {
+            name: 'James Wilson',
+            email: 'james.wilson@marathon.com',
+            phone: '(713) 555-0101',
+            role: 'Project Manager',
+        },
+        safetyLead: {
+            name: 'Maria Garcia',
+            email: 'maria.garcia@starcon.com',
+            phone: '(713) 555-0102',
+            role: 'Safety Lead',
+        },
+        siteContact: {
+            name: 'Robert Chen',
+            email: 'robert.chen@marathon.com',
+            phone: '(713) 555-0103',
+            role: 'Site Superintendent',
+        },
+        flags: {
+            isDOD: false,
+            isODRISA: true,
+        },
+        templateId: 'template-001',
+        templateName: 'Standard Onboarding',
+        taskGroups: mockTemplates[0].taskGroups,
+        totalTeamMembers: 47,
+        completedOnboarding: 28,
+        inProgress: 15,
+        createdAt: '2025-01-01T00:00:00Z',
+        updatedAt: '2025-01-10T00:00:00Z',
+    },
+    {
+        id: 'project-002',
+        name: 'ExxonMobil Baytown Maintenance',
+        description: 'Scheduled maintenance shutdown at ExxonMobil Baytown Complex. Focus on heat exchanger and reactor vessel work.',
+        clientId: 'client-002',
+        clientName: 'ExxonMobil',
+        status: 'ACTIVE',
+        location: 'Baytown, TX',
+        startDate: '2025-01-20',
+        endDate: '2025-02-15',
+        projectManager: {
+            name: 'Patricia Brown',
+            email: 'patricia.brown@exxonmobil.com',
+            phone: '(281) 555-0201',
+            role: 'Project Manager',
+        },
+        safetyLead: {
+            name: 'David Martinez',
+            email: 'david.martinez@starcon.com',
+            phone: '(281) 555-0202',
+            role: 'Safety Lead',
+        },
+        flags: {
+            isDOD: false,
+            isODRISA: true,
+        },
+        templateId: 'template-001',
+        templateName: 'Standard Onboarding',
+        taskGroups: mockTemplates[0].taskGroups,
+        totalTeamMembers: 35,
+        completedOnboarding: 12,
+        inProgress: 18,
+        createdAt: '2025-01-05T00:00:00Z',
+        updatedAt: '2025-01-12T00:00:00Z',
+    },
+    {
+        id: 'project-003',
+        name: 'DOD Naval Shipyard Support',
+        description: 'Contractor support for naval shipyard maintenance operations. Requires security clearance and DOD compliance.',
+        clientId: 'client-003',
+        clientName: 'US Navy',
+        status: 'DRAFT',
+        location: 'Norfolk, VA',
+        startDate: '2025-02-01',
+        endDate: '2025-04-30',
+        projectManager: {
+            name: 'Commander Lisa Anderson',
+            email: 'lisa.anderson@navy.mil',
+            phone: '(757) 555-0301',
+            role: 'Project Manager',
+        },
+        flags: {
+            isDOD: true,
+            isODRISA: false,
+        },
+        templateId: 'template-002',
+        templateName: 'DOD Project Onboarding',
+        taskGroups: mockTemplates[1].taskGroups,
+        totalTeamMembers: 0,
+        completedOnboarding: 0,
+        inProgress: 0,
+        createdAt: '2025-01-08T00:00:00Z',
+        updatedAt: '2025-01-08T00:00:00Z',
+    },
+    {
+        id: 'project-004',
+        name: 'Shell Deer Park Catalyst Change',
+        description: 'Catalyst change-out project at Shell Deer Park. Specialized work requiring experienced operators.',
+        clientId: 'client-004',
+        clientName: 'Shell',
+        status: 'ACTIVE',
+        location: 'Deer Park, TX',
+        startDate: '2025-01-10',
+        endDate: '2025-01-25',
+        projectManager: {
+            name: 'Thomas Lee',
+            email: 'thomas.lee@shell.com',
+            phone: '(713) 555-0401',
+            role: 'Project Manager',
+        },
+        safetyLead: {
+            name: 'Jennifer White',
+            email: 'jennifer.white@tss.com',
+            phone: '(713) 555-0402',
+            role: 'Safety Lead',
+        },
+        flags: {
+            isDOD: false,
+            isODRISA: true,
+        },
+        templateId: 'template-003',
+        templateName: 'Contractor Fast-Track',
+        taskGroups: mockTemplates[2].taskGroups,
+        totalTeamMembers: 22,
+        completedOnboarding: 18,
+        inProgress: 4,
+        createdAt: '2025-01-02T00:00:00Z',
+        updatedAt: '2025-01-09T00:00:00Z',
+    },
+    {
+        id: 'project-005',
+        name: 'Chevron Pasadena Revamp',
+        description: 'Major unit revamp at Chevron Pasadena refinery. Extended project with phased workforce deployment.',
+        clientId: 'client-005',
+        clientName: 'Chevron',
+        status: 'ON_HOLD',
+        location: 'Pasadena, TX',
+        startDate: '2025-03-01',
+        endDate: '2025-05-31',
+        flags: {
+            isDOD: false,
+            isODRISA: false,
+        },
+        templateId: 'template-001',
+        templateName: 'Standard Onboarding',
+        taskGroups: mockTemplates[0].taskGroups,
+        totalTeamMembers: 0,
+        completedOnboarding: 0,
+        inProgress: 0,
+        createdAt: '2025-01-10T00:00:00Z',
+        updatedAt: '2025-01-10T00:00:00Z',
+    },
+];
+
+export const getProjectById = (id: string): Project | undefined => {
+    return mockProjects.find(project => project.id === id);
+};
+
+export const getActiveProjects = (): Project[] => {
+    return mockProjects.filter(project => project.status === 'ACTIVE');
+};
+
+export const getProjectsByStatus = (status: string): Project[] => {
+    return mockProjects.filter(project => project.status === status);
+};

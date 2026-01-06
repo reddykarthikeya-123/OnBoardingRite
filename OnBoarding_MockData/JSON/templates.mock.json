@@ -1,0 +1,333 @@
+{
+    "mockTemplates": [
+        {
+            "id": "template-001",
+            "name": "Standard Onboarding",
+            "description": "Standard onboarding checklist for all new hires and rehires. Includes essential forms, document collection, compliance checks, and training requirements.",
+            "clientName": "All Clients",
+            "version": 2,
+            "isActive": true,
+            "taskGroups": [
+                {
+                    "id": "tg-001",
+                    "name": "Required Forms",
+                    "description": "Essential employment and tax forms",
+                    "category": "FORMS",
+                    "order": 1,
+                    "tasks": [
+                        "task-001",
+                        "task-002",
+                        "task-003",
+                        "task-004",
+                        "task-005"
+                    ]
+                },
+                {
+                    "id": "tg-002",
+                    "name": "Identity Documents",
+                    "description": "Identification and legal documents",
+                    "category": "DOCUMENTS",
+                    "order": 2,
+                    "tasks": [
+                        "task-010",
+                        "task-013"
+                    ]
+                },
+                {
+                    "id": "tg-003",
+                    "name": "Certifications",
+                    "description": "Required safety certifications and credentials",
+                    "category": "CERTIFICATIONS",
+                    "order": 3,
+                    "tasks": [
+                        "task-011",
+                        "task-012",
+                        "task-014"
+                    ]
+                },
+                {
+                    "id": "tg-004",
+                    "name": "Compliance Checks",
+                    "description": "Required compliance verifications",
+                    "category": "COMPLIANCE",
+                    "order": 4,
+                    "tasks": [
+                        "task-020",
+                        "task-021",
+                        "task-022"
+                    ]
+                },
+                {
+                    "id": "tg-005",
+                    "name": "Safety Training",
+                    "description": "Mandatory safety training courses",
+                    "category": "TRAININGS",
+                    "order": 5,
+                    "tasks": [
+                        "task-030",
+                        "task-031",
+                        "task-033"
+                    ]
+                },
+                {
+                    "id": "tg-006",
+                    "name": "System Activation",
+                    "description": "System integrations and badge access",
+                    "category": "INTEGRATION",
+                    "order": 6,
+                    "tasks": [
+                        "task-040",
+                        "task-041"
+                    ]
+                }
+            ],
+            "createdAt": "2025-01-01T00:00:00Z",
+            "updatedAt": "2025-12-01T00:00:00Z",
+            "createdBy": "Sarah Johnson"
+        },
+        {
+            "id": "template-002",
+            "name": "DOD Project Onboarding",
+            "description": "Enhanced onboarding for Department of Defense projects with additional security clearance and compliance requirements.",
+            "clientName": "DOD Contractors",
+            "version": 1,
+            "isActive": true,
+            "taskGroups": [
+                {
+                    "id": "tg-001",
+                    "name": "Required Forms",
+                    "description": "Essential employment and tax forms",
+                    "category": "FORMS",
+                    "order": 1,
+                    "tasks": [
+                        "task-001",
+                        "task-002",
+                        "task-003",
+                        "task-004",
+                        "task-005"
+                    ]
+                },
+                {
+                    "id": "tg-002",
+                    "name": "Identity Documents",
+                    "description": "Identification and legal documents",
+                    "category": "DOCUMENTS",
+                    "order": 2,
+                    "tasks": [
+                        "task-010",
+                        "task-013"
+                    ]
+                },
+                {
+                    "id": "tg-003",
+                    "name": "Certifications",
+                    "description": "Required safety certifications and credentials",
+                    "category": "CERTIFICATIONS",
+                    "order": 3,
+                    "tasks": [
+                        "task-011",
+                        "task-012",
+                        "task-014"
+                    ]
+                },
+                {
+                    "id": "tg-004",
+                    "name": "Compliance Checks",
+                    "description": "Required compliance verifications",
+                    "category": "COMPLIANCE",
+                    "order": 4,
+                    "tasks": [
+                        "task-020",
+                        "task-021",
+                        "task-022"
+                    ]
+                },
+                {
+                    "id": "tg-005",
+                    "name": "Safety Training",
+                    "description": "Mandatory safety training courses",
+                    "category": "TRAININGS",
+                    "order": 5,
+                    "tasks": [
+                        "task-030",
+                        "task-031",
+                        "task-033"
+                    ]
+                },
+                {
+                    "id": "tg-006",
+                    "name": "System Activation",
+                    "description": "System integrations and badge access",
+                    "category": "INTEGRATION",
+                    "order": 6,
+                    "tasks": [
+                        "task-040",
+                        "task-041"
+                    ]
+                },
+                {
+                    "id": "tg-007",
+                    "name": "DOD Security",
+                    "description": "Additional DOD security requirements",
+                    "category": "COMPLIANCE",
+                    "order": 7,
+                    "tasks": [
+                        "task-021"
+                    ],
+                    "eligibilityRules": [
+                        {
+                            "field": "projectFlags.isDOD",
+                            "operator": "equals",
+                            "value": "true"
+                        }
+                    ]
+                }
+            ],
+            "eligibilityRules": [
+                {
+                    "field": "projectFlags.isDOD",
+                    "operator": "equals",
+                    "value": "true"
+                }
+            ],
+            "createdAt": "2025-02-15T00:00:00Z",
+            "updatedAt": "2025-11-15T00:00:00Z",
+            "createdBy": "Mike Thompson"
+        },
+        {
+            "id": "template-003",
+            "name": "Contractor Fast-Track",
+            "description": "Streamlined onboarding for experienced contractors with existing valid credentials. Reduced documentation requirements for rehires within 12 months.",
+            "clientName": "All Clients",
+            "version": 1,
+            "isActive": true,
+            "taskGroups": [
+                {
+                    "id": "tg-ft-001",
+                    "name": "Quick Forms",
+                    "category": "FORMS",
+                    "order": 1,
+                    "tasks": [
+                        "task-002",
+                        "task-003"
+                    ]
+                },
+                {
+                    "id": "tg-ft-002",
+                    "name": "Compliance Verification",
+                    "category": "COMPLIANCE",
+                    "order": 2,
+                    "tasks": [
+                        "task-020",
+                        "task-021"
+                    ]
+                },
+                {
+                    "id": "tg-ft-003",
+                    "name": "Activation",
+                    "category": "INTEGRATION",
+                    "order": 3,
+                    "tasks": [
+                        "task-040",
+                        "task-041"
+                    ]
+                }
+            ],
+            "createdAt": "2025-03-01T00:00:00Z",
+            "updatedAt": "2025-10-20T00:00:00Z",
+            "createdBy": "Sarah Johnson"
+        },
+        {
+            "id": "template-004",
+            "name": "ODRISA Compliance",
+            "description": "Specialized template for projects requiring ODRISA (Owner Drug & Alcohol) compliance with enhanced testing requirements.",
+            "clientName": "Shell, ExxonMobil",
+            "version": 1,
+            "isActive": false,
+            "taskGroups": [
+                {
+                    "id": "tg-001",
+                    "name": "Required Forms",
+                    "description": "Essential employment and tax forms",
+                    "category": "FORMS",
+                    "order": 1,
+                    "tasks": [
+                        "task-001",
+                        "task-002",
+                        "task-003",
+                        "task-004",
+                        "task-005"
+                    ]
+                },
+                {
+                    "id": "tg-002",
+                    "name": "Identity Documents",
+                    "description": "Identification and legal documents",
+                    "category": "DOCUMENTS",
+                    "order": 2,
+                    "tasks": [
+                        "task-010",
+                        "task-013"
+                    ]
+                },
+                {
+                    "id": "tg-003",
+                    "name": "Certifications",
+                    "description": "Required safety certifications and credentials",
+                    "category": "CERTIFICATIONS",
+                    "order": 3,
+                    "tasks": [
+                        "task-011",
+                        "task-012",
+                        "task-014"
+                    ]
+                },
+                {
+                    "id": "tg-004",
+                    "name": "Compliance Checks",
+                    "description": "Required compliance verifications",
+                    "category": "COMPLIANCE",
+                    "order": 4,
+                    "tasks": [
+                        "task-020",
+                        "task-021",
+                        "task-022"
+                    ]
+                },
+                {
+                    "id": "tg-005",
+                    "name": "Safety Training",
+                    "description": "Mandatory safety training courses",
+                    "category": "TRAININGS",
+                    "order": 5,
+                    "tasks": [
+                        "task-030",
+                        "task-031",
+                        "task-033"
+                    ]
+                },
+                {
+                    "id": "tg-006",
+                    "name": "System Activation",
+                    "description": "System integrations and badge access",
+                    "category": "INTEGRATION",
+                    "order": 6,
+                    "tasks": [
+                        "task-040",
+                        "task-041"
+                    ]
+                }
+            ],
+            "eligibilityRules": [
+                {
+                    "field": "projectFlags.isODRISA",
+                    "operator": "equals",
+                    "value": "true"
+                }
+            ],
+            "createdAt": "2025-04-01T00:00:00Z",
+            "updatedAt": "2025-09-01T00:00:00Z",
+            "createdBy": "Mike Thompson"
+        }
+    ]
+}
