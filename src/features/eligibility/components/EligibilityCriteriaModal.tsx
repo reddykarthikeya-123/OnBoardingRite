@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { X, Save, Filter, Link, FileText, Trash2, Search } from 'lucide-react';
+import { X, Save, Filter, Link, FileText, Trash2, Search, Loader2 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import type { EligibilityCriteria, EligibilityCriteriaContext, EligibilityRuleGroup } from '../../../types';
 import { EligibilityCriteriaBuilder } from './EligibilityCriteriaBuilder';
 import { Button } from '../../../components/ui';
-import { mockEligibilityCriteria } from '../../../data';
+import { eligibilityApi } from '../../../services/api';
 
 interface EligibilityCriteriaModalProps {
     isOpen: boolean;
@@ -19,12 +19,21 @@ interface EligibilityCriteriaModalProps {
 
 type LocalRuleMode = 'SELECT' | 'CREATE';
 
+// API list item type (simplified)
+interface NamedRuleListItem {
+    id: string;
+    name: string;
+    description: string;
+    isActive: boolean;
+    ruleCount: number;
+}
+
 /**
  * Check if the given criteria is from the named rules library
  */
-const isFromLibrary = (criteria: EligibilityCriteria | undefined): boolean => {
+const isFromLibrary = (criteria: EligibilityCriteria | undefined, namedRules: NamedRuleListItem[]): boolean => {
     if (!criteria) return false;
-    return mockEligibilityCriteria.some(r => r.id === criteria.id);
+    return namedRules.some(r => r.id === criteria.id);
 };
 
 /**
@@ -46,7 +55,27 @@ export function EligibilityCriteriaModal({
     const [localMode, setLocalMode] = useState<LocalRuleMode>('SELECT');
     const [selectedNamedRuleId, setSelectedNamedRuleId] = useState<string>('');
     const [namedRuleSearch, setNamedRuleSearch] = useState('');
+    const [namedRules, setNamedRules] = useState<NamedRuleListItem[]>([]);
+    const [isLoadingRules, setIsLoadingRules] = useState(false);
 
+    // Load named rules from API
+    useEffect(() => {
+        if (isOpen && !isNamedRule) {
+            loadNamedRules();
+        }
+    }, [isOpen, isNamedRule]);
+
+    const loadNamedRules = async () => {
+        try {
+            setIsLoadingRules(true);
+            const data = await eligibilityApi.list();
+            setNamedRules(data || []);
+        } catch (error) {
+            console.error('Failed to load named rules:', error);
+        } finally {
+            setIsLoadingRules(false);
+        }
+    };
     // Reset state when modal opens
     useEffect(() => {
         if (isOpen) {
@@ -56,7 +85,7 @@ export function EligibilityCriteriaModal({
 
             // Determine the correct mode based on whether criteria exists and if it's from library
             if (initialCriteria) {
-                if (isFromLibrary(initialCriteria)) {
+                if (isFromLibrary(initialCriteria, namedRules)) {
                     // This is a named rule from the library
                     setLocalMode('SELECT');
                     setSelectedNamedRuleId(initialCriteria.id);
@@ -91,7 +120,7 @@ export function EligibilityCriteriaModal({
     };
 
     // Filter named rules by search
-    const filteredNamedRules = mockEligibilityCriteria.filter(rule =>
+    const filteredNamedRules = namedRules.filter(rule =>
         rule.name.toLowerCase().includes(namedRuleSearch.toLowerCase()) ||
         (rule.description || '').toLowerCase().includes(namedRuleSearch.toLowerCase())
     );
@@ -148,15 +177,20 @@ export function EligibilityCriteriaModal({
     };
 
     // Handle save
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!validateCriteria()) return;
 
         if (localMode === 'SELECT' && selectedNamedRuleId) {
-            // Find the selected named rule and use it
-            const namedRule = mockEligibilityCriteria.find(r => r.id === selectedNamedRuleId);
-            if (namedRule) {
-                onSave(namedRule);
-                onClose();
+            // Fetch the full selected named rule and use it
+            try {
+                const namedRule = await eligibilityApi.get(selectedNamedRuleId);
+                if (namedRule) {
+                    onSave(namedRule);
+                    onClose();
+                }
+            } catch (error) {
+                console.error('Failed to load rule details:', error);
+                setErrors(['Failed to load rule details']);
             }
         } else if (criteria) {
             // For local rules without a name, generate a default name
@@ -277,7 +311,7 @@ export function EligibilityCriteriaModal({
                             <div className="eligibility-named-rule-header">
                                 <h4>Select a Named Rule</h4>
                                 <span className="eligibility-named-rule-count">
-                                    {filteredNamedRules.length} of {mockEligibilityCriteria.length} rules
+                                    {filteredNamedRules.length} of {namedRules.length} rules
                                 </span>
                             </div>
 

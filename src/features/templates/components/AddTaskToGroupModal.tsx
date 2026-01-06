@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
     Search,
     Library,
@@ -7,7 +7,8 @@ import {
     Upload,
     Zap,
     ExternalLink,
-    Check
+    Check,
+    Loader2
 } from 'lucide-react';
 import { Modal, Button, Badge } from '../../../components/ui';
 import {
@@ -16,7 +17,7 @@ import {
     CreateRestApiModal,
     CreateRedirectModal
 } from '../../tasks/components';
-import { mockTasks } from '../../../data';
+import { tasksApi } from '../../../services/api';
 import type { Task, TaskType } from '../../../types';
 
 interface AddTaskToGroupModalProps {
@@ -91,13 +92,47 @@ export function AddTaskToGroupModal({
         onClose();
     };
 
+    const [libraryTasks, setLibraryTasks] = useState<Task[]>([]);
+    const [isLoadingTasks, setIsLoadingTasks] = useState(false);
+
+    // Load tasks from API when modal opens
+    useEffect(() => {
+        if (isOpen) {
+            loadLibraryTasks();
+        }
+    }, [isOpen]);
+
+    const loadLibraryTasks = async () => {
+        try {
+            setIsLoadingTasks(true);
+            const data = await tasksApi.list();
+            // Map API response to Task type
+            const tasks = (Array.isArray(data) ? data : []).map((t: any) => ({
+                id: t.id,
+                name: t.name,
+                description: t.description || '',
+                type: t.type as TaskType,
+                category: t.category || 'FORMS',
+                required: t.is_required || false,
+                configuration: t.configuration || {},
+                createdAt: t.created_at,
+                updatedAt: t.updated_at
+            }));
+            setLibraryTasks(tasks);
+        } catch (error) {
+            console.error('Failed to load library tasks:', error);
+        } finally {
+            setIsLoadingTasks(false);
+        }
+    };
+
     // Filter library tasks
     const filteredTasks = useMemo(() => {
-        return mockTasks.filter(task =>
+        return libraryTasks.filter(task =>
             task.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            task.description.toLowerCase().includes(searchQuery.toLowerCase())
+            (task.description || '').toLowerCase().includes(searchQuery.toLowerCase())
         );
-    }, [searchQuery]);
+    }, [searchQuery, libraryTasks]);
 
     const toggleTaskSelection = (taskId: string) => {
         setSelectedTaskIds(prev => {
@@ -113,7 +148,7 @@ export function AddTaskToGroupModal({
 
     const handleAddFromLibrary = () => {
         // Clone selected tasks from library
-        const selectedTasks = mockTasks
+        const selectedTasks = libraryTasks
             .filter(t => selectedTaskIds.has(t.id))
             .map(task => ({
                 ...task,
