@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Users, Mail, Phone, MapPin, Loader2, Trash2, Edit } from 'lucide-react';
-import { Card, Button, Badge } from '../../../components/ui';
+import { Search, Plus, Users, Mail, Phone, MapPin, Loader2, Trash2, Edit, X, Save } from 'lucide-react';
+import { Card, Button, Badge, Modal } from '../../../components/ui';
 import { teamMembersApi } from '../../../services/api';
 
 interface TeamMember {
@@ -15,10 +15,45 @@ interface TeamMember {
     createdAt: string;
 }
 
+interface TeamMemberFormData {
+    employeeId: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    addressLine1: string;
+    addressLine2: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+}
+
+const emptyFormData: TeamMemberFormData = {
+    employeeId: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    addressLine1: '',
+    addressLine2: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    country: 'USA',
+};
+
 export function TeamMembersPage() {
     const [members, setMembers] = useState<TeamMember[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+
+    // Modal state
+    const [showModal, setShowModal] = useState(false);
+    const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
+    const [formData, setFormData] = useState<TeamMemberFormData>(emptyFormData);
+    const [isSaving, setIsSaving] = useState(false);
+    const [formErrors, setFormErrors] = useState<string[]>([]);
 
     useEffect(() => {
         loadMembers();
@@ -43,6 +78,77 @@ export function TeamMembersPage() {
         (member.employeeId || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    // Open modal for new member
+    const handleAddNew = () => {
+        setEditingMember(null);
+        setFormData(emptyFormData);
+        setFormErrors([]);
+        setShowModal(true);
+    };
+
+    // Open modal for editing
+    const handleEdit = async (member: TeamMember) => {
+        try {
+            // Fetch full details
+            const fullMember = await teamMembersApi.get(member.id);
+            setEditingMember(member);
+            setFormData({
+                employeeId: fullMember.employeeId || '',
+                firstName: fullMember.firstName || '',
+                lastName: fullMember.lastName || '',
+                email: fullMember.email || '',
+                phone: fullMember.phone || '',
+                addressLine1: fullMember.addressLine1 || '',
+                addressLine2: fullMember.addressLine2 || '',
+                city: fullMember.city || '',
+                state: fullMember.state || '',
+                zipCode: fullMember.zipCode || '',
+                country: fullMember.country || 'USA',
+            });
+            setFormErrors([]);
+            setShowModal(true);
+        } catch (error) {
+            console.error('Failed to load member details:', error);
+            alert('Failed to load member details.');
+        }
+    };
+
+    // Validate form
+    const validateForm = (): boolean => {
+        const errors: string[] = [];
+        if (!formData.firstName.trim()) errors.push('First name is required');
+        if (!formData.lastName.trim()) errors.push('Last name is required');
+        if (!formData.email.trim()) errors.push('Email is required');
+        if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            errors.push('Invalid email format');
+        }
+        setFormErrors(errors);
+        return errors.length === 0;
+    };
+
+    // Save member (create or update)
+    const handleSave = async () => {
+        if (!validateForm()) return;
+
+        try {
+            setIsSaving(true);
+            if (editingMember) {
+                await teamMembersApi.update(editingMember.id, formData);
+            } else {
+                await teamMembersApi.create(formData);
+            }
+            setShowModal(false);
+            loadMembers();
+        } catch (error: any) {
+            console.error('Failed to save team member:', error);
+            const message = error?.message || 'Failed to save team member.';
+            setFormErrors([message]);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    // Delete member
     const handleDelete = async (memberId: string) => {
         if (confirm('Are you sure you want to delete this team member?')) {
             try {
@@ -53,6 +159,12 @@ export function TeamMembersPage() {
                 alert('Failed to delete team member.');
             }
         }
+    };
+
+    // Handle form field changes
+    const handleFieldChange = (field: keyof TeamMemberFormData, value: string) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+        if (formErrors.length > 0) setFormErrors([]);
     };
 
     if (isLoading) {
@@ -78,7 +190,7 @@ export function TeamMembersPage() {
                         <Button
                             variant="primary"
                             leftIcon={<Plus size={16} />}
-                            onClick={() => alert('Add Team Member form coming soon!')}
+                            onClick={handleAddNew}
                         >
                             Add Member
                         </Button>
@@ -124,7 +236,7 @@ export function TeamMembersPage() {
                                 : 'Try a different search term.'}
                         </p>
                         {members.length === 0 && (
-                            <Button variant="primary" leftIcon={<Plus size={16} />}>
+                            <Button variant="primary" leftIcon={<Plus size={16} />} onClick={handleAddNew}>
                                 Add First Member
                             </Button>
                         )}
@@ -141,7 +253,7 @@ export function TeamMembersPage() {
                                 <div className="team-member-card-actions">
                                     <button
                                         className="btn-icon-sm"
-                                        onClick={() => alert('Edit coming soon!')}
+                                        onClick={() => handleEdit(member)}
                                         title="Edit"
                                     >
                                         <Edit size={14} />
@@ -187,6 +299,162 @@ export function TeamMembersPage() {
                     ))}
                 </div>
             )}
+
+            {/* Add/Edit Modal */}
+            <Modal
+                isOpen={showModal}
+                onClose={() => setShowModal(false)}
+                title={editingMember ? 'Edit Team Member' : 'Add Team Member'}
+                size="lg"
+                footer={
+                    <>
+                        <Button variant="secondary" onClick={() => setShowModal(false)}>
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="primary"
+                            onClick={handleSave}
+                            disabled={isSaving}
+                            leftIcon={isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                        >
+                            {isSaving ? 'Saving...' : 'Save Member'}
+                        </Button>
+                    </>
+                }
+            >
+                {formErrors.length > 0 && (
+                    <div className="mb-4">
+                        {formErrors.map((error, idx) => (
+                            <div key={idx} className="eligibility-error">{error}</div>
+                        ))}
+                    </div>
+                )}
+
+                <div className="form-grid">
+                    {/* Row 1: Employee ID */}
+                    <div className="form-group">
+                        <label className="form-label">Employee ID</label>
+                        <input
+                            type="text"
+                            className="input"
+                            placeholder="e.g., EMP001"
+                            value={formData.employeeId}
+                            onChange={(e) => handleFieldChange('employeeId', e.target.value)}
+                        />
+                    </div>
+                    <div></div>
+
+                    {/* Row 2: First & Last Name */}
+                    <div className="form-group">
+                        <label className="form-label">First Name <span className="text-danger">*</span></label>
+                        <input
+                            type="text"
+                            className="input"
+                            placeholder="John"
+                            value={formData.firstName}
+                            onChange={(e) => handleFieldChange('firstName', e.target.value)}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Last Name <span className="text-danger">*</span></label>
+                        <input
+                            type="text"
+                            className="input"
+                            placeholder="Doe"
+                            value={formData.lastName}
+                            onChange={(e) => handleFieldChange('lastName', e.target.value)}
+                        />
+                    </div>
+
+                    {/* Row 3: Email & Phone */}
+                    <div className="form-group">
+                        <label className="form-label">Email <span className="text-danger">*</span></label>
+                        <input
+                            type="email"
+                            className="input"
+                            placeholder="john.doe@example.com"
+                            value={formData.email}
+                            onChange={(e) => handleFieldChange('email', e.target.value)}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Phone</label>
+                        <input
+                            type="tel"
+                            className="input"
+                            placeholder="(555) 123-4567"
+                            value={formData.phone}
+                            onChange={(e) => handleFieldChange('phone', e.target.value)}
+                        />
+                    </div>
+
+                    {/* Row 4: Address */}
+                    <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                        <label className="form-label">Address Line 1</label>
+                        <input
+                            type="text"
+                            className="input"
+                            placeholder="123 Main Street"
+                            value={formData.addressLine1}
+                            onChange={(e) => handleFieldChange('addressLine1', e.target.value)}
+                        />
+                    </div>
+
+                    <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                        <label className="form-label">Address Line 2</label>
+                        <input
+                            type="text"
+                            className="input"
+                            placeholder="Apt 4B"
+                            value={formData.addressLine2}
+                            onChange={(e) => handleFieldChange('addressLine2', e.target.value)}
+                        />
+                    </div>
+
+                    {/* Row 5: City, State, Zip */}
+                    <div className="form-group">
+                        <label className="form-label">City</label>
+                        <input
+                            type="text"
+                            className="input"
+                            placeholder="Houston"
+                            value={formData.city}
+                            onChange={(e) => handleFieldChange('city', e.target.value)}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">State</label>
+                        <input
+                            type="text"
+                            className="input"
+                            placeholder="TX"
+                            value={formData.state}
+                            onChange={(e) => handleFieldChange('state', e.target.value)}
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label className="form-label">Zip Code</label>
+                        <input
+                            type="text"
+                            className="input"
+                            placeholder="77001"
+                            value={formData.zipCode}
+                            onChange={(e) => handleFieldChange('zipCode', e.target.value)}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Country</label>
+                        <input
+                            type="text"
+                            className="input"
+                            placeholder="USA"
+                            value={formData.country}
+                            onChange={(e) => handleFieldChange('country', e.target.value)}
+                        />
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }
