@@ -15,7 +15,13 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
         throw new Error(`API Error: ${response.status} ${response.statusText}`);
     }
 
-    return response.json();
+    // Handle empty responses (e.g., from DELETE requests)
+    const text = await response.text();
+    if (!text) {
+        return {} as T;
+    }
+
+    return JSON.parse(text);
 }
 
 // Dashboard API
