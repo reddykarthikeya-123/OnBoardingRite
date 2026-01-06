@@ -108,7 +108,8 @@ def create_project(data: CreateProjectRequest, db: Session = Depends(get_db)):
         status=data.status,
         is_dod=data.isDOD,
         is_odrisa=data.isODRISA,
-        template_id=data.templateId if hasattr(data, 'templateId') else None,
+        template_id=data.templateId if hasattr(data, 'templateId') and data.templateId else None,
+        ppm_project_id=data.ppmProjectId if hasattr(data, 'ppmProjectId') and data.ppmProjectId else None,
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow()
     )

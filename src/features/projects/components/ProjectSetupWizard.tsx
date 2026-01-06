@@ -93,23 +93,20 @@ export function ProjectSetupWizard() {
 
         try {
             // Call API to create the project
+            // Note: Contacts and tasks are not currently persisted by the create endpoint due to backend limitations,
+            // but we send the project details that are supported.
             const projectPayload = {
                 name: formData.name,
                 description: formData.description,
-                client_id: formData.clientId,
-                client_name: formData.clientName,
+                clientName: formData.clientName,
                 location: formData.location,
-                start_date: formData.startDate,
-                end_date: formData.endDate || null,
-                is_dod: formData.isDOD,
-                is_odrisa: formData.isODRISA,
-                template_id: formData.templateId || null,
-                source_project_id: formData.sourceProjectId || null,
-                ppm_project_id: formData.ppmProjectId,
-                project_manager: formData.projectManager,
-                safety_lead: formData.safetyLead,
-                site_contact: formData.siteContact,
-                task_groups: formData.taskGroups
+                startDate: formData.startDate,
+                endDate: formData.endDate || null,
+                status: 'DRAFT',
+                isDOD: formData.isDOD,
+                isODRISA: formData.isODRISA,
+                templateId: formData.templateId || null,
+                ppmProjectId: formData.ppmProjectId,
             };
 
             const result = await projectsApi.create(projectPayload);

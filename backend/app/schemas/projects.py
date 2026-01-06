@@ -47,7 +47,8 @@ class CreateProjectRequest(BaseModel):
     status: str = "DRAFT"
     isDOD: bool = False
     isODRISA: bool = False
-    templateId: str
+    templateId: Optional[str] = None
+    ppmProjectId: Optional[str] = None
 
 class ProjectTimeline(BaseModel):
     daysRemaining: int
