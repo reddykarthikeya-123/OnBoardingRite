@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.routers import dashboard, projects, checklists, requisitions, eligibility
+from app.routers import dashboard, projects, checklists, requisitions, eligibility, templates, tasks
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -32,4 +32,6 @@ app.include_router(projects.router, prefix="/api/v1/projects", tags=["projects"]
 app.include_router(checklists.router, prefix="/api/v1/projects", tags=["checklists"])
 app.include_router(requisitions.router, prefix="/api/v1/projects", tags=["requisitions"])
 app.include_router(eligibility.router, prefix="/api/v1/eligibility-rules", tags=["eligibility"])
+app.include_router(templates.router, prefix="/api/v1/templates", tags=["templates"])
+app.include_router(tasks.router, prefix="/api/v1/tasks", tags=["tasks"])
 

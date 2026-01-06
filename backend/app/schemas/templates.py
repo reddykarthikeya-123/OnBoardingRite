@@ -1,15 +1,16 @@
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Union
 from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
+from uuid import UUID
 
 class TemplateTaskGroup(BaseModel):
-    id: str
+    id: Union[str, UUID]
     name: str
     description: Optional[str] = None
     category: Optional[str] = None
     order: int = Field(0, validation_alias="display_order")
     tasks: List[str] = [] # List of Task IDs
-    eligibilityCriteriaId: Optional[str] = Field(None, validation_alias="eligibility_criteria_id")
+    eligibilityCriteriaId: Optional[Union[str, UUID]] = Field(None, validation_alias="eligibility_criteria_id")
 
     @field_validator('tasks', mode='before')
     @classmethod
@@ -29,23 +30,23 @@ class ChecklistTemplateBase(BaseModel):
     version: int = 1
 
 class ChecklistTemplateCreate(ChecklistTemplateBase):
-    clientId: Optional[str] = None
+    clientId: Optional[Union[str, UUID]] = None
 
 class ChecklistTemplateUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     isActive: Optional[bool] = None
-    clientId: Optional[str] = None
+    clientId: Optional[Union[str, UUID]] = None
 
 class ChecklistTemplate(ChecklistTemplateBase):
-    id: str
-    clientId: Optional[str] = Field(None, validation_alias="client_id")
+    id: Union[str, UUID]
+    clientId: Optional[Union[str, UUID]] = Field(None, validation_alias="client_id")
     # Made optional for debugging
     createdAt: Optional[datetime] = Field(None, validation_alias="created_at")
     updatedAt: Optional[datetime] = Field(None, validation_alias="updated_at")
-    createdBy: Optional[str] = Field(None, validation_alias="created_by")
+    createdBy: Optional[Union[str, UUID]] = Field(None, validation_alias="created_by")
     taskGroups: List[TemplateTaskGroup] = Field([], validation_alias="task_groups")
-    eligibilityCriteriaId: Optional[str] = Field(None, validation_alias="eligibility_criteria_id")
+    eligibilityCriteriaId: Optional[Union[str, UUID]] = Field(None, validation_alias="eligibility_criteria_id")
 
     class Config:
         from_attributes = True
