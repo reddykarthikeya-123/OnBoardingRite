@@ -2,6 +2,7 @@ from typing import List, Optional, Any, Union
 from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
 from uuid import UUID
+from .tasks import TaskLibraryItem
 
 class TemplateTaskGroup(BaseModel):
     id: Union[str, UUID]
@@ -9,15 +10,8 @@ class TemplateTaskGroup(BaseModel):
     description: Optional[str] = None
     category: Optional[str] = None
     order: int = Field(0, validation_alias="display_order")
-    tasks: List[str] = [] # List of Task IDs
+    tasks: List[TaskLibraryItem] = [] # List of full Task objects
     eligibilityCriteriaId: Optional[Union[str, UUID]] = Field(None, validation_alias="eligibility_criteria_id")
-
-    @field_validator('tasks', mode='before')
-    @classmethod
-    def extract_task_ids(cls, v: Any) -> List[str]:
-        if not v:
-            return []
-        return [str(t.id) for t in v if hasattr(t, 'id')]
 
     class Config:
         from_attributes = True
@@ -65,3 +59,14 @@ class AddGroupRequest(BaseModel):
     description: Optional[str] = None
     category: str
     order: int
+
+class AddTaskToGroupRequest(BaseModel):
+    name: str
+    description: Optional[str] = None
+    type: str
+    category: Optional[str] = "FORMS"
+    isRequired: bool = True
+    configuration: Optional[dict] = None
+
+class ReorderTasksRequest(BaseModel):
+    taskOrder: List[str]

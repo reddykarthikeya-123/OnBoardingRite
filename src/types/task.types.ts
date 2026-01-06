@@ -127,7 +127,7 @@ export interface TaskGroup {
     description?: string;
     category: TaskCategory;
     order: number;
-    tasks: string[]; // Task IDs
+    tasks: Task[]; // Full Task objects
     eligibilityCriteriaId?: string; // Reference to EligibilityCriteria
 }
 

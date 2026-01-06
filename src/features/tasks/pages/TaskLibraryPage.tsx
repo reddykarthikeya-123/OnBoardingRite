@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Plus,
     Search,
@@ -11,11 +11,11 @@ import {
     Pencil,
     Copy,
     Trash2,
-    Undo2,
-    X
+    X,
+    Loader2
 } from 'lucide-react';
 import { Card, CardBody, Button, Badge, EmptyState, Modal } from '../../../components/ui';
-import { mockTasks } from '../../../data';
+import { tasksApi } from '../../../services/api';
 import type { Task, TaskType, TaskCategory } from '../../../types';
 import {
     CreateCustomFormModal,
@@ -60,17 +60,18 @@ const categoryColors: Record<TaskCategory, string> = {
     INTEGRATION: 'primary',
 };
 
-// Toast notification for undo
+// Toast notification
 interface ToastNotification {
     id: string;
     message: string;
     type: 'success' | 'info' | 'warning' | 'danger';
-    undoAction?: () => void;
 }
 
 export function TaskLibraryPage() {
-    // Task state (converted from static mockTasks)
-    const [tasks, setTasks] = useState<Task[]>(() => [...mockTasks]);
+    // Task state
+    const [tasks, setTasks] = useState<Task[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState('');
 
     // UI state
     const [searchQuery, setSearchQuery] = useState('');
@@ -80,15 +81,16 @@ export function TaskLibraryPage() {
     const [selectedTaskType, setSelectedTaskType] = useState<TaskType | null>(null);
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
-    // Edit modal state - now uses the same type-specific modals
+    // Edit modal state
     const [editingTask, setEditingTask] = useState<Task | null>(null);
     const [showEditModal, setShowEditModal] = useState(false);
 
     // Toast notifications
     const [toasts, setToasts] = useState<ToastNotification[]>([]);
 
-    // Ref to store deleted task for undo (avoids stale closure)
-    const deletedTaskRef = useRef<{ task: Task; index: number } | null>(null);
+    useEffect(() => {
+        loadTasks();
+    }, []);
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -99,9 +101,23 @@ export function TaskLibraryPage() {
         }
     }, [activeDropdown]);
 
+    const loadTasks = async () => {
+        try {
+            setIsLoading(true);
+            const data = await tasksApi.list();
+            setTasks(data);
+            setError('');
+        } catch (err) {
+            console.error('Failed to load tasks:', err);
+            setError('Failed to load tasks. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const filteredTasks = tasks.filter(task => {
         const matchesSearch = task.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            task.description.toLowerCase().includes(searchQuery.toLowerCase());
+            task.description?.toLowerCase().includes(searchQuery.toLowerCase()) || false;
         const matchesType = typeFilter === 'ALL' || task.type === typeFilter;
         const matchesCategory = categoryFilter === 'ALL' || task.category === categoryFilter;
         return matchesSearch && matchesType && matchesCategory;
@@ -116,72 +132,70 @@ export function TaskLibraryPage() {
     };
 
     // Helper to show toast
-    const showToast = (message: string, type: ToastNotification['type'] = 'success', undoAction?: () => void) => {
+    const showToast = (message: string, type: ToastNotification['type'] = 'success') => {
         const id = Date.now().toString();
-        setToasts(prev => [...prev, { id, message, type, undoAction }]);
-        // Auto-dismiss after 8 seconds (longer for undo)
+        setToasts(prev => [...prev, { id, message, type }]);
         setTimeout(() => {
             setToasts(prev => prev.filter(t => t.id !== id));
-        }, undoAction ? 8000 : 4000);
+        }, 4000);
     };
 
     const dismissToast = (id: string) => {
         setToasts(prev => prev.filter(t => t.id !== id));
     };
 
-    // Generate a unique ID
-    const generateId = () => `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    // CREATE: Add new task
+    const handleCreateTask = async (type: TaskType, data: any) => {
+        try {
+            const newTaskData = {
+                name: data.name,
+                description: data.description || '',
+                type,
+                category: data.category || 'FORMS',
+                required: data.required || false,
+                configuration: {
+                    estimatedTime: data.estimatedTime || 15,
+                    instructions: data.instructions || '',
+                    // Type-specific config
+                    ...(type === 'CUSTOM_FORM' && {
+                        formFields: data.fields || []
+                    }),
+                    ...(type === 'DOCUMENT_UPLOAD' && {
+                        documentTypeName: data.documentTypeName,
+                        allowedFileTypes: data.allowedFileTypes,
+                        maxFileSize: data.maxFileSize,
+                        requiresFrontBack: data.requiresFrontBack,
+                        requiresMultipleFiles: data.requiresMultipleFiles,
+                        capturesExpiry: data.capturesExpiry,
+                        capturesDocumentNumber: data.capturesDocumentNumber
+                    }),
+                    ...(type === 'REST_API' && {
+                        endpoint: data.endpoint,
+                        method: data.method,
+                        baseUrl: data.baseUrl,
+                        headers: data.headers,
+                        requestBodyTemplate: data.requestBodyTemplate,
+                        authentication: data.authentication
+                    }),
+                    ...(type === 'REDIRECT' && {
+                        redirectUrl: data.redirectUrl,
+                        externalSystemName: data.externalSystemName,
+                        urlParameters: data.urlParameters,
+                        openInNewTab: data.openInNewTab,
+                        statusTracking: data.statusTracking
+                    })
+                }
+            };
 
-    // CREATE: Add new task from modal data
-    const handleCreateTask = (type: TaskType, data: any) => {
-        const now = new Date().toISOString();
-        const newTask: Task = {
-            id: generateId(),
-            name: data.name,
-            description: data.description || '',
-            type,
-            category: data.category || 'FORMS',
-            required: data.required || false,
-            configuration: {
-                estimatedTime: data.estimatedTime || 15,
-                instructions: data.instructions || '',
-                // Type-specific config
-                ...(type === 'CUSTOM_FORM' && {
-                    formFields: data.fields || []
-                }),
-                ...(type === 'DOCUMENT_UPLOAD' && {
-                    documentTypeName: data.documentTypeName,
-                    allowedFileTypes: data.allowedFileTypes,
-                    maxFileSize: data.maxFileSize,
-                    requiresFrontBack: data.requiresFrontBack,
-                    requiresMultipleFiles: data.requiresMultipleFiles,
-                    capturesExpiry: data.capturesExpiry,
-                    capturesDocumentNumber: data.capturesDocumentNumber
-                }),
-                ...(type === 'REST_API' && {
-                    endpoint: data.endpoint,
-                    method: data.method,
-                    baseUrl: data.baseUrl,
-                    headers: data.headers,
-                    requestBodyTemplate: data.requestBodyTemplate,
-                    authentication: data.authentication
-                }),
-                ...(type === 'REDIRECT' && {
-                    redirectUrl: data.redirectUrl,
-                    externalSystemName: data.externalSystemName,
-                    urlParameters: data.urlParameters,
-                    openInNewTab: data.openInNewTab,
-                    statusTracking: data.statusTracking
-                })
-            },
-            createdAt: now,
-            updatedAt: now
-        };
-
-        setTasks(prev => [newTask, ...prev]);
-        setShowCreateModal(false);
-        setSelectedTaskType(null);
-        showToast(`Task "${newTask.name}" created successfully`);
+            await tasksApi.create(newTaskData);
+            await loadTasks();
+            setShowCreateModal(false);
+            setSelectedTaskType(null);
+            showToast(`Task "${data.name}" created successfully`);
+        } catch (err) {
+            console.error('Failed to create task:', err);
+            showToast('Failed to create task', 'danger');
+        }
     };
 
     // EDIT: Open edit modal with type-specific modal
@@ -192,105 +206,96 @@ export function TaskLibraryPage() {
     };
 
     // EDIT: Save changes from type-specific modal
-    const handleSaveEdit = (type: TaskType, data: any) => {
+    const handleSaveEdit = async (type: TaskType, data: any) => {
         if (!editingTask) return;
 
-        const now = new Date().toISOString();
-        setTasks(prev => prev.map(t =>
-            t.id === editingTask.id
-                ? {
-                    ...t,
-                    name: data.name,
-                    description: data.description,
-                    required: data.required,
-                    category: data.category,
+        try {
+            const updateData = {
+                name: data.name,
+                description: data.description,
+                required: data.required,
+                category: data.category,
+                configuration: {
+                    ...editingTask.configuration,
                     estimatedTime: data.estimatedTime,
-                    configuration: {
-                        ...t.configuration,
-                        instructions: data.instructions,
-                        ...(type === 'CUSTOM_FORM' && {
-                            formFields: data.formFields
-                        }),
-                        ...(type === 'DOCUMENT_UPLOAD' && {
-                            documentTypeName: data.documentTypeName,
-                            allowedFileTypes: data.allowedFileTypes,
-                            maxFileSize: data.maxFileSize,
-                            requiresFrontBack: data.requiresFrontBack,
-                            requiresMultipleFiles: data.requiresMultipleFiles,
-                            capturesExpiry: data.capturesExpiry,
-                            capturesDocumentNumber: data.capturesDocumentNumber
-                        }),
-                        ...(type === 'REST_API' && {
-                            endpoint: data.endpoint,
-                            method: data.method,
-                            baseUrl: data.baseUrl,
-                            headers: data.headers,
-                            requestBodyTemplate: data.requestBodyTemplate,
-                            authentication: data.authentication
-                        }),
-                        ...(type === 'REDIRECT' && {
-                            redirectUrl: data.redirectUrl,
-                            externalSystemName: data.externalSystemName,
-                            urlParameters: data.urlParameters,
-                            openInNewTab: data.openInNewTab,
-                            statusTracking: data.statusTracking
-                        })
-                    },
-                    updatedAt: now
+                    instructions: data.instructions,
+                    ...(type === 'CUSTOM_FORM' && {
+                        formFields: data.formFields
+                    }),
+                    ...(type === 'DOCUMENT_UPLOAD' && {
+                        documentTypeName: data.documentTypeName,
+                        allowedFileTypes: data.allowedFileTypes,
+                        maxFileSize: data.maxFileSize,
+                        requiresFrontBack: data.requiresFrontBack,
+                        requiresMultipleFiles: data.requiresMultipleFiles,
+                        capturesExpiry: data.capturesExpiry,
+                        capturesDocumentNumber: data.capturesDocumentNumber
+                    }),
+                    ...(type === 'REST_API' && {
+                        endpoint: data.endpoint,
+                        method: data.method,
+                        baseUrl: data.baseUrl,
+                        headers: data.headers,
+                        requestBodyTemplate: data.requestBodyTemplate,
+                        authentication: data.authentication
+                    }),
+                    ...(type === 'REDIRECT' && {
+                        redirectUrl: data.redirectUrl,
+                        externalSystemName: data.externalSystemName,
+                        urlParameters: data.urlParameters,
+                        openInNewTab: data.openInNewTab,
+                        statusTracking: data.statusTracking
+                    })
                 }
-                : t
-        ));
+            };
 
-        showToast(`Task "${data.name}" updated`);
-        setEditingTask(null);
-        setShowEditModal(false);
+            await tasksApi.update(editingTask.id, updateData);
+            await loadTasks();
+            showToast(`Task "${data.name}" updated`);
+            setEditingTask(null);
+            setShowEditModal(false);
+        } catch (err) {
+            console.error('Failed to update task:', err);
+            showToast('Failed to update task', 'danger');
+        }
     };
 
     // DUPLICATE: Clone a task
-    const handleDuplicateTask = (task: Task) => {
-        const now = new Date().toISOString();
-        const duplicatedTask: Task = {
-            ...task,
-            id: generateId(),
-            name: `${task.name} (Copy)`,
-            createdAt: now,
-            updatedAt: now
-        };
+    const handleDuplicateTask = async (task: Task) => {
+        try {
+            // Since we don't have a direct clone endpoint, we create a new one with same data
+            const duplicateData = {
+                name: `${task.name} (Copy)`,
+                description: task.description,
+                type: task.type,
+                category: task.category,
+                required: task.required,
+                configuration: task.configuration
+            };
 
-        setTasks(prev => [duplicatedTask, ...prev]);
-        setActiveDropdown(null);
-        showToast(`Task duplicated as "${duplicatedTask.name}"`);
+            await tasksApi.create(duplicateData);
+            await loadTasks();
+            setActiveDropdown(null);
+            showToast(`Task duplicated as "${duplicateData.name}"`);
+        } catch (err) {
+            console.error('Failed to duplicate task:', err);
+            showToast('Failed to duplicate task', 'danger');
+        }
     };
 
-    // DELETE: Remove task with undo using ref for stable reference
-    const handleDeleteTask = (task: Task) => {
-        const taskIndex = tasks.findIndex(t => t.id === task.id);
+    // DELETE: Remove task
+    const handleDeleteTask = async (task: Task) => {
+        if (!window.confirm(`Are you sure you want to delete "${task.name}"?`)) return;
 
-        // Store in ref for undo
-        deletedTaskRef.current = { task, index: taskIndex };
-
-        // Remove from list
-        setTasks(prev => prev.filter(t => t.id !== task.id));
-        setActiveDropdown(null);
-
-        // Show toast with undo option
-        showToast(
-            `Task "${task.name}" deleted`,
-            'info',
-            () => {
-                // Undo: restore the task at its original position
-                if (deletedTaskRef.current) {
-                    const { task: deletedTask, index } = deletedTaskRef.current;
-                    setTasks(prev => {
-                        const newTasks = [...prev];
-                        newTasks.splice(Math.min(index, newTasks.length), 0, deletedTask);
-                        return newTasks;
-                    });
-                    deletedTaskRef.current = null;
-                    showToast(`Task "${deletedTask.name}" restored`);
-                }
-            }
-        );
+        try {
+            await tasksApi.delete(task.id);
+            await loadTasks();
+            setActiveDropdown(null);
+            showToast(`Task "${task.name}" deleted`, 'success');
+        } catch (err) {
+            console.error('Failed to delete task:', err);
+            showToast('Failed to delete task', 'danger');
+        }
     };
 
     // Helper to convert task configuration to modal data format
@@ -357,6 +362,23 @@ export function TaskLibraryPage() {
         }
     };
 
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px] page-enter">
+                <Loader2 className="animate-spin text-primary" size={32} />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[400px] text-center page-enter">
+                <p className="text-danger mb-4">{error}</p>
+                <Button variant="secondary" onClick={loadTasks}>Retry</Button>
+            </div>
+        );
+    }
+
     return (
         <div className="page-enter">
             {/* Toast Notifications */}
@@ -366,20 +388,6 @@ export function TaskLibraryPage() {
                         <div key={toast.id} className={`toast toast-${toast.type}`}>
                             <div className="toast-content">
                                 <span className="toast-message">{toast.message}</span>
-                                {toast.undoAction && (
-                                    <button
-                                        className="toast-undo"
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            toast.undoAction?.();
-                                            dismissToast(toast.id);
-                                        }}
-                                    >
-                                        <Undo2 size={12} />
-                                        Undo
-                                    </button>
-                                )}
                             </div>
                             <button className="toast-close" onClick={() => dismissToast(toast.id)}>
                                 <X size={14} />
@@ -550,7 +558,7 @@ export function TaskLibraryPage() {
                                     </div>
 
                                     <h3 className="task-card-title">{task.name}</h3>
-                                    <p className="task-card-description mb-4">{task.description}</p>
+                                    <p className="task-card-description mb-4 line-clamp-2">{task.description}</p>
 
                                     <div className="flex items-center gap-2 flex-wrap mb-4">
                                         <Badge variant={categoryColors[task.category] as any}>

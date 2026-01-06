@@ -1,10 +1,11 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Union
 from datetime import datetime
+from uuid import UUID
 
 # Task in library (standalone, not part of template)
 class TaskLibraryItem(BaseModel):
-    id: str
+    id: Union[str, UUID]
     name: str
     description: Optional[str] = None
     type: str  # CUSTOM_FORM, DOCUMENT_UPLOAD, REST_API, REDIRECT

@@ -9,7 +9,8 @@ from app.core.database import get_db
 from app.models.models import ChecklistTemplate, TaskGroup, Task
 from app.schemas.templates import (
     ChecklistTemplateCreate, ChecklistTemplateUpdate, ChecklistTemplate as ChecklistTemplateSchema,
-    CloneTemplateRequest, AddGroupRequest, ReorderGroupsRequest
+    CloneTemplateRequest, AddGroupRequest, ReorderGroupsRequest,
+    AddTaskToGroupRequest, ReorderTasksRequest
 )
 
 
@@ -200,6 +201,88 @@ def delete_group(template_id: str, group_id: str, db: Session = Depends(get_db))
     g = db.query(TaskGroup).filter(TaskGroup.id == group_id, TaskGroup.template_id == template_id).first()
     if not g:
         raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Check if group has tasks? Cascade delete usually handles it if configured, 
+    # otherwise we might need to manually delete tasks.
+    # For now assume cascade or manual deletion isn't strictly enforced by DB constraint blocking it.
+    
     db.delete(g)
     db.commit()
     return {"message": "Group deleted"}
+
+@router.post("/{template_id}/groups/{group_id}/tasks")
+def add_task_to_group(
+    template_id: str, 
+    group_id: str, 
+    data: AddTaskToGroupRequest, 
+    db: Session = Depends(get_db)
+):
+    # Verify group belongs to template
+    group = db.query(TaskGroup).filter(TaskGroup.id == group_id, TaskGroup.template_id == template_id).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+        
+    # Calculate order (append to end)
+    # This query counts tasks in this group
+    count = db.query(Task).filter(Task.task_group_id == group_id).count()
+    
+    new_task = Task(
+        id=uuid_lib.uuid4(),
+        task_group_id=group_id,
+        name=data.name,
+        description=data.description,
+        type=data.type,
+        category=data.category,
+        is_required=data.isRequired,
+        display_order=count + 1,
+        configuration=data.configuration or {},
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow()
+    )
+    
+    db.add(new_task)
+    db.commit()
+    db.refresh(new_task)
+    
+    return new_task
+
+@router.delete("/{template_id}/groups/{group_id}/tasks/{task_id}")
+def delete_task_from_group(
+    template_id: str, 
+    group_id: str, 
+    task_id: str, 
+    db: Session = Depends(get_db)
+):
+    # Verify group belongs to template - strict check
+    group = db.query(TaskGroup).filter(TaskGroup.id == group_id, TaskGroup.template_id == template_id).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    task = db.query(Task).filter(Task.id == task_id, Task.task_group_id == group_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+        
+    db.delete(task)
+    db.commit()
+    
+    return {"message": "Task deleted"}
+
+@router.post("/{template_id}/groups/{group_id}/tasks/reorder")
+def reorder_tasks(
+    template_id: str, 
+    group_id: str, 
+    data: ReorderTasksRequest, 
+    db: Session = Depends(get_db)
+):
+    # Verify group belongs to template
+    group = db.query(TaskGroup).filter(TaskGroup.id == group_id, TaskGroup.template_id == template_id).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    for idx, task_id in enumerate(data.taskOrder):
+        task = db.query(Task).filter(Task.id == task_id, Task.task_group_id == group_id).first()
+        if task:
+            task.display_order = idx + 1
+            
+    db.commit()
+    return {"message": "Tasks reordered"}

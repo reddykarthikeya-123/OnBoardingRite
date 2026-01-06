@@ -127,4 +127,90 @@ export const eligibilityApi = {
     }),
 };
 
+// Templates API
+export const templatesApi = {
+    list: (search?: string) => {
+        const query = search ? `?search=${encodeURIComponent(search)}` : '';
+        return fetchApi<any[]>(`/templates/${query}`);
+    },
+
+    get: (id: string) => fetchApi<any>(`/templates/${id}`),
+
+    create: (data: any) => fetchApi<any>('/templates/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+    }),
+
+    update: (id: string, data: any) => fetchApi<any>(`/templates/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+    }),
+
+    delete: (id: string) => fetchApi<{ success: boolean }>(`/templates/${id}`, {
+        method: 'DELETE',
+    }),
+
+    clone: (id: string) => fetchApi<any>(`/templates/${id}/clone`, {
+        method: 'POST',
+    }),
+
+    // Groups
+    addGroup: (templateId: string, data: any) => fetchApi<any>(`/templates/${templateId}/groups`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+    }),
+
+    deleteGroup: (templateId: string, groupId: string) => fetchApi<any>(`/templates/${templateId}/groups/${groupId}`, {
+        method: 'DELETE',
+    }),
+
+    reorderGroups: (templateId: string, groupOrder: string[]) => fetchApi<any>(`/templates/${templateId}/groups/reorder`, {
+        method: 'POST',
+        body: JSON.stringify({ groupOrder }),
+    }),
+
+    // Tasks within Groups
+    addTaskToGroup: (templateId: string, groupId: string, data: any) => fetchApi<any>(`/templates/${templateId}/groups/${groupId}/tasks`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+    }),
+
+    deleteTaskFromGroup: (templateId: string, groupId: string, taskId: string) => fetchApi<any>(`/templates/${templateId}/groups/${groupId}/tasks/${taskId}`, {
+        method: 'DELETE',
+    }),
+
+    reorderTasks: (templateId: string, groupId: string, taskOrder: string[]) => fetchApi<any>(`/templates/${templateId}/groups/${groupId}/tasks/reorder`, {
+        method: 'POST',
+        body: JSON.stringify({ taskOrder }),
+    }),
+};
+
+// Tasks API (Library)
+export const tasksApi = {
+    list: (params?: { search?: string; type?: string; category?: string }) => {
+        const query = new URLSearchParams();
+        if (params?.search) query.append('search', params.search);
+        if (params?.type) query.append('type', params.type);
+        if (params?.category) query.append('category', params.category);
+        return fetchApi<any[]>(`/tasks/?${query.toString()}`);
+    },
+
+    get: (id: string) => fetchApi<any>(`/tasks/${id}`),
+
+    create: (data: any) => fetchApi<any>('/tasks/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+    }),
+
+    update: (id: string, data: any) => fetchApi<any>(`/tasks/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+    }),
+
+    delete: (id: string) => fetchApi<{ success: boolean }>(`/tasks/${id}`, {
+        method: 'DELETE',
+    }),
+};
+
 export { API_BASE_URL };
+
