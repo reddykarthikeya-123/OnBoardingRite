@@ -19,7 +19,7 @@ import {
     Minus
 } from 'lucide-react';
 import { Card, CardBody, Badge, Progress, Button } from '../../../components/ui';
-import { mockProjects, mockTeamMembers, getTeamMembersByProject } from '../../../data';
+// All data now comes from API
 import { dashboardApi, projectsApi } from '../../../services/api';
 import type { TeamMember } from '../../../types';
 
@@ -143,7 +143,7 @@ export function DashboardPage() {
     const navigate = useNavigate();
     const [selectedProject, setSelectedProject] = useState<string>('project-001');
     const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
-    const [showMassCommModal, setShowMassCommModal] = useState<'email' | 'sms' | null>(null);
+
 
     // API Data State
     const [apiStats, setApiStats] = useState<{
@@ -155,7 +155,7 @@ export function DashboardPage() {
         memberGrowthThisWeek: number;
     } | null>(null);
     const [apiProjects, setApiProjects] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [, setLoading] = useState(true);
 
     // Fetch data from API on mount
     useEffect(() => {
@@ -202,14 +202,14 @@ export function DashboardPage() {
         fetchMembers();
     }, [selectedProject]);
 
-    // Use API data if available, fallback to mock
-    const activeProjects = apiProjects.length > 0 ? apiProjects : mockProjects.filter(p => p.status === 'ACTIVE');
-    const currentProject = apiProjects.find(p => p.id === selectedProject) || mockProjects.find(p => p.id === selectedProject);
+    // All data from API - no mock fallbacks
+    const activeProjects = apiProjects;
+    const currentProject = apiProjects.find(p => p.id === selectedProject);
 
-    // Use API members if available, fallback to mock
-    const projectMembers = apiMembers.length > 0 ? apiMembers : getTeamMembersByProject(selectedProject);
+    // Team members from API
+    const projectMembers = apiMembers;
 
-    // Use API stats if available, otherwise calculate from mock data
+    // Stats from API
     const globalStats = useMemo(() => {
         if (apiStats) {
             return {
@@ -220,18 +220,14 @@ export function DashboardPage() {
                 activeProjects: apiStats.activeProjects
             };
         }
-        // Fallback to mock data calculation
-        const total = mockTeamMembers.length;
-        const completed = mockTeamMembers.filter(m => m.progressPercentage === 100).length;
-        const inProgress = mockTeamMembers.filter(m => m.progressPercentage > 0 && m.progressPercentage < 100).length;
-        const blocked = mockTeamMembers.filter(m => m.taskInstances?.some(t => t.status === 'BLOCKED')).length;
-        return { total, completed, inProgress, blocked, activeProjects: activeProjects.length };
+        // Default empty stats if API call fails
+        return { total: 0, completed: 0, inProgress: 0, blocked: 0, activeProjects: activeProjects.length };
     }, [apiStats, activeProjects.length]);
 
     // Stats for selected project (used in table header)
     const selectedProjectStats = useMemo(() => {
         const members = projectMembers;
-        const blocked = members.filter(m => m.taskInstances?.some(t => t.status === 'BLOCKED')).length;
+        const blocked = members.filter((m: any) => m.taskInstances?.some((t: any) => t.status === 'BLOCKED')).length;
         return { blocked };
     }, [projectMembers]);
 
@@ -389,7 +385,7 @@ export function DashboardPage() {
                     <div className="project-selector-grid">
                         {activeProjects.map((project) => {
                             const isSelected = selectedProject === project.id;
-                            const members = getTeamMembersByProject(project.id);
+                            const members = project.id === selectedProject ? projectMembers : [];
                             const completedCount = members.filter(m => m.progressPercentage === 100).length;
 
                             return (

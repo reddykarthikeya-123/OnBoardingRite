@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     ArrowLeft,
@@ -15,23 +16,121 @@ import {
     MoreVertical,
     Shield,
     ChevronRight,
-    ListChecks
+    ListChecks,
+    Loader2
 } from 'lucide-react';
 import { Card, CardBody, Button, Badge, Progress } from '../../../components/ui';
-import { getProjectById, getTeamMembersByProject, mockTasks } from '../../../data';
+import { projectsApi } from '../../../services/api';
+
+interface ProjectDetail {
+    id: string;
+    name: string;
+    description: string;
+    clientName: string;
+    location: string;
+    status: string;
+    startDate: string;
+    endDate?: string;
+    templateName: string;
+    totalTeamMembers: number;
+    completedOnboarding: number;
+    inProgress: number;
+    flags: { isDOD: boolean; isODRISA: boolean };
+    taskGroups: Array<{ id: string; name: string; tasks: any[] }>;
+    projectManager?: { name: string; email: string; phone?: string };
+    safetyLead?: { name: string; email: string };
+    siteContact?: { name: string; email: string };
+}
+
+interface TeamMember {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    trade: string;
+    status: string;
+    progressPercentage: number;
+    assignedProcessorName?: string;
+}
 
 export function ProjectDetailPage() {
     const { projectId } = useParams<{ projectId: string }>();
     const navigate = useNavigate();
-    const project = getProjectById(projectId || '');
-    const teamMembers = getTeamMembersByProject(projectId || '');
+    const [project, setProject] = useState<ProjectDetail | null>(null);
+    const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState('');
 
-    if (!project) {
+    useEffect(() => {
+        if (projectId) {
+            loadProjectData();
+        }
+    }, [projectId]);
+
+    const loadProjectData = async () => {
+        try {
+            setIsLoading(true);
+            const [projectData, membersData] = await Promise.all([
+                projectsApi.get(projectId!),
+                projectsApi.getMembers(projectId!).catch(() => [])
+            ]);
+
+            // Map project data
+            setProject({
+                id: projectData.id,
+                name: projectData.name,
+                description: projectData.description || '',
+                clientName: projectData.clientName || projectData.client_name || 'N/A',
+                location: projectData.location || 'N/A',
+                status: projectData.status,
+                startDate: projectData.startDate || projectData.start_date || new Date().toISOString(),
+                endDate: projectData.endDate || projectData.end_date,
+                templateName: projectData.templateName || projectData.template_name || '',
+                totalTeamMembers: projectData.totalTeamMembers || projectData.total_team_members || 0,
+                completedOnboarding: projectData.completedOnboarding || projectData.completed_onboarding || 0,
+                inProgress: projectData.inProgress || projectData.in_progress || 0,
+                flags: projectData.flags || { isDOD: projectData.is_dod || false, isODRISA: projectData.is_odrisa || false },
+                taskGroups: projectData.taskGroups || projectData.task_groups || [],
+                projectManager: projectData.projectManager || projectData.project_manager,
+                safetyLead: projectData.safetyLead || projectData.safety_lead,
+                siteContact: projectData.siteContact || projectData.site_contact
+            });
+
+            // Map members data
+            setTeamMembers(membersData.map((m: any) => ({
+                id: m.id,
+                firstName: m.firstName || m.first_name || '',
+                lastName: m.lastName || m.last_name || '',
+                email: m.email || '',
+                trade: m.trade || 'General',
+                status: m.status || 'PENDING',
+                progressPercentage: m.progressPercentage || m.progress_percentage || 0,
+                assignedProcessorName: m.assignedProcessorName || m.assigned_processor_name
+            })));
+
+            setError('');
+        } catch (err) {
+            console.error('Failed to load project:', err);
+            setError('Failed to load project details.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px] page-enter">
+                <Loader2 className="animate-spin text-primary" size={32} />
+            </div>
+        );
+    }
+
+    if (error || !project) {
         return (
             <div className="page-enter">
                 <div className="text-center py-12">
-                    <h2 className="text-xl font-semibold mb-2">Project not found</h2>
-                    <p className="text-secondary mb-4">The project you're looking for doesn't exist.</p>
+                    <h2 className="text-xl font-semibold mb-2">{error || 'Project not found'}</h2>
+                    <p className="text-secondary mb-4">The project you're looking for doesn't exist or couldn't be loaded.</p>
                     <Button variant="secondary" onClick={() => navigate('/projects')}>
                         Back to Projects
                     </Button>
@@ -45,12 +144,9 @@ export function ProjectDetailPage() {
         : 0;
 
     const totalTasks = project.taskGroups.reduce((acc, group) => acc + group.tasks.length, 0);
-    const pendingCount = project.totalTeamMembers - project.completedOnboarding - project.inProgress;
+    const pendingCount = Math.max(0, project.totalTeamMembers - project.completedOnboarding - project.inProgress);
     const requiredTasksCount = project.taskGroups.reduce((acc, group) =>
-        acc + group.tasks.filter(taskId => {
-            const task = mockTasks.find(t => t.id === taskId);
-            return task?.required;
-        }).length, 0);
+        acc + group.tasks.filter((task: any) => task.isRequired || task.is_required).length, 0);
 
     return (
         <div className="page-enter project-detail-page">
@@ -229,7 +325,7 @@ export function ProjectDetailPage() {
                     </CardBody>
                 </Card>
 
-                {/* Key Contacts Card - All in one polished block */}
+                {/* Key Contacts Card */}
                 <Card className="project-info-card project-contacts-card">
                     <CardBody>
                         <div className="project-info-card-header">

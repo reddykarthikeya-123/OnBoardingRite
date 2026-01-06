@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Plus,
@@ -8,10 +8,11 @@ import {
     Users,
     CheckCircle2,
     AlertTriangle,
-    Filter
+    Filter,
+    Loader2
 } from 'lucide-react';
 import { Card, CardBody, Button, Badge, Progress, EmptyState } from '../../../components/ui';
-import { mockProjects } from '../../../data';
+import { projectsApi } from '../../../services/api';
 import type { ProjectStatus } from '../../../types';
 
 const statusColors: Record<ProjectStatus, 'success' | 'primary' | 'warning' | 'secondary' | 'danger'> = {
@@ -22,12 +23,65 @@ const statusColors: Record<ProjectStatus, 'success' | 'primary' | 'warning' | 's
     ARCHIVED: 'secondary',
 };
 
+interface ProjectListItem {
+    id: string;
+    name: string;
+    clientName: string;
+    location: string;
+    status: ProjectStatus;
+    startDate: string;
+    endDate?: string;
+    templateName?: string;
+    totalTeamMembers: number;
+    completedOnboarding: number;
+    inProgress: number;
+    flags: { isDOD: boolean; isODRISA: boolean };
+    projectManager?: { name: string };
+}
+
 export function ProjectsPage() {
     const navigate = useNavigate();
+    const [projects, setProjects] = useState<ProjectListItem[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('ALL');
 
-    const filteredProjects = mockProjects.filter(project => {
+    useEffect(() => {
+        loadProjects();
+    }, []);
+
+    const loadProjects = async () => {
+        try {
+            setIsLoading(true);
+            const response = await projectsApi.list();
+            // Map API response to expected shape
+            const mapped = response.items.map((p: any) => ({
+                id: p.id,
+                name: p.name,
+                clientName: p.clientName || p.client_name || 'N/A',
+                location: p.location || 'N/A',
+                status: p.status as ProjectStatus,
+                startDate: p.startDate || p.start_date || new Date().toISOString(),
+                endDate: p.endDate || p.end_date,
+                templateName: p.templateName || p.template_name || '',
+                totalTeamMembers: p.totalTeamMembers || p.total_team_members || 0,
+                completedOnboarding: p.completedOnboarding || p.completed_onboarding || 0,
+                inProgress: p.inProgress || p.in_progress || 0,
+                flags: p.flags || { isDOD: p.is_dod || false, isODRISA: p.is_odrisa || false },
+                projectManager: p.projectManager || p.project_manager
+            }));
+            setProjects(mapped);
+            setError('');
+        } catch (err) {
+            console.error('Failed to load projects:', err);
+            setError('Failed to load projects. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const filteredProjects = projects.filter(project => {
         const matchesSearch = project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             project.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
             project.location.toLowerCase().includes(searchQuery.toLowerCase());
@@ -38,12 +92,29 @@ export function ProjectsPage() {
     });
 
     const statusCounts = {
-        ALL: mockProjects.length,
-        ACTIVE: mockProjects.filter(p => p.status === 'ACTIVE').length,
-        DRAFT: mockProjects.filter(p => p.status === 'DRAFT').length,
-        ON_HOLD: mockProjects.filter(p => p.status === 'ON_HOLD').length,
-        COMPLETED: mockProjects.filter(p => p.status === 'COMPLETED').length,
+        ALL: projects.length,
+        ACTIVE: projects.filter(p => p.status === 'ACTIVE').length,
+        DRAFT: projects.filter(p => p.status === 'DRAFT').length,
+        ON_HOLD: projects.filter(p => p.status === 'ON_HOLD').length,
+        COMPLETED: projects.filter(p => p.status === 'COMPLETED').length,
     };
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px] page-enter">
+                <Loader2 className="animate-spin text-primary" size={32} />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[400px] text-center page-enter">
+                <p className="text-danger mb-4">{error}</p>
+                <Button variant="secondary" onClick={loadProjects}>Retry</Button>
+            </div>
+        );
+    }
 
     return (
         <div className="page-enter">
@@ -98,7 +169,12 @@ export function ProjectsPage() {
                 <EmptyState
                     icon={<Filter size={48} />}
                     title="No projects found"
-                    description="Try adjusting your search or filter criteria"
+                    description={projects.length === 0 ? "Create your first project to get started" : "Try adjusting your search or filter criteria"}
+                    action={projects.length === 0 ? (
+                        <Button variant="primary" leftIcon={<Plus size={16} />} onClick={() => navigate('/projects/new')}>
+                            New Project
+                        </Button>
+                    ) : undefined}
                 />
             ) : (
                 <div className="grid grid-cols-2 gap-4">
