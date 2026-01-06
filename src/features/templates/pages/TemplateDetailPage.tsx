@@ -344,7 +344,7 @@ export function TemplateDetailPage() {
                 </Card>
                 <Card>
                     <CardBody className="p-4">
-                        <div className="text-2xl font-bold">{template.createdBy}</div>
+                        <div className="text-2xl font-bold">{template.createdByName || 'System'}</div>
                         <div className="text-sm text-secondary">Created By</div>
                     </CardBody>
                 </Card>

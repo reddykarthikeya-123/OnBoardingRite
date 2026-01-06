@@ -13,6 +13,7 @@ export interface ChecklistTemplate {
     createdAt: string;
     updatedAt: string;
     createdBy: string;
+    createdByName?: string; // User's full name
 }
 
 export interface CreateTemplateDTO {

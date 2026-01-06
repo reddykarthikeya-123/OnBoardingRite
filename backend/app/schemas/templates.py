@@ -39,6 +39,7 @@ class ChecklistTemplate(ChecklistTemplateBase):
     createdAt: Optional[datetime] = Field(None, validation_alias="created_at")
     updatedAt: Optional[datetime] = Field(None, validation_alias="updated_at")
     createdBy: Optional[Union[str, UUID]] = Field(None, validation_alias="created_by")
+    createdByName: Optional[str] = None  # Will be populated by the router
     taskGroups: List[TemplateTaskGroup] = Field([], validation_alias="task_groups")
     eligibilityCriteriaId: Optional[Union[str, UUID]] = Field(None, validation_alias="eligibility_criteria_id")
 

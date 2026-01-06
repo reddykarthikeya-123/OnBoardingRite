@@ -6,7 +6,7 @@ from datetime import datetime
 import uuid as uuid_lib
 
 from app.core.database import get_db
-from app.models.models import ChecklistTemplate, TaskGroup, Task
+from app.models.models import ChecklistTemplate, TaskGroup, Task, User
 from app.schemas.templates import (
     ChecklistTemplateCreate, ChecklistTemplateUpdate, ChecklistTemplate as ChecklistTemplateSchema,
     CloneTemplateRequest, AddGroupRequest, ReorderGroupsRequest,
@@ -15,6 +15,15 @@ from app.schemas.templates import (
 
 
 router = APIRouter()
+
+def get_user_name(db: Session, user_id) -> Optional[str]:
+    """Helper to get user's full name from ID"""
+    if not user_id:
+        return None
+    user = db.query(User).filter(User.id == user_id).first()
+    if user:
+        return f"{user.first_name} {user.last_name}".strip()
+    return None
 
 @router.get("/", response_model=List[ChecklistTemplateSchema])
 def list_templates(
@@ -38,8 +47,17 @@ def list_templates(
                 ChecklistTemplate.description.ilike(search_term)
             )
         )
-        
-    return query.all()
+    
+    templates = query.all()
+    
+    # Build response with createdByName
+    result = []
+    for t in templates:
+        schema = ChecklistTemplateSchema.model_validate(t)
+        schema.createdByName = get_user_name(db, t.created_by)
+        result.append(schema)
+    
+    return result
 
 @router.get("/{template_id}", response_model=ChecklistTemplateSchema)
 def get_template(template_id: str, db: Session = Depends(get_db)):
@@ -49,7 +67,12 @@ def get_template(template_id: str, db: Session = Depends(get_db)):
         
     # Sort groups
     t.task_groups.sort(key=lambda x: x.display_order)
-    return t
+    
+    # Build response with createdByName
+    schema = ChecklistTemplateSchema.model_validate(t)
+    schema.createdByName = get_user_name(db, t.created_by)
+    
+    return schema
 
 @router.post("/", response_model=ChecklistTemplateSchema)
 def create_template(data: ChecklistTemplateCreate, db: Session = Depends(get_db)):
