@@ -11,7 +11,8 @@ from app.models.models import Project, ProjectContact, ProjectAssignment, TeamMe
 from app.schemas.dashboard import ProjectFlags
 from app.schemas.projects import (
     ProjectListResponse, ProjectListItem, ProjectStats, ContactInfo,
-    CreateProjectRequest, ProjectDetail, ProjectTimeline, KeyMembers
+    CreateProjectRequest, ProjectDetail, ProjectTimeline, KeyMembers,
+    ProjectTask, ProjectTaskGroup
 )
 
 router = APIRouter()
@@ -156,13 +157,41 @@ def get_project_details(project_id: str, db: Session = Depends(get_db)):
         ProjectAssignment.status == 'IN_PROGRESS'
     ).count()
         
-    # Get template name if template_id exists
+    # Get template name and task groups if template_id exists
     template_name = None
+    template_id_str = None
+    task_groups = []
     if p.template_id:
-        from app.models.models import ChecklistTemplate
+        from app.models.models import ChecklistTemplate, TaskGroup, Task
         template = db.query(ChecklistTemplate).filter(ChecklistTemplate.id == p.template_id).first()
         if template:
             template_name = template.name
+            template_id_str = str(p.template_id)
+            
+            # Fetch task groups for this template
+            groups = db.query(TaskGroup).filter(
+                TaskGroup.template_id == p.template_id
+            ).order_by(TaskGroup.display_order).all()
+            
+            for g in groups:
+                # Fetch tasks for this group
+                tasks = db.query(Task).filter(
+                    Task.task_group_id == g.id
+                ).order_by(Task.display_order).all()
+                
+                group_tasks = [
+                    ProjectTask(
+                        id=str(t.id),
+                        name=t.name,
+                        isRequired=bool(t.is_required)
+                    ) for t in tasks
+                ]
+                
+                task_groups.append(ProjectTaskGroup(
+                    id=str(g.id),
+                    name=g.name,
+                    tasks=group_tasks
+                ))
     
     return ProjectDetail(
         id=str(p.id),
@@ -175,6 +204,7 @@ def get_project_details(project_id: str, db: Session = Depends(get_db)):
         status=p.status,
         flags=ProjectFlags(isDOD=bool(p.is_dod), isODRISA=bool(p.is_odrisa)),
         templateName=template_name,
+        templateId=template_id_str,
         timeline=ProjectTimeline(
             daysRemaining=days_remaining,
             targetEndDate=p.end_date
@@ -189,7 +219,8 @@ def get_project_details(project_id: str, db: Session = Depends(get_db)):
             completed=completed,
             inProgress=in_progress,
             pending=total_members - completed - in_progress
-        )
+        ),
+        taskGroups=task_groups
     )
 
 @router.get("/{project_id}/members")

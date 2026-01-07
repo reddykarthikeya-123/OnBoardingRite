@@ -15,6 +15,47 @@ PROJECT_ROOT = Path(__file__).parent.absolute()
 BACKEND_DIR = PROJECT_ROOT / "backend"
 FRONTEND_DIR = PROJECT_ROOT
 
+# Ports used by the dev servers
+BACKEND_PORT = 8000
+FRONTEND_PORT = 5173
+
+def kill_process_on_port(port):
+    """Kill any process using the specified port (Windows only)"""
+    if sys.platform != "win32":
+        return
+    
+    try:
+        # Find process using the port
+        result = subprocess.run(
+            ["netstat", "-ano", "-p", "TCP"],
+            capture_output=True,
+            text=True,
+            shell=True
+        )
+        
+        for line in result.stdout.split('\n'):
+            if f":{port}" in line and "LISTENING" in line:
+                parts = line.split()
+                if len(parts) >= 5:
+                    pid = parts[-1]
+                    if pid.isdigit():
+                        print(f"⚠️  Killing process {pid} on port {port}...")
+                        subprocess.run(
+                            ["taskkill", "/F", "/PID", pid],
+                            capture_output=True,
+                            shell=True
+                        )
+                        time.sleep(0.5)
+    except Exception as e:
+        print(f"Warning: Could not check port {port}: {e}")
+
+def cleanup_ports():
+    """Kill any processes using the required ports"""
+    print("🔍 Checking for processes on required ports...")
+    kill_process_on_port(BACKEND_PORT)
+    kill_process_on_port(FRONTEND_PORT)
+    print("✅ Ports cleared")
+
 def start_backend():
     """Start FastAPI backend server"""
     print("🚀 Starting Backend (FastAPI) on http://localhost:8000...")
@@ -52,6 +93,10 @@ def main():
     print("=" * 50)
     print("  OnBoardingRite Development Servers")
     print("=" * 50)
+    print()
+    
+    # Kill any existing processes on required ports
+    cleanup_ports()
     print()
     
     # Start both servers

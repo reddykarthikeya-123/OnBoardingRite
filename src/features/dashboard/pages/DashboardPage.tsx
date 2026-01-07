@@ -349,8 +349,6 @@ export function DashboardPage() {
                 <StatCard
                     title="Total Team Members"
                     value={globalStats.total}
-                    change="+12 this week"
-                    changeType="positive"
                     icon={<Users size={22} />}
                     iconColor="secondary"
                 />

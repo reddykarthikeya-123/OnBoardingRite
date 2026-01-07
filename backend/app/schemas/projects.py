@@ -59,6 +59,17 @@ class KeyMembers(BaseModel):
     siteLead: Optional[ContactInfo] = None
     safetyLead: Optional[ContactInfo] = None
 
+# Task group schemas for ProjectDetail
+class ProjectTask(BaseModel):
+    id: str
+    name: str
+    isRequired: bool = False
+
+class ProjectTaskGroup(BaseModel):
+    id: str
+    name: str
+    tasks: List[ProjectTask] = []
+
 class ProjectDetail(BaseModel):
     id: str
     name: str
@@ -70,6 +81,8 @@ class ProjectDetail(BaseModel):
     status: str
     flags: ProjectFlags
     templateName: Optional[str] = None
+    templateId: Optional[str] = None
     timeline: ProjectTimeline
     keyMembers: KeyMembers
     stats: ProjectStats
+    taskGroups: List[ProjectTaskGroup] = []

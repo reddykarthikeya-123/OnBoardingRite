@@ -4679,10 +4679,13 @@ select {
 .project-contacts-row {
   display: flex;
   gap: var(--spacing-4);
+  overflow-x: auto;
+  padding-bottom: var(--spacing-2);
 }
 
 .project-contact-inline {
-  flex: 1;
+  flex-shrink: 0;
+  min-width: 180px;
   display: flex;
   gap: var(--spacing-3);
   padding: var(--spacing-3);

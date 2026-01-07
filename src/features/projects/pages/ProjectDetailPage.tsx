@@ -76,6 +76,7 @@ export function ProjectDetailPage() {
             ]);
 
             // Map project data
+            const stats = projectData.stats || {};
             setProject({
                 id: projectData.id,
                 name: projectData.name,
@@ -86,14 +87,14 @@ export function ProjectDetailPage() {
                 startDate: projectData.startDate || projectData.start_date || new Date().toISOString(),
                 endDate: projectData.endDate || projectData.end_date,
                 templateName: projectData.templateName || projectData.template_name || '',
-                totalTeamMembers: projectData.totalTeamMembers || projectData.total_team_members || 0,
-                completedOnboarding: projectData.completedOnboarding || projectData.completed_onboarding || 0,
-                inProgress: projectData.inProgress || projectData.in_progress || 0,
+                totalTeamMembers: stats.totalMembers || projectData.totalTeamMembers || 0,
+                completedOnboarding: stats.completed || projectData.completedOnboarding || 0,
+                inProgress: stats.inProgress || projectData.inProgress || 0,
                 flags: projectData.flags || { isDOD: projectData.is_dod || false, isODRISA: projectData.is_odrisa || false },
                 taskGroups: projectData.taskGroups || projectData.task_groups || [],
-                projectManager: projectData.projectManager || projectData.project_manager,
-                safetyLead: projectData.safetyLead || projectData.safety_lead,
-                siteContact: projectData.siteContact || projectData.site_contact
+                projectManager: projectData.keyMembers?.projectManager || projectData.projectManager || projectData.project_manager,
+                safetyLead: projectData.keyMembers?.safetyLead || projectData.safetyLead || projectData.safety_lead,
+                siteContact: projectData.keyMembers?.siteLead || projectData.siteContact || projectData.site_contact
             });
 
             // Map members data
