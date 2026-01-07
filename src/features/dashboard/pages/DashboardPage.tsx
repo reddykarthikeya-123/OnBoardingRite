@@ -564,7 +564,7 @@ export function DashboardPage() {
                                                     <Badge variant="secondary">{member.trade}</Badge>
                                                 </td>
                                                 <td>
-                                                    <span className="text-sm">{member.category.replace('_', ' ')}</span>
+                                                    <span className="text-sm">{member?.category?.replace('_', ' ')}</span>
                                                 </td>
                                                 <td>
                                                     <Badge variant={getStatusVariant(member.status)}>
