@@ -497,84 +497,114 @@ export function TaskLibraryPage() {
                     description="Try adjusting your search or filter criteria"
                 />
             ) : (
-                <div className="task-grid">
+                <div className="grid grid-cols-3 gap-4">
                     {filteredTasks.map((task) => {
                         const typeConfig = taskTypeConfig[task.type];
 
                         return (
-                            <Card key={task.id} className="task-card">
-                                <CardBody>
-                                    <div className="task-card-header mb-3">
-                                        <div className={`task-card-type ${typeConfig.color}`}>
-                                            {typeConfig.icon}
-                                            {typeConfig.label}
+                            <Card key={task.id} variant="interactive">
+                                <CardBody className="p-0">
+                                    <div className="flex">
+                                        {/* Left: Large Icon Area (30%) */}
+                                        <div
+                                            className="flex items-center justify-center"
+                                            style={{
+                                                width: '30%',
+                                                minHeight: '140px',
+                                                background: typeConfig.color === 'primary' ? 'var(--color-primary-50)' :
+                                                    typeConfig.color === 'secondary' ? 'var(--color-secondary-50)' :
+                                                        typeConfig.color === 'accent' ? 'var(--color-accent-50)' :
+                                                            'var(--color-neutral-100)',
+                                                borderRight: '1px solid var(--color-border-light)'
+                                            }}
+                                        >
+                                            <div style={{
+                                                color: typeConfig.color === 'primary' ? 'var(--color-primary-600)' :
+                                                    typeConfig.color === 'secondary' ? 'var(--color-secondary-600)' :
+                                                        typeConfig.color === 'accent' ? 'var(--color-accent-600)' :
+                                                            'var(--color-neutral-600)'
+                                            }}>
+                                                {task.type === 'CUSTOM_FORM' && <FileText size={40} />}
+                                                {task.type === 'DOCUMENT_UPLOAD' && <Upload size={40} />}
+                                                {task.type === 'REST_API' && <Zap size={40} />}
+                                                {task.type === 'REDIRECT' && <ExternalLink size={40} />}
+                                            </div>
                                         </div>
-                                        <div className="relative">
-                                            <button
-                                                className="btn btn-ghost btn-icon btn-sm"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setActiveDropdown(activeDropdown === task.id ? null : task.id);
-                                                }}
-                                            >
-                                                <MoreVertical size={14} />
-                                            </button>
-                                            {activeDropdown === task.id && (
-                                                <div className="dropdown-menu" style={{ right: 0, left: 'auto' }}>
+
+                                        {/* Right: Content Area (70%) */}
+                                        <div style={{ width: '70%', padding: '16px' }}>
+                                            {/* Header with type label and actions */}
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-xs text-muted font-medium uppercase tracking-wide">
+                                                    {typeConfig.label}
+                                                </span>
+                                                <div className="relative">
                                                     <button
-                                                        className="dropdown-item"
+                                                        className="btn btn-ghost btn-icon btn-sm"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            handleEditTask(task);
+                                                            setActiveDropdown(activeDropdown === task.id ? null : task.id);
                                                         }}
                                                     >
-                                                        <Pencil size={14} />
-                                                        Edit
+                                                        <MoreVertical size={14} />
                                                     </button>
-                                                    <button
-                                                        className="dropdown-item"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleDuplicateTask(task);
-                                                        }}
-                                                    >
-                                                        <Copy size={14} />
-                                                        Duplicate
-                                                    </button>
-                                                    <div className="dropdown-divider" />
-                                                    <button
-                                                        className="dropdown-item dropdown-item-danger"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleDeleteTask(task);
-                                                        }}
-                                                    >
-                                                        <Trash2 size={14} />
-                                                        Delete
-                                                    </button>
+                                                    {activeDropdown === task.id && (
+                                                        <div className="dropdown-menu" style={{ right: 0, left: 'auto' }}>
+                                                            <button
+                                                                className="dropdown-item"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleEditTask(task);
+                                                                }}
+                                                            >
+                                                                <Pencil size={14} />
+                                                                Edit
+                                                            </button>
+                                                            <button
+                                                                className="dropdown-item"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleDuplicateTask(task);
+                                                                }}
+                                                            >
+                                                                <Copy size={14} />
+                                                                Duplicate
+                                                            </button>
+                                                            <div className="dropdown-divider" />
+                                                            <button
+                                                                className="dropdown-item dropdown-item-danger"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleDeleteTask(task);
+                                                                }}
+                                                            >
+                                                                <Trash2 size={14} />
+                                                                Delete
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            )}
+                                            </div>
+
+                                            {/* Title */}
+                                            <h3 className="font-semibold text-base mb-1">{task.name}</h3>
+
+                                            {/* Description */}
+                                            <p className="text-sm text-secondary line-clamp-2 mb-3">
+                                                {task.description || 'No description'}
+                                            </p>
+
+                                            {/* Footer: Badges */}
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <Badge variant={categoryColors[task.category] as any}>
+                                                    {task.category}
+                                                </Badge>
+                                                {task.required && (
+                                                    <Badge variant="danger">Required</Badge>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-
-                                    <h3 className="task-card-title">{task.name}</h3>
-                                    <p className="task-card-description mb-4 line-clamp-2">{task.description}</p>
-
-                                    <div className="flex items-center gap-2 flex-wrap mb-4">
-                                        <Badge variant={categoryColors[task.category] as any}>
-                                            {task.category}
-                                        </Badge>
-                                        {task.required && (
-                                            <Badge variant="danger">Required</Badge>
-                                        )}
-                                    </div>
-
-                                    {task.configuration.estimatedTime && (
-                                        <div className="flex items-center gap-2 text-xs text-muted">
-                                            <Clock size={12} />
-                                            <span>~{task.configuration.estimatedTime} min</span>
-                                        </div>
-                                    )}
                                 </CardBody>
                             </Card>
                         );

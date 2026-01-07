@@ -161,26 +161,29 @@ export function ProjectEditPage() {
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="btn-icon"
+                            className="btn-icon flex-shrink-0"
                             onClick={() => navigate(`/projects/${projectId}`)}
                         >
                             <ArrowLeft size={18} />
                         </Button>
-                        <div className="flex-1 min-w-0">
-                            <span className="font-semibold text-sm truncate block">{project.name}</span>
-                            <span className="text-xs text-muted">{project.clientName}</span>
+                        <div className="flex-1">
+                            <div className="font-semibold text-sm" style={{ wordBreak: 'break-word' }}>{project.name}</div>
+                            <div className="text-xs text-muted">{project.clientName}</div>
                         </div>
                     </div>
 
-                    <div className="project-edit-sidebar-search">
-                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+
+                    <div className="project-edit-sidebar-search" style={{ position: 'relative' }}>
+                        <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+                            <Search size={16} className="text-muted" />
+                        </span>
                         <input
                             type="text"
                             className="input"
                             placeholder="Search tasks..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            style={{ paddingLeft: '2.25rem', fontSize: 'var(--font-size-sm)' }}
+                            style={{ paddingLeft: '2.25rem', fontSize: 'var(--font-size-sm)', width: '100%' }}
                         />
                     </div>
                 </div>
