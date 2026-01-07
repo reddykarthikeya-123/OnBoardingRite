@@ -7,7 +7,7 @@ import {
     getFieldById,
     getOperatorInfo,
     FIELD_CATEGORY_LABELS,
-} from '../../../data';
+} from '../utils/eligibility.utils';
 
 interface EligibilityRuleRowProps {
     rule: EligibilityRule;

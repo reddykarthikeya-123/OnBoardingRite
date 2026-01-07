@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { EligibilityCriteria, EligibilityRuleGroup, EligibilityCriteriaContext } from '../../../types';
 import { EligibilityRuleGroupComponent } from './EligibilityRuleGroup';
-import { generateId, createEmptyRuleGroup } from '../../../data';
+import { generateId, createEmptyRuleGroup } from '../utils/eligibility.utils';
 
 interface EligibilityCriteriaBuilderProps {
     criteria?: EligibilityCriteria;

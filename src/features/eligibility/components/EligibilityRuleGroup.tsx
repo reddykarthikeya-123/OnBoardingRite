@@ -3,7 +3,7 @@ import { Plus, Trash2, Layers } from 'lucide-react';
 import type { EligibilityRuleGroup, EligibilityRuleItem, EligibilityRule, CustomSQLRule } from '../../../types';
 import { EligibilityRuleRow } from './EligibilityRuleRow';
 import { SQLRuleEditor } from './SQLRuleEditor';
-import { generateId } from '../../../data';
+import { generateId } from '../utils/eligibility.utils';
 
 interface EligibilityRuleGroupProps {
     group: EligibilityRuleGroup;

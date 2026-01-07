@@ -1,7 +1,6 @@
 
 import { Filter, ChevronRight } from 'lucide-react';
 import type { EligibilityCriteria } from '../../../types';
-import { getEligibilityCriteriaById } from '../../../data';
 
 interface EligibilityCriteriaBadgeProps {
     criteriaId?: string;
@@ -13,16 +12,16 @@ interface EligibilityCriteriaBadgeProps {
 /**
  * Compact badge display for eligibility criteria
  * Shows criteria name and rule count, clickable to edit
+ * 
+ * Note: Criteria should be passed directly via the `criteria` prop.
+ * If only `criteriaId` is provided without `criteria`, an empty badge is shown.
  */
 export function EligibilityCriteriaBadge({
     criteriaId,
-    criteria: propCriteria,
+    criteria,
     onClick,
     showDetails = false,
 }: EligibilityCriteriaBadgeProps) {
-    // Get criteria from ID if not provided directly
-    const criteria = propCriteria || (criteriaId ? getEligibilityCriteriaById(criteriaId) : undefined);
-
     if (!criteria) {
         return (
             <button

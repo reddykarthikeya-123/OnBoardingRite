@@ -1,12 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     ArrowLeft, Search, ChevronDown, ChevronRight, Plus, Save, Trash2,
     FileText, Upload, Link2, Settings, FolderKanban, AlertCircle,
-    Users, Info, Shield, Clock, MapPin, Building
+    Users, Info, Shield, Clock, MapPin, Building, Loader2
 } from 'lucide-react';
 import { Button, Badge } from '../../../components/ui';
-import { getProjectById, mockTasks } from '../../../data';
+import { projectsApi, tasksApi } from '../../../services/api';
 import type { Task, TaskGroup } from '../../../types';
 
 // Inline client data for the select dropdown
@@ -35,18 +35,71 @@ const getTaskTypeIcon = (type: string) => {
 export function ProjectEditPage() {
     const { projectId } = useParams<{ projectId: string }>();
     const navigate = useNavigate();
-    const project = getProjectById(projectId || '');
+
+    const [project, setProject] = useState<any>(null);
+    const [allTasks, setAllTasks] = useState<Task[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const [searchQuery, setSearchQuery] = useState('');
-    const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(project?.taskGroups.map(g => g.id) || []));
+    const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
     const [selectedSection, setSelectedSection] = useState<EditSection>('details');
     const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
-    if (!project) {
+    // Fetch project, checklist, and tasks on mount
+    useEffect(() => {
+        const loadData = async () => {
+            if (!projectId) return;
+
+            setLoading(true);
+            setError(null);
+
+            try {
+                const [projectData, checklistData, tasksData] = await Promise.all([
+                    projectsApi.get(projectId),
+                    projectsApi.getChecklist(projectId),
+                    tasksApi.list()
+                ]);
+
+                // Merge task groups from checklist into project data
+                const projectWithChecklist = {
+                    ...projectData,
+                    taskGroups: checklistData || []
+                };
+
+                setProject(projectWithChecklist);
+                setAllTasks(tasksData);
+
+                // Expand all groups by default
+                if (checklistData && checklistData.length > 0) {
+                    setExpandedGroups(new Set(checklistData.map((g: any) => g.id)));
+                }
+            } catch (err) {
+                console.error('Failed to load project:', err);
+                setError('Failed to load project data');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadData();
+    }, [projectId]);
+
+    if (loading) {
+        return (
+            <div className="page-enter flex items-center justify-center py-16">
+                <Loader2 className="animate-spin" size={32} />
+                <span className="ml-3">Loading project...</span>
+            </div>
+        );
+    }
+
+    if (error || !project) {
         return (
             <div className="page-enter text-center py-16">
                 <h2 className="text-xl font-semibold mb-2">Project Not Found</h2>
-                <p className="text-muted mb-4">The project you're looking for doesn't exist.</p>
+                <p className="text-muted mb-4">{error || "The project you're looking for doesn't exist."}</p>
                 <Button variant="primary" onClick={() => navigate('/projects')}>
                     Back to Projects
                 </Button>
@@ -55,10 +108,17 @@ export function ProjectEditPage() {
     }
 
     // Resolve task groups to include full task objects
-    const taskGroupsWithTasks: TaskGroupWithTasks[] = project.taskGroups.map(group => ({
+    const taskGroupsWithTasks: TaskGroupWithTasks[] = (project.taskGroups || []).map((group: any) => ({
         ...group,
-        taskObjects: group.tasks
-            .map(taskId => mockTasks.find(t => t.id === taskId))
+        taskObjects: (group.tasks || [])
+            .map((task: any) => {
+                // If task is already an object with name, use it directly
+                if (typeof task === 'object' && task.name) {
+                    return task;
+                }
+                // Otherwise, it's a task ID - look it up in allTasks
+                return allTasks.find(t => t.id === task);
+            })
             .filter(Boolean) as Task[]
     }));
 
@@ -67,7 +127,7 @@ export function ProjectEditPage() {
         ...group,
         taskObjects: group.taskObjects.filter(task =>
             task.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            task.description.toLowerCase().includes(searchQuery.toLowerCase())
+            (task.description || '').toLowerCase().includes(searchQuery.toLowerCase())
         )
     })).filter(group => group.taskObjects.length > 0 || searchQuery === '');
 
@@ -88,7 +148,8 @@ export function ProjectEditPage() {
         setSelectedTaskId(taskId);
     };
 
-    const selectedTask = selectedTaskId ? mockTasks.find(t => t.id === selectedTaskId) : null;
+    const selectedTask = selectedTaskId ? allTasks.find(t => t.id === selectedTaskId) ||
+        taskGroupsWithTasks.flatMap(g => g.taskObjects).find(t => t.id === selectedTaskId) : null;
     const totalTasks = taskGroupsWithTasks.reduce((acc, g) => acc + g.taskObjects.length, 0);
 
     return (

@@ -1,0 +1,368 @@
+// Eligibility Criteria Utility Functions and Constants
+// Field definitions, operators, and helper functions for eligibility rules
+
+import type {
+    EligibilityFieldDefinition,
+    EligibilityFieldCategory,
+    EligibilityOperator,
+    OperatorInfo,
+    EligibilityRuleGroup,
+} from '../../../types';
+
+/**
+ * Operator definitions with labels and behavior
+ */
+export const ELIGIBILITY_OPERATORS: OperatorInfo[] = [
+    { value: 'equals', label: 'Equals', requiresValue: true },
+    { value: 'not_equals', label: 'Does not equal', requiresValue: true },
+    { value: 'contains', label: 'Contains', requiresValue: true },
+    { value: 'not_contains', label: 'Does not contain', requiresValue: true },
+    { value: 'starts_with', label: 'Starts with', requiresValue: true },
+    { value: 'ends_with', label: 'Ends with', requiresValue: true },
+    { value: 'in', label: 'Is one of', requiresValue: true },
+    { value: 'not_in', label: 'Is not one of', requiresValue: true },
+    { value: 'greater_than', label: 'Greater than', requiresValue: true },
+    { value: 'less_than', label: 'Less than', requiresValue: true },
+    { value: 'greater_than_or_equal', label: 'Greater than or equal', requiresValue: true },
+    { value: 'less_than_or_equal', label: 'Less than or equal', requiresValue: true },
+    { value: 'between', label: 'Between', requiresValue: true, requiresSecondValue: true },
+    { value: 'is_empty', label: 'Is empty', requiresValue: false },
+    { value: 'is_not_empty', label: 'Is not empty', requiresValue: false },
+];
+
+/**
+ * Get operator info by value
+ */
+export const getOperatorInfo = (operator: EligibilityOperator): OperatorInfo | undefined => {
+    return ELIGIBILITY_OPERATORS.find(op => op.value === operator);
+};
+
+/**
+ * Operators by data type
+ */
+export const OPERATORS_BY_TYPE: Record<string, EligibilityOperator[]> = {
+    STRING: ['equals', 'not_equals', 'contains', 'not_contains', 'starts_with', 'ends_with', 'in', 'not_in', 'is_empty', 'is_not_empty'],
+    NUMBER: ['equals', 'not_equals', 'greater_than', 'less_than', 'greater_than_or_equal', 'less_than_or_equal', 'between', 'is_empty', 'is_not_empty'],
+    DATE: ['equals', 'not_equals', 'greater_than', 'less_than', 'greater_than_or_equal', 'less_than_or_equal', 'between', 'is_empty', 'is_not_empty'],
+    BOOLEAN: ['equals', 'not_equals'],
+    ARRAY: ['contains', 'not_contains', 'in', 'not_in', 'is_empty', 'is_not_empty'],
+};
+
+/**
+ * US States for dropdown options
+ */
+export const US_STATES = [
+    { value: 'AL', label: 'Alabama' },
+    { value: 'AK', label: 'Alaska' },
+    { value: 'AZ', label: 'Arizona' },
+    { value: 'AR', label: 'Arkansas' },
+    { value: 'CA', label: 'California' },
+    { value: 'CO', label: 'Colorado' },
+    { value: 'CT', label: 'Connecticut' },
+    { value: 'DE', label: 'Delaware' },
+    { value: 'FL', label: 'Florida' },
+    { value: 'GA', label: 'Georgia' },
+    { value: 'HI', label: 'Hawaii' },
+    { value: 'ID', label: 'Idaho' },
+    { value: 'IL', label: 'Illinois' },
+    { value: 'IN', label: 'Indiana' },
+    { value: 'IA', label: 'Iowa' },
+    { value: 'KS', label: 'Kansas' },
+    { value: 'KY', label: 'Kentucky' },
+    { value: 'LA', label: 'Louisiana' },
+    { value: 'ME', label: 'Maine' },
+    { value: 'MD', label: 'Maryland' },
+    { value: 'MA', label: 'Massachusetts' },
+    { value: 'MI', label: 'Michigan' },
+    { value: 'MN', label: 'Minnesota' },
+    { value: 'MS', label: 'Mississippi' },
+    { value: 'MO', label: 'Missouri' },
+    { value: 'MT', label: 'Montana' },
+    { value: 'NE', label: 'Nebraska' },
+    { value: 'NV', label: 'Nevada' },
+    { value: 'NH', label: 'New Hampshire' },
+    { value: 'NJ', label: 'New Jersey' },
+    { value: 'NM', label: 'New Mexico' },
+    { value: 'NY', label: 'New York' },
+    { value: 'NC', label: 'North Carolina' },
+    { value: 'ND', label: 'North Dakota' },
+    { value: 'OH', label: 'Ohio' },
+    { value: 'OK', label: 'Oklahoma' },
+    { value: 'OR', label: 'Oregon' },
+    { value: 'PA', label: 'Pennsylvania' },
+    { value: 'RI', label: 'Rhode Island' },
+    { value: 'SC', label: 'South Carolina' },
+    { value: 'SD', label: 'South Dakota' },
+    { value: 'TN', label: 'Tennessee' },
+    { value: 'TX', label: 'Texas' },
+    { value: 'UT', label: 'Utah' },
+    { value: 'VT', label: 'Vermont' },
+    { value: 'VA', label: 'Virginia' },
+    { value: 'WA', label: 'Washington' },
+    { value: 'WV', label: 'West Virginia' },
+    { value: 'WI', label: 'Wisconsin' },
+    { value: 'WY', label: 'Wyoming' },
+];
+
+/**
+ * Union options
+ */
+export const UNION_OPTIONS = [
+    { value: 'UA', label: 'United Association (UA)' },
+    { value: 'IBEW', label: 'IBEW - Electricians' },
+    { value: 'IUOE', label: 'IUOE - Operating Engineers' },
+    { value: 'LIUNA', label: 'LIUNA - Laborers' },
+    { value: 'SMART', label: 'SMART - Sheet Metal' },
+    { value: 'IRONWORKERS', label: 'Ironworkers' },
+    { value: 'BOILERMAKERS', label: 'Boilermakers' },
+    { value: 'CARPENTERS', label: 'Carpenters' },
+    { value: 'MILLWRIGHTS', label: 'Millwrights' },
+    { value: 'NON_UNION', label: 'Non-Union' },
+];
+
+/**
+ * Pay type options
+ */
+export const PAY_TYPE_OPTIONS = [
+    { value: 'HOURLY', label: 'Hourly' },
+    { value: 'SALARIED', label: 'Salaried' },
+];
+
+/**
+ * Job/Trade code options
+ */
+export const JOB_CODE_OPTIONS = [
+    { value: 'WELDER', label: 'Welder' },
+    { value: 'PIPEFITTER', label: 'Pipefitter' },
+    { value: 'RIGGER', label: 'Rigger' },
+    { value: 'ELECTRICIAN', label: 'Electrician' },
+    { value: 'IRONWORKER', label: 'Ironworker' },
+    { value: 'CARPENTER', label: 'Carpenter' },
+    { value: 'MILLWRIGHT', label: 'Millwright' },
+    { value: 'INSULATOR', label: 'Insulator' },
+    { value: 'OPERATOR', label: 'Operator' },
+    { value: 'LABORER', label: 'Laborer' },
+    { value: 'FOREMAN', label: 'Foreman' },
+    { value: 'SUPERINTENDENT', label: 'Superintendent' },
+];
+
+/**
+ * Project flag options
+ */
+export const PROJECT_FLAG_OPTIONS = [
+    { value: 'true', label: 'Yes' },
+    { value: 'false', label: 'No' },
+];
+
+/**
+ * Field category labels
+ */
+export const FIELD_CATEGORY_LABELS: Record<EligibilityFieldCategory, string> = {
+    PPM_PROJECT: 'PPM Project Details',
+    EMPLOYEE_CANDIDATE: 'Employee/Candidate Details',
+    ASSIGNMENT: 'Assignment Details',
+    CUSTOM_SQL: 'Custom SQL Rule',
+};
+
+/**
+ * All available eligibility fields
+ */
+export const ELIGIBILITY_FIELDS: EligibilityFieldDefinition[] = [
+    // PPM Project Details
+    {
+        id: 'ppm.client',
+        name: 'Client',
+        category: 'PPM_PROJECT',
+        dataType: 'STRING',
+        operators: OPERATORS_BY_TYPE.STRING,
+        placeholder: 'Enter client name',
+        description: 'The client name associated with the PPM project',
+    },
+    {
+        id: 'ppm.projectName',
+        name: 'Project Name',
+        category: 'PPM_PROJECT',
+        dataType: 'STRING',
+        operators: OPERATORS_BY_TYPE.STRING,
+        placeholder: 'Enter project name',
+        description: 'The name of the PPM project',
+    },
+    {
+        id: 'ppm.location.state',
+        name: 'Project State',
+        category: 'PPM_PROJECT',
+        dataType: 'STRING',
+        operators: OPERATORS_BY_TYPE.STRING,
+        options: US_STATES,
+        description: 'The state where the project is located',
+    },
+    {
+        id: 'ppm.location.city',
+        name: 'Project City',
+        category: 'PPM_PROJECT',
+        dataType: 'STRING',
+        operators: OPERATORS_BY_TYPE.STRING,
+        placeholder: 'Enter city name',
+        description: 'The city where the project is located',
+    },
+    {
+        id: 'ppm.location.zipCode',
+        name: 'Project Zip Code',
+        category: 'PPM_PROJECT',
+        dataType: 'STRING',
+        operators: OPERATORS_BY_TYPE.STRING,
+        placeholder: 'Enter zip code',
+        description: 'The zip code of the project location',
+    },
+    {
+        id: 'ppm.flags.isDOD',
+        name: 'DOD Project',
+        category: 'PPM_PROJECT',
+        dataType: 'BOOLEAN',
+        operators: OPERATORS_BY_TYPE.BOOLEAN,
+        options: PROJECT_FLAG_OPTIONS,
+        description: 'Whether this is a Department of Defense project',
+    },
+    {
+        id: 'ppm.flags.isDISA',
+        name: 'DISA Project',
+        category: 'PPM_PROJECT',
+        dataType: 'BOOLEAN',
+        operators: OPERATORS_BY_TYPE.BOOLEAN,
+        options: PROJECT_FLAG_OPTIONS,
+        description: 'Whether this requires DISA compliance',
+    },
+
+    // Employee/Candidate Details
+    {
+        id: 'person.homeAddress.state',
+        name: 'Home State',
+        category: 'EMPLOYEE_CANDIDATE',
+        dataType: 'STRING',
+        operators: OPERATORS_BY_TYPE.STRING,
+        options: US_STATES,
+        description: 'The state of the employee/candidate home address',
+    },
+    {
+        id: 'person.homeAddress.city',
+        name: 'Home City',
+        category: 'EMPLOYEE_CANDIDATE',
+        dataType: 'STRING',
+        operators: OPERATORS_BY_TYPE.STRING,
+        placeholder: 'Enter city name',
+        description: 'The city of the employee/candidate home address',
+    },
+    {
+        id: 'person.homeAddress.zipCode',
+        name: 'Home Zip Code',
+        category: 'EMPLOYEE_CANDIDATE',
+        dataType: 'STRING',
+        operators: OPERATORS_BY_TYPE.STRING,
+        placeholder: 'Enter zip code',
+        description: 'The zip code of the employee/candidate home address',
+    },
+    {
+        id: 'person.dateOfBirth',
+        name: 'Date of Birth',
+        category: 'EMPLOYEE_CANDIDATE',
+        dataType: 'DATE',
+        operators: OPERATORS_BY_TYPE.DATE,
+        description: 'The date of birth of the employee/candidate',
+    },
+
+    // Assignment Details
+    {
+        id: 'assignment.workLocation.state',
+        name: 'Work Location State',
+        category: 'ASSIGNMENT',
+        dataType: 'STRING',
+        operators: OPERATORS_BY_TYPE.STRING,
+        options: US_STATES,
+        description: 'The state of the work location assignment',
+    },
+    {
+        id: 'assignment.workLocation.city',
+        name: 'Work Location City',
+        category: 'ASSIGNMENT',
+        dataType: 'STRING',
+        operators: OPERATORS_BY_TYPE.STRING,
+        placeholder: 'Enter city name',
+        description: 'The city of the work location assignment',
+    },
+    {
+        id: 'assignment.workLocation.zipCode',
+        name: 'Work Location Zip Code',
+        category: 'ASSIGNMENT',
+        dataType: 'STRING',
+        operators: OPERATORS_BY_TYPE.STRING,
+        placeholder: 'Enter zip code',
+        description: 'The zip code of the work location assignment',
+    },
+    {
+        id: 'assignment.union',
+        name: 'Union',
+        category: 'ASSIGNMENT',
+        dataType: 'STRING',
+        operators: OPERATORS_BY_TYPE.STRING,
+        options: UNION_OPTIONS,
+        description: 'The union affiliation for this assignment',
+    },
+    {
+        id: 'assignment.payType',
+        name: 'Pay Type',
+        category: 'ASSIGNMENT',
+        dataType: 'STRING',
+        operators: OPERATORS_BY_TYPE.STRING,
+        options: PAY_TYPE_OPTIONS,
+        description: 'Whether the position is hourly or salaried',
+    },
+    {
+        id: 'assignment.jobCode',
+        name: 'Job/Trade Code',
+        category: 'ASSIGNMENT',
+        dataType: 'STRING',
+        operators: OPERATORS_BY_TYPE.STRING,
+        options: JOB_CODE_OPTIONS,
+        description: 'The job or trade code for the assignment',
+    },
+    {
+        id: 'assignment.positionCode',
+        name: 'Position Code',
+        category: 'ASSIGNMENT',
+        dataType: 'STRING',
+        operators: OPERATORS_BY_TYPE.STRING,
+        placeholder: 'Enter position code',
+        description: 'The position code for the assignment',
+    },
+];
+
+/**
+ * Get field definition by ID
+ */
+export const getFieldById = (fieldId: string): EligibilityFieldDefinition | undefined => {
+    return ELIGIBILITY_FIELDS.find(field => field.id === fieldId);
+};
+
+/**
+ * Get fields by category
+ */
+export const getFieldsByCategory = (category: EligibilityFieldCategory): EligibilityFieldDefinition[] => {
+    return ELIGIBILITY_FIELDS.filter(field => field.category === category);
+};
+
+/**
+ * Create an empty rule group
+ */
+export const createEmptyRuleGroup = (): EligibilityRuleGroup => ({
+    id: `group-${Date.now()}`,
+    type: 'GROUP',
+    logic: 'AND',
+    rules: [],
+});
+
+/**
+ * Generate a unique ID
+ */
+export const generateId = (prefix: string = 'id'): string => {
+    return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+};

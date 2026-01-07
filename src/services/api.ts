@@ -99,6 +99,15 @@ export const projectsApi = {
             completedAt: string | null;
         }>;
     }>>(`/projects/${projectId}/members`),
+
+    update: (id: string, data: any) => fetchApi<any>(`/projects/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+    }),
+
+    delete: (id: string) => fetchApi<{ message: string }>(`/projects/${id}`, {
+        method: 'DELETE',
+    }),
 };
 
 // Eligibility Rules API
