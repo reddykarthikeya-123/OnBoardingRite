@@ -3,21 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import { Building, FileCheck, CheckCircle, ArrowLeft } from 'lucide-react';
 import { Button, Stepper } from '../../../components/ui';
 import type { StepperStep } from '../../../components/ui';
-import { PPMProjectSelectionStep } from './wizard/PPMProjectSelectionStep';
+import { ProjectDetailsStep } from './wizard/ProjectDetailsStep';
 import { TemplateSelectionStep } from './wizard/TemplateSelectionStep';
 import { projectsApi } from '../../../services/api';
 import type { ProjectContact } from '../../../types';
 
 const WIZARD_STEPS: StepperStep[] = [
-    { id: 'ppm-project', label: 'Select Project', icon: <Building size={16} /> },
+    { id: 'details', label: 'Project Details', icon: <Building size={16} /> },
     { id: 'template', label: 'Select Template', icon: <FileCheck size={16} /> },
 ];
 
 export interface ProjectFormData {
-    // PPM Project Selection
-    ppmProjectId: string;
+    // PPM Project Selection (Optional now)
+    ppmProjectId?: string;
 
-    // Derived from PPM Project
+    // Manual Entry
     name: string;
     description: string;
     clientId: string;
@@ -28,7 +28,7 @@ export interface ProjectFormData {
     isDOD: boolean;
     isODRISA: boolean;
 
-    // Team Contacts (from PPM)
+    // Team Contacts (Optional for now)
     projectManager: ProjectContact | null;
     safetyLead: ProjectContact | null;
     siteContact: ProjectContact | null;
@@ -41,7 +41,6 @@ export interface ProjectFormData {
 }
 
 const initialFormData: ProjectFormData = {
-    ppmProjectId: '',
     name: '',
     description: '',
     clientId: '',
@@ -93,8 +92,6 @@ export function ProjectSetupWizard() {
 
         try {
             // Call API to create the project
-            // Note: Contacts and tasks are not currently persisted by the create endpoint due to backend limitations,
-            // but we send the project details that are supported.
             const projectPayload = {
                 name: formData.name,
                 description: formData.description,
@@ -124,7 +121,13 @@ export function ProjectSetupWizard() {
     const canProceed = (): boolean => {
         switch (currentStep) {
             case 0:
-                return !!formData.ppmProjectId;
+                // Require Name, Client, Location, Start Date
+                return !!(
+                    formData.name &&
+                    formData.clientId &&
+                    formData.location &&
+                    formData.startDate
+                );
             case 1:
                 // Enable if: template selected, blank template confirmed (empty name), or copying from project
                 return !!formData.templateId || formData.templateName === '' || !!formData.sourceProjectId;
@@ -136,7 +139,7 @@ export function ProjectSetupWizard() {
     const renderStep = () => {
         switch (currentStep) {
             case 0:
-                return <PPMProjectSelectionStep data={formData} onUpdate={updateFormData} />;
+                return <ProjectDetailsStep data={formData} onUpdate={updateFormData} />;
             case 1:
                 return <TemplateSelectionStep data={formData} onUpdate={updateFormData} />;
             default:

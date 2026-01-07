@@ -152,6 +152,23 @@ export function ProjectEditPage() {
         taskGroupsWithTasks.flatMap(g => g.taskObjects).find(t => t.id === selectedTaskId) : null;
     const totalTasks = taskGroupsWithTasks.reduce((acc, g) => acc + g.taskObjects.length, 0);
 
+
+    const handleDeleteProject = async () => {
+        if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            setLoading(true);
+            await projectsApi.delete(projectId!);
+            navigate('/projects');
+        } catch (err) {
+            console.error('Failed to delete project:', err);
+            alert('Failed to delete project. Please try again.');
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="project-edit-layout">
             {/* Sidebar */}
@@ -293,7 +310,7 @@ export function ProjectEditPage() {
                                 <p className="text-sm text-muted mt-1">Basic project information and schedule</p>
                             </div>
                             <div className="flex gap-3">
-                                <Button variant="secondary" size="sm" leftIcon={<Trash2 size={14} />}>
+                                <Button variant="secondary" size="sm" leftIcon={<Trash2 size={14} />} onClick={handleDeleteProject}>
                                     Delete Project
                                 </Button>
                                 <Button variant="primary" size="sm" leftIcon={<Save size={14} />}>

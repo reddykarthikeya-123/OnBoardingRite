@@ -268,3 +268,21 @@ def get_project_members(project_id: str, db: Session = Depends(get_db)):
         })
     
     return members
+
+@router.delete("/{project_id}")
+def delete_project(project_id: str, db: Session = Depends(get_db)):
+    """Delete a project"""
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Check if project can be deleted (e.g. not in progress or completed?)
+    # For now, allow deletion of any project as requested
+    
+    try:
+        db.delete(project)
+        db.commit()
+        return {"message": "Project deleted successfully"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
