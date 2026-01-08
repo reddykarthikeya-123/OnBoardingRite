@@ -12,7 +12,6 @@ import {
     Building,
     FileText,
     Layers,
-    ExternalLink,
     Shield,
     ChevronRight,
     ListChecks,
