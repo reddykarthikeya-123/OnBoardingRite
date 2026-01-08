@@ -162,6 +162,7 @@ export function TaskLibraryPage() {
                     }),
                     ...(type === 'DOCUMENT_UPLOAD' && {
                         documentTypeName: data.documentTypeName,
+                        documentTypePreset: data.documentTypePreset,
                         allowedFileTypes: data.allowedFileTypes,
                         maxFileSize: data.maxFileSize,
                         requiresFrontBack: data.requiresFrontBack,
@@ -224,6 +225,7 @@ export function TaskLibraryPage() {
                     }),
                     ...(type === 'DOCUMENT_UPLOAD' && {
                         documentTypeName: data.documentTypeName,
+                        documentTypePreset: data.documentTypePreset,
                         allowedFileTypes: data.allowedFileTypes,
                         maxFileSize: data.maxFileSize,
                         requiresFrontBack: data.requiresFrontBack,
@@ -317,6 +319,7 @@ export function TaskLibraryPage() {
                 return {
                     ...baseData,
                     documentTypeName: config.documentTypeName || '',
+                    documentTypePreset: config.documentTypePreset || 'custom',
                     allowedFileTypes: config.allowedFileTypes || ['image/jpeg', 'image/png', 'application/pdf'],
                     maxFileSize: config.maxFileSize || 10,
                     requiresFrontBack: config.requiresFrontBack || false,

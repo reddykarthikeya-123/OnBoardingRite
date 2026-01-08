@@ -29,6 +29,7 @@ export interface DocumentUploadTaskData {
     required: boolean;
     instructions: string;
     documentTypeName: string;
+    documentTypePreset: string;
     allowedFileTypes: string[];
     maxFileSize: number;
     requiresFrontBack: boolean;
@@ -95,6 +96,7 @@ export function CreateDocumentUploadModal({
             setRequired(initialData.required);
             setInstructions(initialData.instructions);
             setDocumentTypeName(initialData.documentTypeName);
+            setSelectedPreset(initialData.documentTypePreset || 'custom');
             setAllowedFileTypes(initialData.allowedFileTypes);
             setMaxFileSize(initialData.maxFileSize);
             setRequiresFrontBack(initialData.requiresFrontBack);
@@ -172,6 +174,7 @@ export function CreateDocumentUploadModal({
             required,
             instructions: instructions.trim(),
             documentTypeName: documentTypeName.trim(),
+            documentTypePreset: selectedPreset,
             allowedFileTypes,
             maxFileSize,
             requiresFrontBack,
