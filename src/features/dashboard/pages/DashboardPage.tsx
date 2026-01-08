@@ -435,11 +435,6 @@ export function DashboardPage() {
                             <p className="text-sm text-secondary">{projectMembers.length} team members</p>
                         </div>
                         <div className="flex items-center gap-3">
-                            {selectedProjectStats.blocked > 0 && (
-                                <Badge variant="danger" icon={<AlertCircle size={12} />}>
-                                    {selectedProjectStats.blocked} blocked
-                                </Badge>
-                            )}
                             <Button
                                 variant="secondary"
                                 size="sm"
@@ -660,6 +655,6 @@ export function DashboardPage() {
                     </div>
                 </CardBody>
             </Card>
-        </div>
+        </div >
     );
 }
