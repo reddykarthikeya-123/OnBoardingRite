@@ -5,7 +5,7 @@ import {
     FileText, Upload, Link2, Settings, FolderKanban, AlertCircle,
     Users, Info, Shield, Clock, MapPin, Building, Loader2
 } from 'lucide-react';
-import { Button, Badge } from '../../../components/ui';
+import { Button, Badge, Modal } from '../../../components/ui';
 import { projectsApi, tasksApi } from '../../../services/api';
 import type { Task, TaskGroup } from '../../../types';
 
@@ -39,13 +39,13 @@ export function ProjectEditPage() {
     const [project, setProject] = useState<any>(null);
     const [allTasks, setAllTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const [searchQuery, setSearchQuery] = useState('');
     const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
     const [selectedSection, setSelectedSection] = useState<EditSection>('details');
     const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     // Fetch project, checklist, and tasks on mount
     useEffect(() => {
@@ -153,11 +153,11 @@ export function ProjectEditPage() {
     const totalTasks = taskGroupsWithTasks.reduce((acc, g) => acc + g.taskObjects.length, 0);
 
 
-    const handleDeleteProject = async () => {
-        if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
-            return;
-        }
+    const handleDeleteClick = () => {
+        setShowDeleteModal(true);
+    };
 
+    const confirmDeleteProject = async () => {
         try {
             setLoading(true);
             await projectsApi.delete(projectId!);
@@ -166,6 +166,7 @@ export function ProjectEditPage() {
             console.error('Failed to delete project:', err);
             alert('Failed to delete project. Please try again.');
             setLoading(false);
+            setShowDeleteModal(false);
         }
     };
 
@@ -310,7 +311,7 @@ export function ProjectEditPage() {
                                 <p className="text-sm text-muted mt-1">Basic project information and schedule</p>
                             </div>
                             <div className="flex gap-3">
-                                <Button variant="secondary" size="sm" leftIcon={<Trash2 size={14} />} onClick={handleDeleteProject}>
+                                <Button variant="secondary" size="sm" leftIcon={<Trash2 size={14} />} onClick={handleDeleteClick}>
                                     Delete Project
                                 </Button>
                                 <Button variant="primary" size="sm" leftIcon={<Save size={14} />}>
@@ -911,6 +912,33 @@ export function ProjectEditPage() {
                     </div>
                 )}
             </main>
+
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={showDeleteModal}
+                onClose={() => setShowDeleteModal(false)}
+                title="Delete Project"
+                size="sm"
+                footer={
+                    <>
+                        <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="danger"
+                            onClick={confirmDeleteProject}
+                            leftIcon={<Trash2 size={16} />}
+                        >
+                            Delete Project
+                        </Button>
+                    </>
+                }
+            >
+                <div className="p-2">
+                    <p className="mb-2">Are you sure you want to delete <strong>{project.name}</strong>?</p>
+                    <p className="text-sm text-muted">This action will permanently delete the project and all associated data. This cannot be undone.</p>
+                </div>
+            </Modal>
         </div>
     );
 }

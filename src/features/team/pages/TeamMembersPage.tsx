@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Users, Mail, Phone, MapPin, Loader2, Trash2, Edit, X, Save } from 'lucide-react';
+import { Search, Plus, Users, Mail, Phone, MapPin, Loader2, Trash2, Edit, Save } from 'lucide-react';
 import { Card, Button, Badge, Modal } from '../../../components/ui';
 import { teamMembersApi } from '../../../services/api';
 
