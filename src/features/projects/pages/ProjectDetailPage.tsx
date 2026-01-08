@@ -71,7 +71,7 @@ export function ProjectDetailPage() {
     const [selectedMemberIds, setSelectedMemberIds] = useState<Set<string>>(new Set());
     const [memberSearchQuery, setMemberSearchQuery] = useState('');
     const [isAddingMembers, setIsAddingMembers] = useState(false);
-    const [selectedTrade, setSelectedTrade] = useState('General');
+    const [memberTrades, setMemberTrades] = useState<Map<string, string>>(new Map());
 
     // Trade options for dropdown
     const TRADES = ['General', 'Electrician', 'Welder', 'Pipefitter', 'Carpenter', 'Ironworker', 'Millwright', 'Boilermaker', 'Insulator', 'Painter', 'Laborer'];
@@ -163,6 +163,7 @@ export function ProjectDetailPage() {
     const handleOpenAddMemberModal = async () => {
         setShowAddMemberModal(true);
         setSelectedMemberIds(new Set());
+        setMemberTrades(new Map());
         setMemberSearchQuery('');
         await loadAvailableMembers();
     };
@@ -172,10 +173,30 @@ export function ProjectDetailPage() {
             const newSet = new Set(prev);
             if (newSet.has(memberId)) {
                 newSet.delete(memberId);
+                // Also remove from trades map
+                setMemberTrades(prevTrades => {
+                    const newTrades = new Map(prevTrades);
+                    newTrades.delete(memberId);
+                    return newTrades;
+                });
             } else {
                 newSet.add(memberId);
+                // Set default trade for new member
+                setMemberTrades(prevTrades => {
+                    const newTrades = new Map(prevTrades);
+                    newTrades.set(memberId, 'General');
+                    return newTrades;
+                });
             }
             return newSet;
+        });
+    };
+
+    const handleMemberTradeChange = (memberId: string, trade: string) => {
+        setMemberTrades(prev => {
+            const newTrades = new Map(prev);
+            newTrades.set(memberId, trade);
+            return newTrades;
         });
     };
 
@@ -184,9 +205,14 @@ export function ProjectDetailPage() {
 
         try {
             setIsAddingMembers(true);
-            await projectsApi.addMembers(projectId!, Array.from(selectedMemberIds), selectedTrade);
+            // Convert memberTrades map to array format for API
+            const memberTradesArray = Array.from(selectedMemberIds).map(memberId => ({
+                memberId,
+                trade: memberTrades.get(memberId) || 'General'
+            }));
+            await projectsApi.addMembers(projectId!, memberTradesArray);
             setShowAddMemberModal(false);
-            setSelectedTrade('General'); // Reset trade selection
+            setMemberTrades(new Map()); // Reset trades
             // Reload project data to reflect new members
             await loadProjectData();
         } catch (err) {
@@ -758,22 +784,42 @@ export function ProjectDetailPage() {
                         )}
                     </div>
 
-                    {/* Trade Selection */}
-                    <div className="add-member-trade-select">
-                        <label htmlFor="trade-select" className="add-member-trade-label">
-                            Assign Trade:
-                        </label>
-                        <select
-                            id="trade-select"
-                            value={selectedTrade}
-                            onChange={(e) => setSelectedTrade(e.target.value)}
-                            className="add-member-trade-dropdown"
-                        >
-                            {TRADES.map(trade => (
-                                <option key={trade} value={trade}>{trade}</option>
-                            ))}
-                        </select>
-                    </div>
+                    {/* Per-Member Trade Selection - Only show when members are selected */}
+                    {selectedMemberIds.size > 0 && (
+                        <div className="add-member-trade-section">
+                            <div className="add-member-trade-header">
+                                <span className="add-member-trade-title">Assign Trades</span>
+                                <span className="text-sm text-muted">Select trade for each member</span>
+                            </div>
+                            <div className="add-member-trade-list">
+                                {Array.from(selectedMemberIds).map(memberId => {
+                                    const member = availableMembers.find(m => m.id === memberId);
+                                    if (!member) return null;
+                                    return (
+                                        <div key={memberId} className="add-member-trade-row">
+                                            <div className="add-member-trade-member">
+                                                <div className="add-member-avatar-sm">
+                                                    {member.firstName[0]}{member.lastName[0]}
+                                                </div>
+                                                <span className="add-member-trade-name">
+                                                    {member.firstName} {member.lastName}
+                                                </span>
+                                            </div>
+                                            <select
+                                                value={memberTrades.get(memberId) || 'General'}
+                                                onChange={(e) => handleMemberTradeChange(memberId, e.target.value)}
+                                                className="add-member-trade-dropdown"
+                                            >
+                                                {TRADES.map(trade => (
+                                                    <option key={trade} value={trade}>{trade}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Actions */}
                     <div className="add-member-actions">

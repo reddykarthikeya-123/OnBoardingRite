@@ -109,11 +109,10 @@ export const projectsApi = {
         method: 'DELETE',
     }),
 
-    addMembers: async (projectId: string, memberIds: string[], trade: string = 'General') => {
-        // Call the existing API endpoint for each member
-        // The endpoint expects {teamMemberId, trade?, category}
+    addMembers: async (projectId: string, memberTrades: Array<{ memberId: string, trade: string }>) => {
+        // Call the existing API endpoint for each member with their specific trade
         const results = await Promise.all(
-            memberIds.map(memberId =>
+            memberTrades.map(({ memberId, trade }) =>
                 fetchApi<{ success: boolean; assignmentId: string }>(`/projects/${projectId}/members`, {
                     method: 'POST',
                     body: JSON.stringify({
