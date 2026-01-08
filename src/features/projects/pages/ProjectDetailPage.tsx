@@ -321,7 +321,11 @@ export function ProjectDetailPage() {
                         >
                             Edit Project
                         </Button>
-                        <Button variant="primary" leftIcon={<ExternalLink size={16} />}>
+                        <Button
+                            variant="primary"
+                            leftIcon={<ExternalLink size={16} />}
+                            onClick={() => navigate(`/projects/${projectId}/dashboard`)}
+                        >
                             View Dashboard
                         </Button>
                     </div>
