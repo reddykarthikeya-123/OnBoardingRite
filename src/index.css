@@ -4671,6 +4671,313 @@ select {
   text-decoration: underline;
 }
 
+/* Clickable Template Groups */
+.project-template-preview-item.clickable {
+  cursor: pointer;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+}
+
+.project-template-preview-item.clickable:hover {
+  background: var(--color-primary-50);
+}
+
+.project-template-preview-item.clickable svg {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+/* Expanded Tasks List */
+.project-template-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  padding-left: calc(var(--spacing-3) + 22px + var(--spacing-3));
+  padding-bottom: var(--spacing-2);
+  margin-top: var(--spacing-1);
+}
+
+.project-template-task {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-3);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-light);
+  transition: all var(--transition-fast);
+}
+
+.project-template-task:hover {
+  border-color: var(--color-primary-200);
+  background: var(--color-primary-50);
+}
+
+.project-template-task svg {
+  color: var(--color-primary-500);
+  flex-shrink: 0;
+}
+
+.project-template-task span {
+  flex: 1;
+}
+
+/* ============================================
+   TEMPLATE MODAL STYLES
+   ============================================ */
+.template-modal-content {
+  padding: var(--spacing-2);
+}
+
+.template-modal-stats {
+  display: flex;
+  gap: var(--spacing-4);
+  padding: var(--spacing-4);
+  background: linear-gradient(135deg, var(--color-primary-50), var(--color-neutral-50));
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-5);
+}
+
+.template-modal-stat {
+  flex: 1;
+  text-align: center;
+  padding: var(--spacing-2);
+}
+
+.template-modal-stat-value {
+  display: block;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary-600);
+}
+
+.template-modal-stat-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.template-modal-groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  max-height: 50vh;
+  overflow-y: auto;
+  padding-right: var(--spacing-2);
+}
+
+.template-modal-group {
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+}
+
+.template-modal-group-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3) var(--spacing-4);
+  background: var(--color-neutral-50);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.template-modal-group-num {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  flex-shrink: 0;
+}
+
+.template-modal-group-name {
+  flex: 1;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.template-modal-tasks {
+  padding: var(--spacing-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.template-modal-task {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3) var(--spacing-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  min-height: 40px;
+  transition: all var(--transition-fast);
+}
+
+.template-modal-task:hover {
+  background: var(--color-neutral-50);
+}
+
+.template-modal-task svg {
+  color: var(--color-primary-500);
+  flex-shrink: 0;
+}
+
+.template-modal-task-name {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+/* ============================================
+   ADD MEMBER MODAL STYLES
+   ============================================ */
+.add-member-modal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.add-member-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.add-member-search-icon {
+  position: absolute;
+  left: var(--spacing-3);
+  color: var(--color-text-muted);
+}
+
+.add-member-search-input {
+  width: 100%;
+  padding: var(--spacing-3) var(--spacing-3) var(--spacing-3) calc(var(--spacing-3) + 24px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-fast);
+}
+
+.add-member-search-input:focus {
+  outline: none;
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 3px var(--color-primary-100);
+}
+
+.add-member-list {
+  max-height: 400px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2);
+  background: var(--color-neutral-50);
+  border-radius: var(--radius-lg);
+}
+
+.add-member-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-8);
+  color: var(--color-text-muted);
+}
+
+.add-member-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3);
+  background: var(--color-surface);
+  border: 2px solid transparent;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.add-member-item:hover {
+  border-color: var(--color-primary-200);
+  background: var(--color-primary-50);
+}
+
+.add-member-item.selected {
+  border-color: var(--color-primary-500);
+  background: var(--color-primary-50);
+}
+
+.add-member-checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.add-member-item.selected .add-member-checkbox {
+  border-color: var(--color-primary-500);
+  background: var(--color-primary-500);
+  color: white;
+}
+
+.add-member-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+  flex-shrink: 0;
+}
+
+.add-member-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.add-member-name {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.add-member-email {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.add-member-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--spacing-4);
+  border-top: 1px solid var(--color-border-light);
+}
+
+.add-member-count {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
 /* Polished Inline Contacts */
 .project-contacts-card {
   background: linear-gradient(135deg, var(--color-surface), var(--color-neutral-50));

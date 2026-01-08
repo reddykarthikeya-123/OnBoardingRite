@@ -17,10 +17,13 @@ import {
     Shield,
     ChevronRight,
     ListChecks,
-    Loader2
+    Loader2,
+    UserPlus,
+    Check,
+    Search
 } from 'lucide-react';
-import { Card, CardBody, Button, Badge, Progress } from '../../../components/ui';
-import { projectsApi } from '../../../services/api';
+import { Card, CardBody, Button, Badge, Progress, Modal } from '../../../components/ui';
+import { projectsApi, teamMembersApi } from '../../../services/api';
 
 interface ProjectDetail {
     id: string;
@@ -60,6 +63,14 @@ export function ProjectDetailPage() {
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
+    const [showTemplateModal, setShowTemplateModal] = useState(false);
+
+    // Add Member modal state
+    const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+    const [availableMembers, setAvailableMembers] = useState<TeamMember[]>([]);
+    const [selectedMemberIds, setSelectedMemberIds] = useState<Set<string>>(new Set());
+    const [memberSearchQuery, setMemberSearchQuery] = useState('');
+    const [isAddingMembers, setIsAddingMembers] = useState(false);
 
     useEffect(() => {
         if (projectId) {
@@ -117,6 +128,74 @@ export function ProjectDetailPage() {
             setIsLoading(false);
         }
     };
+
+    // Load all team members and filter out already-assigned ones
+    const loadAvailableMembers = async () => {
+        try {
+            const allMembers = await teamMembersApi.list();
+            const assignedIds = new Set(teamMembers.map(m => m.id));
+            const available = allMembers
+                .filter((m: any) => !assignedIds.has(m.id))
+                .map((m: any) => ({
+                    id: m.id,
+                    firstName: m.firstName || m.first_name || '',
+                    lastName: m.lastName || m.last_name || '',
+                    email: m.email || '',
+                    trade: m.trade || 'General',
+                    status: 'PENDING',
+                    progressPercentage: 0
+                }));
+            setAvailableMembers(available);
+        } catch (err) {
+            console.error('Failed to load available members:', err);
+        }
+    };
+
+    const handleOpenAddMemberModal = async () => {
+        setShowAddMemberModal(true);
+        setSelectedMemberIds(new Set());
+        setMemberSearchQuery('');
+        await loadAvailableMembers();
+    };
+
+    const handleToggleMember = (memberId: string) => {
+        setSelectedMemberIds(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(memberId)) {
+                newSet.delete(memberId);
+            } else {
+                newSet.add(memberId);
+            }
+            return newSet;
+        });
+    };
+
+    const handleAddSelectedMembers = async () => {
+        if (selectedMemberIds.size === 0) return;
+
+        try {
+            setIsAddingMembers(true);
+            await projectsApi.addMembers(projectId!, Array.from(selectedMemberIds));
+            setShowAddMemberModal(false);
+            // Reload project data to reflect new members
+            await loadProjectData();
+        } catch (err) {
+            console.error('Failed to add members:', err);
+        } finally {
+            setIsAddingMembers(false);
+        }
+    };
+
+    const filteredAvailableMembers = availableMembers.filter(m => {
+        if (!memberSearchQuery) return true;
+        const query = memberSearchQuery.toLowerCase();
+        return (
+            m.firstName.toLowerCase().includes(query) ||
+            m.lastName.toLowerCase().includes(query) ||
+            m.email.toLowerCase().includes(query) ||
+            m.trade.toLowerCase().includes(query)
+        );
+    });
 
     if (isLoading) {
         return (
@@ -305,7 +384,12 @@ export function ProjectDetailPage() {
                                 <h3 className="project-info-card-title">Checklist Template</h3>
                                 <p className="project-info-card-subtitle">{project.templateName}</p>
                             </div>
-                            <Button variant="ghost" size="sm" className="ml-auto btn-icon">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="ml-auto btn-icon"
+                                onClick={() => setShowTemplateModal(true)}
+                            >
                                 <ChevronRight size={16} />
                             </Button>
                         </div>
@@ -318,7 +402,11 @@ export function ProjectDetailPage() {
                                 </div>
                             ))}
                             {project.taskGroups.length > 3 && (
-                                <div className="project-template-preview-more">
+                                <div
+                                    className="project-template-preview-more"
+                                    onClick={() => setShowTemplateModal(true)}
+                                    style={{ cursor: 'pointer' }}
+                                >
                                     +{project.taskGroups.length - 3} more
                                 </div>
                             )}
@@ -449,7 +537,9 @@ export function ProjectDetailPage() {
                     </h2>
                     <div className="flex items-center gap-3">
                         <span className="text-sm text-muted">{teamMembers.length} members</span>
-                        <Button variant="primary" size="sm">Add Member</Button>
+                        <Button variant="primary" size="sm" leftIcon={<UserPlus size={14} />} onClick={handleOpenAddMemberModal}>
+                            Add Member
+                        </Button>
                     </div>
                 </div>
 
@@ -530,6 +620,126 @@ export function ProjectDetailPage() {
                     </CardBody>
                 </Card>
             </section>
+
+            {/* Checklist Template Modal */}
+            <Modal
+                isOpen={showTemplateModal}
+                onClose={() => setShowTemplateModal(false)}
+                title={`Checklist Template: ${project.templateName}`}
+                size="lg"
+            >
+                <div className="template-modal-content">
+                    <div className="template-modal-stats">
+                        <div className="template-modal-stat">
+                            <span className="template-modal-stat-value">{project.taskGroups.length}</span>
+                            <span className="template-modal-stat-label">Task Groups</span>
+                        </div>
+                        <div className="template-modal-stat">
+                            <span className="template-modal-stat-value">{totalTasks}</span>
+                            <span className="template-modal-stat-label">Total Tasks</span>
+                        </div>
+                        <div className="template-modal-stat">
+                            <span className="template-modal-stat-value">{requiredTasksCount}</span>
+                            <span className="template-modal-stat-label">Required</span>
+                        </div>
+                    </div>
+                    <div className="template-modal-groups">
+                        {project.taskGroups.map((group, index) => (
+                            <div key={group.id} className="template-modal-group">
+                                <div className="template-modal-group-header">
+                                    <span className="template-modal-group-num">{index + 1}</span>
+                                    <span className="template-modal-group-name">{group.name}</span>
+                                    <Badge variant="secondary">{group.tasks.length} tasks</Badge>
+                                </div>
+                                <div className="template-modal-tasks">
+                                    {group.tasks.map((task: any) => (
+                                        <div key={task.id} className="template-modal-task">
+                                            <FileText size={14} />
+                                            <span className="template-modal-task-name">{task.name}</span>
+                                            {(task.isRequired || task.is_required) && (
+                                                <Badge variant="danger" className="ml-auto">Required</Badge>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Add Member Modal */}
+            <Modal
+                isOpen={showAddMemberModal}
+                onClose={() => setShowAddMemberModal(false)}
+                title="Add Team Members"
+                size="lg"
+            >
+                <div className="add-member-modal">
+                    {/* Search */}
+                    <div className="add-member-search">
+                        <Search size={16} className="add-member-search-icon" />
+                        <input
+                            type="text"
+                            placeholder="Search by name, email, or trade..."
+                            value={memberSearchQuery}
+                            onChange={(e) => setMemberSearchQuery(e.target.value)}
+                            className="add-member-search-input"
+                        />
+                    </div>
+
+                    {/* Member List */}
+                    <div className="add-member-list">
+                        {filteredAvailableMembers.length === 0 ? (
+                            <div className="add-member-empty">
+                                <Users size={32} className="text-muted" />
+                                <p>No available members to add</p>
+                            </div>
+                        ) : (
+                            filteredAvailableMembers.map((member) => (
+                                <div
+                                    key={member.id}
+                                    className={`add-member-item ${selectedMemberIds.has(member.id) ? 'selected' : ''}`}
+                                    onClick={() => handleToggleMember(member.id)}
+                                >
+                                    <div className="add-member-checkbox">
+                                        {selectedMemberIds.has(member.id) && <Check size={14} />}
+                                    </div>
+                                    <div className="add-member-avatar">
+                                        {member.firstName[0]}{member.lastName[0]}
+                                    </div>
+                                    <div className="add-member-info">
+                                        <span className="add-member-name">
+                                            {member.firstName} {member.lastName}
+                                        </span>
+                                        <span className="add-member-email">{member.email}</span>
+                                    </div>
+                                    <Badge variant="secondary">{member.trade}</Badge>
+                                </div>
+                            ))
+                        )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="add-member-actions">
+                        <span className="add-member-count">
+                            {selectedMemberIds.size} member{selectedMemberIds.size !== 1 ? 's' : ''} selected
+                        </span>
+                        <div className="flex gap-3">
+                            <Button variant="secondary" onClick={() => setShowAddMemberModal(false)}>
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="primary"
+                                onClick={handleAddSelectedMembers}
+                                disabled={selectedMemberIds.size === 0 || isAddingMembers}
+                            >
+                                {isAddingMembers ? 'Adding...' : `Add ${selectedMemberIds.size} Member${selectedMemberIds.size !== 1 ? 's' : ''}`}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }
