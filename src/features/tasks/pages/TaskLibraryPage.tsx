@@ -158,7 +158,7 @@ export function TaskLibraryPage() {
                     instructions: data.instructions || '',
                     // Type-specific config
                     ...(type === 'CUSTOM_FORM' && {
-                        formFields: data.fields || []
+                        formFields: data.formFields || []
                     }),
                     ...(type === 'DOCUMENT_UPLOAD' && {
                         documentTypeName: data.documentTypeName,
