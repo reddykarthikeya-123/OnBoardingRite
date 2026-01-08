@@ -115,10 +115,11 @@ export function CreateCustomFormModal({
     };
 
     const addField = (type: FormField['type']) => {
+        const fieldNum = formFields.length + 1;
         const newField: FormField = {
             id: generateId(),
-            name: `field_${formFields.length + 1}`,
-            label: `${fieldTypeConfig[type].label} Field`,
+            name: `Field ${fieldNum}`,
+            label: `New ${fieldTypeConfig[type].label}`,
             type,
             required: false,
             placeholder: '',
@@ -454,8 +455,8 @@ export function CreateCustomFormModal({
                                             type="text"
                                             className="input"
                                             value={selectedField.name}
-                                            onChange={(e) => updateField(selectedField.id, { name: e.target.value.replace(/\s/g, '_').toLowerCase() })}
-                                            placeholder="field_name"
+                                            onChange={(e) => updateField(selectedField.id, { name: e.target.value })}
+                                            placeholder="First Name"
                                         />
                                         <span className="input-helper">Used for data storage</span>
                                     </div>
