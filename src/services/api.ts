@@ -109,7 +109,7 @@ export const projectsApi = {
         method: 'DELETE',
     }),
 
-    addMembers: async (projectId: string, memberIds: string[]) => {
+    addMembers: async (projectId: string, memberIds: string[], trade: string = 'General') => {
         // Call the existing API endpoint for each member
         // The endpoint expects {teamMemberId, trade?, category}
         const results = await Promise.all(
@@ -119,7 +119,7 @@ export const projectsApi = {
                     body: JSON.stringify({
                         teamMemberId: memberId,
                         category: 'NEW_HIRE',
-                        trade: 'General'
+                        trade: trade
                     }),
                 }).catch(err => ({ success: false, error: err }))
             )

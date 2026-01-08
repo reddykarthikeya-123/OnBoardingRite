@@ -71,6 +71,10 @@ export function ProjectDetailPage() {
     const [selectedMemberIds, setSelectedMemberIds] = useState<Set<string>>(new Set());
     const [memberSearchQuery, setMemberSearchQuery] = useState('');
     const [isAddingMembers, setIsAddingMembers] = useState(false);
+    const [selectedTrade, setSelectedTrade] = useState('General');
+
+    // Trade options for dropdown
+    const TRADES = ['General', 'Electrician', 'Welder', 'Pipefitter', 'Carpenter', 'Ironworker', 'Millwright', 'Boilermaker', 'Insulator', 'Painter', 'Laborer'];
 
     // Delete Member modal state
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -180,8 +184,9 @@ export function ProjectDetailPage() {
 
         try {
             setIsAddingMembers(true);
-            await projectsApi.addMembers(projectId!, Array.from(selectedMemberIds));
+            await projectsApi.addMembers(projectId!, Array.from(selectedMemberIds), selectedTrade);
             setShowAddMemberModal(false);
+            setSelectedTrade('General'); // Reset trade selection
             // Reload project data to reflect new members
             await loadProjectData();
         } catch (err) {
@@ -751,6 +756,23 @@ export function ProjectDetailPage() {
                                 </div>
                             ))
                         )}
+                    </div>
+
+                    {/* Trade Selection */}
+                    <div className="add-member-trade-select">
+                        <label htmlFor="trade-select" className="add-member-trade-label">
+                            Assign Trade:
+                        </label>
+                        <select
+                            id="trade-select"
+                            value={selectedTrade}
+                            onChange={(e) => setSelectedTrade(e.target.value)}
+                            className="add-member-trade-dropdown"
+                        >
+                            {TRADES.map(trade => (
+                                <option key={trade} value={trade}>{trade}</option>
+                            ))}
+                        </select>
                     </div>
 
                     {/* Actions */}
