@@ -105,18 +105,25 @@ def create_requisition(project_id: str, data: CreateRequisitionRequest, db: Sess
 
 @router.post("/{project_id}/members", response_model=dict)
 def assign_member_to_project(project_id: str, data: AssignMemberRequest, db: Session = Depends(get_db)):
-    project = db.query(Project).filter(Project.id == project_id).first()
+    # Convert string UUIDs to UUID objects
+    try:
+        project_uuid = uuid_lib.UUID(project_id)
+        member_uuid = uuid_lib.UUID(data.teamMemberId)
+    except (ValueError, AttributeError):
+        raise HTTPException(status_code=400, detail="Invalid UUID format")
+    
+    project = db.query(Project).filter(Project.id == project_uuid).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     
-    member = db.query(TeamMember).filter(TeamMember.id == data.teamMemberId).first()
+    member = db.query(TeamMember).filter(TeamMember.id == member_uuid).first()
     if not member:
         raise HTTPException(status_code=404, detail="Team member not found")
     
     # Check if already assigned
     existing = db.query(ProjectAssignment).filter(
-        ProjectAssignment.project_id == project_id,
-        ProjectAssignment.team_member_id == data.teamMemberId
+        ProjectAssignment.project_id == project_uuid,
+        ProjectAssignment.team_member_id == member_uuid
     ).first()
     
     if existing:
@@ -124,11 +131,11 @@ def assign_member_to_project(project_id: str, data: AssignMemberRequest, db: Ses
     
     assignment = ProjectAssignment(
         id=uuid_lib.uuid4(),
-        project_id=project.id,
-        team_member_id=member.id,
+        project_id=project_uuid,
+        team_member_id=member_uuid,
         status="PENDING",
         category=data.category,
-        trade=data.trade,
+        trade=data.trade or "General",
         assigned_at=datetime.utcnow()
     )
     

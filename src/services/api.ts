@@ -108,6 +108,25 @@ export const projectsApi = {
     delete: (id: string) => fetchApi<{ message: string }>(`/projects/${id}`, {
         method: 'DELETE',
     }),
+
+    addMembers: async (projectId: string, memberIds: string[]) => {
+        // Call the existing API endpoint for each member
+        // The endpoint expects {teamMemberId, trade?, category}
+        const results = await Promise.all(
+            memberIds.map(memberId =>
+                fetchApi<{ success: boolean; assignmentId: string }>(`/projects/${projectId}/members`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        teamMemberId: memberId,
+                        category: 'NEW_HIRE',
+                        trade: 'General'
+                    }),
+                }).catch(err => ({ success: false, error: err }))
+            )
+        );
+        const successCount = results.filter(r => r.success).length;
+        return { success: true, added: successCount };
+    },
 };
 
 // Eligibility Rules API
