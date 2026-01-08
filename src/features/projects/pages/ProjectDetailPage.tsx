@@ -315,18 +315,11 @@ export function ProjectDetailPage() {
                     </div>
                     <div className="project-detail-hero-actions">
                         <Button
-                            variant="secondary"
+                            variant="primary"
                             leftIcon={<Pencil size={16} />}
                             onClick={() => navigate(`/projects/${projectId}/edit`)}
                         >
                             Edit Project
-                        </Button>
-                        <Button
-                            variant="primary"
-                            leftIcon={<ExternalLink size={16} />}
-                            onClick={() => navigate(`/projects/${projectId}/dashboard`)}
-                        >
-                            View Dashboard
                         </Button>
                     </div>
                 </div>
