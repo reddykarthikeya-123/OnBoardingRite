@@ -235,6 +235,7 @@ class TaskInstance(Base):
     
     task = relationship("Task", back_populates="task_instances")
     assignment = relationship("ProjectAssignment", back_populates="task_instances")
+    documents = relationship("Document", back_populates="task_instance")
 
 
 class Requisition(Base):
@@ -284,4 +285,28 @@ class Communication(Base):
     status = Column(String(50), default='SENT')
 
 
-
+class Document(Base):
+    __tablename__ = "or_documents"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    task_instance_id = Column(UUID(as_uuid=True), ForeignKey("or_task_instances.id"))
+    
+    # File metadata
+    filename = Column(String(255), nullable=False)
+    original_filename = Column(String(255), nullable=False)
+    mime_type = Column(String(100), nullable=False)
+    file_size = Column(Integer, nullable=False)
+    file_data = Column(Text, nullable=False)  # BYTEA stored as binary
+    
+    # Document-specific metadata
+    document_side = Column(String(20))
+    document_number = Column(String(100))
+    expiry_date = Column(Date)
+    
+    # Tracking
+    uploaded_by = Column(UUID(as_uuid=True), ForeignKey("or_team_members.id"))
+    uploaded_at = Column(TIMESTAMP)
+    created_at = Column(TIMESTAMP)
+    
+    task_instance = relationship("TaskInstance", back_populates="documents")
+    uploader = relationship("TeamMember")

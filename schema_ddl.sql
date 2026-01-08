@@ -364,6 +364,36 @@ CREATE INDEX idx_comments_created ON or_task_comments(created_at DESC);
 CREATE INDEX idx_comments_internal ON or_task_comments(is_internal);
 
 -- =============================================
+-- 17. DOCUMENTS TABLE (File BLOB Storage)
+-- =============================================
+CREATE TABLE or_documents (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    task_instance_id UUID REFERENCES or_task_instances(id) ON DELETE CASCADE,
+    
+    -- File metadata
+    filename VARCHAR(255) NOT NULL,        -- Stored filename (may be sanitized)
+    original_filename VARCHAR(255) NOT NULL, -- Original uploaded filename
+    mime_type VARCHAR(100) NOT NULL,
+    file_size INTEGER NOT NULL,            -- Size in bytes (max ~5MB)
+    file_data BYTEA NOT NULL,              -- The actual file binary data
+    
+    -- Document-specific metadata (for ID documents)
+    document_side VARCHAR(20),             -- 'FRONT', 'BACK', or NULL
+    document_number VARCHAR(100),          -- If capturesDocumentNumber enabled
+    expiry_date DATE,                      -- If capturesExpiry enabled
+    
+    -- Tracking
+    uploaded_by UUID REFERENCES or_team_members(id),
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_documents_task_instance ON or_documents(task_instance_id);
+CREATE INDEX idx_documents_uploaded_by ON or_documents(uploaded_by);
+CREATE INDEX idx_documents_mime_type ON or_documents(mime_type);
+CREATE INDEX idx_documents_uploaded_at ON or_documents(uploaded_at DESC);
+
+-- =============================================
 -- 17. or_communications LOG TABLE
 -- =============================================
 CREATE TABLE or_communications (
