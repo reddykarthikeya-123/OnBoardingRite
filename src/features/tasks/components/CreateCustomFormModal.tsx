@@ -440,25 +440,18 @@ export function CreateCustomFormModal({
                             {selectedField ? (
                                 <div className="field-config-form">
                                     <div className="input-group">
-                                        <label className="input-label">Label *</label>
-                                        <input
-                                            type="text"
-                                            className="input"
-                                            value={selectedField.label}
-                                            onChange={(e) => updateField(selectedField.id, { label: e.target.value })}
-                                        />
-                                    </div>
-
-                                    <div className="input-group">
-                                        <label className="input-label">Field Name</label>
+                                        <label className="input-label">Field Name *</label>
                                         <input
                                             type="text"
                                             className="input"
                                             value={selectedField.name}
-                                            onChange={(e) => updateField(selectedField.id, { name: e.target.value })}
+                                            onChange={(e) => updateField(selectedField.id, {
+                                                name: e.target.value,
+                                                label: e.target.value
+                                            })}
                                             placeholder="First Name"
                                         />
-                                        <span className="input-helper">Used for data storage</span>
+                                        <span className="input-helper">Displayed as label and used for data storage</span>
                                     </div>
 
                                     {selectedField.type !== 'EMBEDDED_PDF' && selectedField.type !== 'CHECKBOX' && selectedField.type !== 'SIGNATURE' && (
