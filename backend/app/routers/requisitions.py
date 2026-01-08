@@ -146,9 +146,16 @@ def assign_member_to_project(project_id: str, data: AssignMemberRequest, db: Ses
 
 @router.delete("/{project_id}/members/{member_id}")
 def remove_member_from_project(project_id: str, member_id: str, db: Session = Depends(get_db)):
+    # Convert string UUIDs to UUID objects
+    try:
+        project_uuid = uuid_lib.UUID(project_id)
+        member_uuid = uuid_lib.UUID(member_id)
+    except (ValueError, AttributeError):
+        raise HTTPException(status_code=400, detail="Invalid UUID format")
+    
     assignment = db.query(ProjectAssignment).filter(
-        ProjectAssignment.project_id == project_id,
-        ProjectAssignment.team_member_id == member_id
+        ProjectAssignment.project_id == project_uuid,
+        ProjectAssignment.team_member_id == member_uuid
     ).first()
     
     if not assignment:

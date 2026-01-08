@@ -13,14 +13,14 @@ import {
     FileText,
     Layers,
     ExternalLink,
-    MoreVertical,
     Shield,
     ChevronRight,
     ListChecks,
     Loader2,
     UserPlus,
     Check,
-    Search
+    Search,
+    Trash2
 } from 'lucide-react';
 import { Card, CardBody, Button, Badge, Progress, Modal } from '../../../components/ui';
 import { projectsApi, teamMembersApi } from '../../../services/api';
@@ -71,6 +71,11 @@ export function ProjectDetailPage() {
     const [selectedMemberIds, setSelectedMemberIds] = useState<Set<string>>(new Set());
     const [memberSearchQuery, setMemberSearchQuery] = useState('');
     const [isAddingMembers, setIsAddingMembers] = useState(false);
+
+    // Delete Member modal state
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [memberToDelete, setMemberToDelete] = useState<TeamMember | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         if (projectId) {
@@ -196,6 +201,28 @@ export function ProjectDetailPage() {
             m.trade.toLowerCase().includes(query)
         );
     });
+
+    const handleOpenDeleteConfirm = (member: TeamMember) => {
+        setMemberToDelete(member);
+        setShowDeleteConfirm(true);
+    };
+
+    const handleDeleteMember = async () => {
+        if (!memberToDelete) return;
+
+        try {
+            setIsDeleting(true);
+            await projectsApi.removeMember(projectId!, memberToDelete.id);
+            setShowDeleteConfirm(false);
+            setMemberToDelete(null);
+            // Reload project data to reflect removed member
+            await loadProjectData();
+        } catch (err) {
+            console.error('Failed to delete member:', err);
+        } finally {
+            setIsDeleting(false);
+        }
+    };
 
     if (isLoading) {
         return (
@@ -607,8 +634,14 @@ export function ProjectDetailPage() {
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <Button variant="ghost" size="sm" className="btn-icon">
-                                                        <MoreVertical size={16} />
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="btn-icon text-danger hover:bg-danger-50"
+                                                        onClick={() => handleOpenDeleteConfirm(member)}
+                                                        title="Remove member from project"
+                                                    >
+                                                        <Trash2 size={16} />
                                                     </Button>
                                                 </td>
                                             </tr>
@@ -737,6 +770,38 @@ export function ProjectDetailPage() {
                                 {isAddingMembers ? 'Adding...' : `Add ${selectedMemberIds.size} Member${selectedMemberIds.size !== 1 ? 's' : ''}`}
                             </Button>
                         </div>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Delete Member Confirmation Modal */}
+            <Modal
+                isOpen={showDeleteConfirm}
+                onClose={() => setShowDeleteConfirm(false)}
+                title="Remove Team Member"
+                size="sm"
+            >
+                <div className="delete-confirm-modal">
+                    <div className="delete-confirm-icon">
+                        <AlertCircle size={48} className="text-danger" />
+                    </div>
+                    <p className="delete-confirm-message">
+                        Are you sure you want to remove <strong>{memberToDelete?.firstName} {memberToDelete?.lastName}</strong> from this project?
+                    </p>
+                    <p className="delete-confirm-warning text-sm text-muted">
+                        This action cannot be undone. The member will lose access to all project tasks.
+                    </p>
+                    <div className="delete-confirm-actions">
+                        <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="danger"
+                            onClick={handleDeleteMember}
+                            disabled={isDeleting}
+                        >
+                            {isDeleting ? 'Removing...' : 'Remove Member'}
+                        </Button>
                     </div>
                 </div>
             </Modal>

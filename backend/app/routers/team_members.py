@@ -111,10 +111,41 @@ def update_team_member(member_id: str, data: TeamMemberUpdate, db: Session = Dep
 
 @router.delete("/{member_id}")
 def delete_team_member(member_id: str, db: Session = Depends(get_db)):
-    member = db.query(TeamMember).filter(TeamMember.id == member_id).first()
+    # Convert string UUID to UUID object
+    try:
+        member_uuid = uuid_lib.UUID(member_id)
+    except (ValueError, AttributeError):
+        raise HTTPException(status_code=400, detail="Invalid UUID format")
+    
+    member = db.query(TeamMember).filter(TeamMember.id == member_uuid).first()
     if not member:
         raise HTTPException(status_code=404, detail="Team member not found")
+    
+    # Import related models here to avoid circular imports
+    from app.models.models import ProjectAssignment, Communication
+    
+    try:
+        # CASCADING DELETE - Delete all related records manually
         
-    db.delete(member)
-    db.commit()
-    return {"message": "Team member deleted"}
+        # 1. Delete all project assignments for this team member
+        assignments_deleted = db.query(ProjectAssignment).filter(
+            ProjectAssignment.team_member_id == member_uuid
+        ).delete(synchronize_session=False)
+        
+        # 2. Set team_member_id to NULL in communications to preserve history
+        communications_updated = db.query(Communication).filter(
+            Communication.team_member_id == member_uuid
+        ).update({Communication.team_member_id: None}, synchronize_session=False)
+        
+        # 3. Delete the team member
+        db.delete(member)
+        db.commit()
+        
+        return {
+            "message": "Team member deleted",
+            "assignments_deleted": assignments_deleted,
+            "communications_updated": communications_updated
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to delete team member: {str(e)}")

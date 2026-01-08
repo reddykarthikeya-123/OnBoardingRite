@@ -127,6 +127,10 @@ export const projectsApi = {
         const successCount = results.filter(r => r.success).length;
         return { success: true, added: successCount };
     },
+
+    removeMember: (projectId: string, memberId: string) => fetchApi<{ success: boolean }>(`/projects/${projectId}/members/${memberId}`, {
+        method: 'DELETE',
+    }),
 };
 
 // Eligibility Rules API
