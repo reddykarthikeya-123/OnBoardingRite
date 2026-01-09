@@ -105,6 +105,8 @@ def create_requisition(project_id: str, data: CreateRequisitionRequest, db: Sess
 
 @router.post("/{project_id}/members", response_model=dict)
 def assign_member_to_project(project_id: str, data: AssignMemberRequest, db: Session = Depends(get_db)):
+    from app.models.models import TaskInstance, Template, TemplateTask, Task
+    
     # Convert string UUIDs to UUID objects
     try:
         project_uuid = uuid_lib.UUID(project_id)
@@ -129,6 +131,7 @@ def assign_member_to_project(project_id: str, data: AssignMemberRequest, db: Ses
     if existing:
         raise HTTPException(status_code=400, detail="Member already assigned to project")
     
+    # Create the assignment
     assignment = ProjectAssignment(
         id=uuid_lib.uuid4(),
         project_id=project_uuid,
@@ -140,9 +143,37 @@ def assign_member_to_project(project_id: str, data: AssignMemberRequest, db: Ses
     )
     
     db.add(assignment)
+    db.flush()  # Get the assignment ID
+    
+    # Create task instances from project's template
+    task_instances_created = 0
+    if project.template_id:
+        # Get all tasks from the template
+        template_tasks = db.query(TemplateTask).filter(
+            TemplateTask.template_id == project.template_id
+        ).all()
+        
+        for tt in template_tasks:
+            # Create a task instance for each template task
+            task_instance = TaskInstance(
+                id=uuid_lib.uuid4(),
+                task_id=tt.task_id,
+                assignment_id=assignment.id,
+                status="PENDING",
+                waived=False,
+                created_at=datetime.utcnow()
+            )
+            db.add(task_instance)
+            task_instances_created += 1
+    
     db.commit()
     
-    return {"success": True, "assignmentId": str(assignment.id)}
+    return {
+        "success": True, 
+        "assignmentId": str(assignment.id),
+        "taskInstancesCreated": task_instances_created
+    }
+
 
 @router.delete("/{project_id}/members/{member_id}")
 def remove_member_from_project(project_id: str, member_id: str, db: Session = Depends(get_db)):
