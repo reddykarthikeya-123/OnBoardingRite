@@ -19,8 +19,7 @@ import {
     UserPlus,
     Check,
     Search,
-    Trash2,
-    Eye
+    Trash2
 } from 'lucide-react';
 import { Card, CardBody, Button, Badge, Progress, Modal } from '../../../components/ui';
 import { projectsApi, teamMembersApi, candidateApi } from '../../../services/api';
@@ -700,7 +699,7 @@ export function ProjectDetailPage() {
                                                             onClick={() => handleViewSubmissions(member)}
                                                             title="View submitted forms"
                                                         >
-                                                            <Eye size={16} />
+                                                            <FileText size={16} />
                                                         </Button>
                                                         <Button
                                                             variant="ghost"

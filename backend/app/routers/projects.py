@@ -269,6 +269,58 @@ def get_project_members(project_id: str, db: Session = Depends(get_db)):
     
     return members
 
+from pydantic import BaseModel
+
+class UpdateProjectRequest(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    clientName: Optional[str] = None
+    location: Optional[str] = None
+    startDate: Optional[date] = None
+    endDate: Optional[date] = None
+    status: Optional[str] = None
+    isDOD: Optional[bool] = None
+    isODRISA: Optional[bool] = None
+
+@router.put("/{project_id}")
+def update_project(project_id: str, data: UpdateProjectRequest, db: Session = Depends(get_db)):
+    """Update a project's details"""
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Update fields if provided
+    if data.name is not None:
+        project.name = data.name
+    if data.description is not None:
+        project.description = data.description
+    if data.clientName is not None:
+        project.client_name = data.clientName
+    if data.location is not None:
+        project.location = data.location
+    if data.startDate is not None:
+        project.start_date = data.startDate
+    if data.endDate is not None:
+        project.end_date = data.endDate
+    if data.status is not None:
+        project.status = data.status
+    if data.isDOD is not None:
+        project.is_dod = data.isDOD
+    if data.isODRISA is not None:
+        project.is_odrisa = data.isODRISA
+    
+    project.updated_at = datetime.utcnow()
+    
+    db.commit()
+    db.refresh(project)
+    
+    return {
+        "id": str(project.id),
+        "name": project.name,
+        "status": project.status,
+        "message": "Project updated successfully"
+    }
+
 @router.delete("/{project_id}")
 def delete_project(project_id: str, db: Session = Depends(get_db)):
     """Delete a project"""

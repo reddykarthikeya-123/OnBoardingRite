@@ -17,7 +17,6 @@ import {
     CheckSquare,
     Square,
     Minus,
-    Eye,
     FileText,
     ChevronRight,
     Loader2
@@ -680,7 +679,7 @@ export function DashboardPage() {
                                                 <td className="actions-col">
                                                     <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                                                         <ActionButton
-                                                            icon={<Eye size={14} />}
+                                                            icon={<FileText size={14} />}
                                                             label="View Submitted Forms"
                                                             variant="primary"
                                                             onClick={() => handleViewSubmissions(member)}

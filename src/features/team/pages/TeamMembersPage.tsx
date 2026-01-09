@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Users, Mail, Phone, MapPin, Loader2, Trash2, Edit, Save } from 'lucide-react';
+import { Search, Plus, Users, Mail, Phone, MapPin, Loader2, Trash2, Edit, Save, FileText, ChevronRight, ChevronDown } from 'lucide-react';
 import { Card, Button, Badge, Modal } from '../../../components/ui';
-import { teamMembersApi } from '../../../services/api';
+import { teamMembersApi, candidateApi } from '../../../services/api';
+import { SubmittedTaskViewer } from '../../candidate/components/SubmittedTaskViewer';
 
 interface TeamMember {
     id: string;
@@ -54,6 +55,30 @@ export function TeamMembersPage() {
     const [formData, setFormData] = useState<TeamMemberFormData>(emptyFormData);
     const [isSaving, setIsSaving] = useState(false);
     const [formErrors, setFormErrors] = useState<string[]>([]);
+
+    // Submissions modal state
+    const [showSubmissionsModal, setShowSubmissionsModal] = useState(false);
+    const [selectedMemberForSubmissions, setSelectedMemberForSubmissions] = useState<TeamMember | null>(null);
+    const [groupedSubmissions, setGroupedSubmissions] = useState<Array<{
+        projectId: string;
+        projectName: string;
+        role: string | null;
+        submissions: Array<{
+            id: string;
+            taskId: string;
+            taskName: string;
+            category: string | null;
+            submittedAt: string | null;
+            formData: Record<string, any> | null;
+        }>;
+    }>>([]);
+    const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
+    const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
+    const [viewTask, setViewTask] = useState<{
+        name: string;
+        submittedAt: string | null;
+        formData: Record<string, any>;
+    } | null>(null);
 
     useEffect(() => {
         loadMembers();
@@ -167,6 +192,42 @@ export function TeamMembersPage() {
         if (formErrors.length > 0) setFormErrors([]);
     };
 
+    // View submissions for a member (all projects)
+    const handleViewSubmissions = async (member: TeamMember) => {
+        setSelectedMemberForSubmissions(member);
+        setShowSubmissionsModal(true);
+        setIsLoadingSubmissions(true);
+        setViewTask(null);
+        setExpandedProjects(new Set());
+
+        try {
+            const data = await candidateApi.getSubmittedTasks(member.id);
+            setGroupedSubmissions(data || []);
+            // Auto-expand all projects
+            if (data && data.length > 0) {
+                setExpandedProjects(new Set(data.map((g: any) => g.projectId)));
+            }
+        } catch (error) {
+            console.error('Failed to load submissions:', error);
+            setGroupedSubmissions([]);
+        } finally {
+            setIsLoadingSubmissions(false);
+        }
+    };
+
+    // Toggle project expansion in submissions modal
+    const toggleProject = (projectId: string) => {
+        setExpandedProjects(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(projectId)) {
+                newSet.delete(projectId);
+            } else {
+                newSet.add(projectId);
+            }
+            return newSet;
+        });
+    };
+
     if (isLoading) {
         return (
             <div className="page-enter flex items-center justify-center" style={{ minHeight: '400px' }}>
@@ -251,6 +312,13 @@ export function TeamMembersPage() {
                                     {member.firstName[0]}{member.lastName[0]}
                                 </div>
                                 <div className="team-member-card-actions">
+                                    <button
+                                        className="btn-icon-sm"
+                                        onClick={() => handleViewSubmissions(member)}
+                                        title="View Submissions"
+                                    >
+                                        <FileText size={14} />
+                                    </button>
                                     <button
                                         className="btn-icon-sm"
                                         onClick={() => handleEdit(member)}
@@ -454,6 +522,102 @@ export function TeamMembersPage() {
                         />
                     </div>
                 </div>
+            </Modal>
+
+            {/* Submissions Modal - Grouped by Project */}
+            <Modal
+                isOpen={showSubmissionsModal}
+                onClose={() => { setShowSubmissionsModal(false); setViewTask(null); }}
+                title={viewTask
+                    ? `${selectedMemberForSubmissions?.firstName} ${selectedMemberForSubmissions?.lastName}`
+                    : `Submitted Forms - ${selectedMemberForSubmissions?.firstName} ${selectedMemberForSubmissions?.lastName}`
+                }
+                size="lg"
+            >
+                {viewTask ? (
+                    <SubmittedTaskViewer
+                        taskName={viewTask.name}
+                        submittedAt={viewTask.submittedAt}
+                        formData={viewTask.formData}
+                        onClose={() => setViewTask(null)}
+                    />
+                ) : isLoadingSubmissions ? (
+                    <div className="flex items-center justify-center py-8">
+                        <Loader2 className="animate-spin" size={24} />
+                        <span className="ml-2">Loading submissions...</span>
+                    </div>
+                ) : groupedSubmissions.length === 0 ? (
+                    <div className="text-center py-8 text-muted">
+                        <FileText size={32} className="mx-auto mb-2" style={{ opacity: 0.3 }} />
+                        <p>No submitted forms yet.</p>
+                    </div>
+                ) : (
+                    <div className="submissions-list">
+                        {groupedSubmissions.map((project) => (
+                            <div key={project.projectId} className="project-group">
+                                <button
+                                    className="project-group-header"
+                                    onClick={() => toggleProject(project.projectId)}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        width: '100%',
+                                        padding: '12px 16px',
+                                        background: 'var(--color-bg-subtle)',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        cursor: 'pointer',
+                                        marginBottom: '8px',
+                                        textAlign: 'left'
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        {expandedProjects.has(project.projectId) ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                                        <span style={{ fontWeight: 600 }}>{project.projectName}</span>
+                                        <Badge variant="secondary">{project.submissions.length} forms</Badge>
+                                    </div>
+                                </button>
+
+                                {expandedProjects.has(project.projectId) && (
+                                    <div style={{ paddingLeft: '16px', marginBottom: '16px' }}>
+                                        {project.submissions.map((task) => (
+                                            <div
+                                                key={task.id}
+                                                onClick={() => setViewTask({
+                                                    name: task.taskName,
+                                                    submittedAt: task.submittedAt,
+                                                    formData: task.formData || {}
+                                                })}
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    padding: '12px',
+                                                    cursor: 'pointer',
+                                                    borderBottom: '1px solid var(--color-border-light)'
+                                                }}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                    <FileText size={18} style={{ color: 'var(--color-primary-600)' }} />
+                                                    <div>
+                                                        <div style={{ fontWeight: 500 }}>{task.taskName}</div>
+                                                        {task.submittedAt && (
+                                                            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                                                                {new Date(task.submittedAt).toLocaleDateString()}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <ChevronRight size={16} style={{ color: 'var(--color-text-muted)' }} />
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
             </Modal>
         </div>
     );

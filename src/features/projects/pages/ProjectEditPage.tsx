@@ -86,6 +86,33 @@ export function ProjectEditPage() {
         loadData();
     }, [projectId]);
 
+    // Form state for project editing - must be before any conditional returns
+    const [isSaving, setIsSaving] = useState(false);
+    const [formData, setFormData] = useState<{
+        name: string;
+        description: string;
+        clientName: string;
+        status: string;
+        location: string;
+        startDate: string;
+        endDate: string;
+    } | null>(null);
+
+    // Initialize form data when project loads
+    useEffect(() => {
+        if (project && !formData) {
+            setFormData({
+                name: project.name || '',
+                description: project.description || '',
+                clientName: project.clientName || '',
+                status: project.status || 'DRAFT',
+                location: project.location || '',
+                startDate: project.startDate || '',
+                endDate: project.endDate || ''
+            });
+        }
+    }, [project, formData]);
+
     if (loading) {
         return (
             <div className="page-enter flex items-center justify-center py-16">
@@ -167,6 +194,36 @@ export function ProjectEditPage() {
             alert('Failed to delete project. Please try again.');
             setLoading(false);
             setShowDeleteModal(false);
+        }
+    };
+
+    const handleInputChange = (field: string, value: string) => {
+        setFormData(prev => prev ? { ...prev, [field]: value } : null);
+    };
+
+    const handleSaveProject = async () => {
+        if (!projectId || !formData) return;
+
+        setIsSaving(true);
+        try {
+            await projectsApi.update(projectId, {
+                name: formData.name,
+                description: formData.description,
+                clientName: formData.clientName,
+                status: formData.status,
+                location: formData.location,
+                startDate: formData.startDate,
+                endDate: formData.endDate
+            });
+            // Refresh project data
+            const updated = await projectsApi.get(projectId);
+            setProject({ ...updated, taskGroups: project?.taskGroups || [] });
+            alert('Project saved successfully!');
+        } catch (err) {
+            console.error('Failed to save project:', err);
+            alert('Failed to save project. Please try again.');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -314,8 +371,8 @@ export function ProjectEditPage() {
                                 <Button variant="secondary" size="sm" leftIcon={<Trash2 size={14} />} onClick={handleDeleteClick}>
                                     Delete Project
                                 </Button>
-                                <Button variant="primary" size="sm" leftIcon={<Save size={14} />}>
-                                    Save Changes
+                                <Button variant="primary" size="sm" leftIcon={<Save size={14} />} onClick={handleSaveProject} disabled={isSaving}>
+                                    {isSaving ? 'Saving...' : 'Save Changes'}
                                 </Button>
                             </div>
                         </header>
@@ -332,7 +389,8 @@ export function ProjectEditPage() {
                                     <input
                                         type="text"
                                         className="input"
-                                        defaultValue={project.name}
+                                        value={formData?.name || ''}
+                                        onChange={(e) => handleInputChange('name', e.target.value)}
                                     />
                                 </div>
 
@@ -341,7 +399,8 @@ export function ProjectEditPage() {
                                     <textarea
                                         className="input"
                                         rows={3}
-                                        defaultValue={project.description}
+                                        value={formData?.description || ''}
+                                        onChange={(e) => handleInputChange('description', e.target.value)}
                                         placeholder="Enter a description for this project..."
                                     />
                                 </div>
@@ -349,15 +408,16 @@ export function ProjectEditPage() {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="form-group">
                                         <label className="form-label">Client *</label>
-                                        <select className="input select" defaultValue={project.clientId}>
+                                        <select className="input select" value={formData?.clientName || ''} onChange={(e) => handleInputChange('clientName', e.target.value)}>
                                             {clientOptions.map(client => (
-                                                <option key={client.id} value={client.id}>{client.name}</option>
+                                                <option key={client.id} value={client.name}>{client.name}</option>
                                             ))}
                                         </select>
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">Status</label>
-                                        <select className="input select" defaultValue={project.status}>
+                                        <select className="input select" value={formData?.status || 'DRAFT'} onChange={(e) => handleInputChange('status', e.target.value)}>
+                                            <option value="DRAFT">Draft</option>
                                             <option value="ACTIVE">Active</option>
                                             <option value="PENDING">Pending</option>
                                             <option value="COMPLETED">Completed</option>
@@ -378,7 +438,8 @@ export function ProjectEditPage() {
                                     <input
                                         type="text"
                                         className="input"
-                                        defaultValue={project.location}
+                                        value={formData?.location || ''}
+                                        onChange={(e) => handleInputChange('location', e.target.value)}
                                         placeholder="City, State"
                                     />
                                 </div>
@@ -389,7 +450,8 @@ export function ProjectEditPage() {
                                         <input
                                             type="date"
                                             className="input"
-                                            defaultValue={project.startDate}
+                                            value={formData?.startDate || ''}
+                                            onChange={(e) => handleInputChange('startDate', e.target.value)}
                                         />
                                     </div>
                                     <div className="form-group">
@@ -397,7 +459,8 @@ export function ProjectEditPage() {
                                         <input
                                             type="date"
                                             className="input"
-                                            defaultValue={project.endDate}
+                                            value={formData?.endDate || ''}
+                                            onChange={(e) => handleInputChange('endDate', e.target.value)}
                                         />
                                     </div>
                                 </div>
