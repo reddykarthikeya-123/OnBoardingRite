@@ -389,6 +389,21 @@ export const candidateApi = {
             `/candidate/tasks/${assignmentId}/${taskInstanceId}/start`,
             { method: 'POST' }
         ),
+
+    // Get submitted tasks for profile
+    getSubmittedTasks: (candidateId: string) => fetchApi<Array<{
+        projectId: string;
+        projectName: string;
+        role: string | null;
+        submissions: Array<{
+            id: string;
+            taskId: string;
+            taskName: string;
+            category: string | null;
+            submittedAt: string | null;
+            formData: Record<string, any> | null;
+        }>;
+    }>>(`/candidate/profile/submissions/${candidateId}`),
 };
 
 export { API_BASE_URL };

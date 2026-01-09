@@ -154,7 +154,7 @@ class TeamMember(Base):
     created_at = Column(TIMESTAMP)
     updated_at = Column(TIMESTAMP)
     
-    assignments = relationship("ProjectAssignment", back_populates="team_member")
+    assignments = relationship("ProjectAssignment", back_populates="team_member", cascade="all, delete-orphan")
 
 
 class Project(Base):
@@ -177,8 +177,8 @@ class Project(Base):
     updated_at = Column(TIMESTAMP)
     created_by = Column(UUID(as_uuid=True), ForeignKey("or_users.id"))
     
-    assignments = relationship("ProjectAssignment", back_populates="project")
-    contacts = relationship("ProjectContact", back_populates="project")
+    assignments = relationship("ProjectAssignment", back_populates="project", cascade="all, delete-orphan")
+    contacts = relationship("ProjectContact", back_populates="project", cascade="all, delete-orphan")
 
     @property
     def flags(self):
@@ -219,7 +219,7 @@ class ProjectAssignment(Base):
     
     project = relationship("Project", back_populates="assignments")
     team_member = relationship("TeamMember", back_populates="assignments")
-    task_instances = relationship("TaskInstance", back_populates="assignment")
+    task_instances = relationship("TaskInstance", back_populates="assignment", cascade="all, delete-orphan")
 
 class TaskInstance(Base):
     __tablename__ = "or_task_instances"
@@ -242,7 +242,7 @@ class TaskInstance(Base):
     
     task = relationship("Task", back_populates="task_instances")
     assignment = relationship("ProjectAssignment", back_populates="task_instances")
-    documents = relationship("Document", back_populates="task_instance")
+    documents = relationship("Document", back_populates="task_instance", cascade="all, delete-orphan")
 
 
 class Requisition(Base):

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { ChevronRight, Mail, Phone, MapPin, Briefcase, Building, Calendar, Loader2 } from 'lucide-react';
+import { ChevronRight, Mail, Phone, MapPin, Loader2, FileText } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
+import { candidateApi } from '../../../services/api';
+import { SubmittedTaskViewer } from '../components/SubmittedTaskViewer';
 
 interface ProfileData {
     firstName: string;
@@ -13,29 +15,63 @@ interface ProfileData {
     location: string | null;
 }
 
+interface SubmittedTask {
+    id: string;
+    taskId: string;
+    taskName: string;
+    category: string | null;
+    submittedAt: string | null;
+    formData: Record<string, any> | null;
+}
+
+interface ProjectSubmissionGroup {
+    projectId: string;
+    projectName: string;
+    role: string | null;
+    submissions: SubmittedTask[];
+}
+
 export function CandidateProfilePage() {
     const { user } = useAuth();
     const [loading, setLoading] = useState(true);
     const [profileData, setProfileData] = useState<ProfileData | null>(null);
+    const [submissions, setSubmissions] = useState<ProjectSubmissionGroup[]>([]);
+    const [viewTask, setViewTask] = useState<SubmittedTask | null>(null);
 
     useEffect(() => {
         loadProfile();
     }, [user]);
 
     const loadProfile = async () => {
-        // For now, use the user data from auth context
-        // In the future, this could fetch more details from an API
         if (user) {
             setProfileData({
                 firstName: user.firstName || 'User',
                 lastName: user.lastName || '',
                 email: user.email || '',
-                phone: null,  // Would come from API
-                trade: null,  // Would come from API
-                projectName: null,  // Would come from API
-                startDate: null,  // Would come from API
-                location: null,  // Would come from API
+                phone: null,
+                trade: null,
+                projectName: user.assignmentId ? 'Current Project' : null,
+                startDate: null,
+                location: null,
             });
+
+            // Fetch submitted tasks
+            try {
+                const data = await candidateApi.getSubmittedTasks(user.id);
+                setSubmissions(data);
+
+                // Update profile data with info from first project if available
+                if (data.length > 0) {
+                    const firstProject = data[0];
+                    setProfileData(prev => prev ? ({
+                        ...prev,
+                        projectName: firstProject.projectName,
+                        trade: firstProject.role
+                    }) : null);
+                }
+            } catch (err) {
+                console.error('Failed to load submissions:', err);
+            }
         }
         setLoading(false);
     };
@@ -111,39 +147,57 @@ export function CandidateProfilePage() {
                 </div>
             </div>
 
-            {/* Project Assignment - Only show if data exists */}
-            {profileData.projectName && (
-                <div className="profile-section">
-                    <h2 className="profile-section-title">Project Assignment</h2>
-                    <div className="profile-card">
+
+            {/* Submitted Forms Section */}
+            <div className="profile-section">
+                <h2 className="profile-section-title">Submitted Forms</h2>
+                <div className="profile-card">
+                    {submissions.length === 0 ? (
                         <div className="profile-card-item">
-                            <Building size={18} className="profile-card-icon" />
                             <div className="profile-card-content">
-                                <span className="profile-card-label">Project</span>
-                                <span className="profile-card-value">{profileData.projectName}</span>
+                                <span className="profile-card-value" style={{ color: '#697386', fontStyle: 'italic' }}>
+                                    No submitted forms yet
+                                </span>
                             </div>
                         </div>
-                        {profileData.trade && (
-                            <div className="profile-card-item">
-                                <Briefcase size={18} className="profile-card-icon" />
-                                <div className="profile-card-content">
-                                    <span className="profile-card-label">Trade</span>
-                                    <span className="profile-card-value">{profileData.trade}</span>
-                                </div>
+                    ) : (
+                        submissions.map((group) => (
+                            <div key={group.projectId}>
+                                {submissions.length > 1 && (
+                                    <div className="profile-list-header" style={{ padding: '8px 0', color: '#8792a2', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase' }}>
+                                        {group.projectName}
+                                    </div>
+                                )}
+
+                                {group.submissions.map((task, index) => (
+                                    <div
+                                        key={task.id}
+                                        className="profile-card-item clickable"
+                                        onClick={() => setViewTask(task)}
+                                        style={{
+                                            borderBottom: index < group.submissions.length - 1 ? '1px solid #f0f0f0' : 'none',
+                                            cursor: 'pointer',
+                                            padding: '12px 0'
+                                        }}
+                                    >
+                                        <FileText size={18} className="profile-card-icon" style={{ color: '#4caf50' }} />
+                                        <div className="profile-card-content" style={{ flex: 1 }}>
+                                            <span className="profile-card-label">
+                                                {group.projectName} • {task.submittedAt ? new Date(task.submittedAt).toLocaleDateString() : 'Completed'}
+                                            </span>
+                                            <span className="profile-card-value" style={{ color: '#1a1f36' }}>{task.taskName}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', color: '#697386' }}>
+                                            <span style={{ fontSize: '13px', marginRight: '8px' }}>View</span>
+                                            <ChevronRight size={16} />
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                        )}
-                        {profileData.startDate && (
-                            <div className="profile-card-item">
-                                <Calendar size={18} className="profile-card-icon" />
-                                <div className="profile-card-content">
-                                    <span className="profile-card-label">Start Date</span>
-                                    <span className="profile-card-value">{profileData.startDate}</span>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                        ))
+                    )}
                 </div>
-            )}
+            </div>
 
             {/* Settings Menu */}
             <div className="profile-section">
@@ -166,6 +220,16 @@ export function CandidateProfilePage() {
                     </button>
                 </div>
             </div>
+
+            {/* Task Viewer Modal */}
+            {viewTask && (
+                <SubmittedTaskViewer
+                    taskName={viewTask.taskName}
+                    submittedAt={viewTask.submittedAt}
+                    formData={viewTask.formData || {}}
+                    onClose={() => setViewTask(null)}
+                />
+            )}
         </div>
     );
 }

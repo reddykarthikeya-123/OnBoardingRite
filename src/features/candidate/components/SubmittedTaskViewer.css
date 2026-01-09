@@ -1,0 +1,143 @@
+.viewer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 16px;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.viewer-modal {
+    background: white;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    animation: slideUp 0.3s ease-out;
+}
+
+.viewer-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #eef0f3;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.viewer-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1a1f36;
+    margin: 0 0 4px 0;
+}
+
+.viewer-subtitle {
+    font-size: 0.875rem;
+    color: #697386;
+    margin: 0;
+}
+
+.viewer-close-btn {
+    background: none;
+    border: none;
+    color: #8792a2;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.viewer-close-btn:hover {
+    background: #f7fafc;
+    color: #1a1f36;
+}
+
+.viewer-content {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.form-data-grid {
+    display: grid;
+    gap: 16px;
+}
+
+.form-data-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-data-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    color: #697386;
+}
+
+.form-data-value-box {
+    background: #f7fafc;
+    border: 1px solid #eef0f3;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 0.9375rem;
+    color: #1a1f36;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+}
+
+.viewer-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #eef0f3;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.viewer-done-btn {
+    background: #1a1f36;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.viewer-done-btn:hover {
+    background: #2d364c;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}

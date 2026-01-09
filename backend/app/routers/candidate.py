@@ -82,6 +82,27 @@ class FormSubmissionRequest(BaseModel):
     formData: Dict[str, Any]
 
 
+class SubmittedTaskItem(BaseModel):
+    """Details of a submitted task"""
+    id: str
+    taskId: str
+    taskName: str
+    category: Optional[str]
+    submittedAt: Optional[str]
+    formData: Optional[Dict[str, Any]]
+    
+    class Config:
+        from_attributes = True
+
+
+class ProjectSubmissionGroup(BaseModel):
+    """Group of submissions for a project"""
+    projectId: str
+    projectName: str
+    role: Optional[str]
+    submissions: List[SubmittedTaskItem]
+
+
 # =============================================
 # HELPER FUNCTIONS
 # =============================================
@@ -443,3 +464,69 @@ def start_candidate_task(
         "status": ti.status,
         "startedAt": ti.started_at.isoformat() if ti.started_at else None
     }
+
+
+# =============================================
+# SUBMITTED FORMS ENDPOINT
+# =============================================
+
+@router.get("/profile/submissions/{candidate_id}", response_model=List[ProjectSubmissionGroup])
+def get_submitted_tasks(
+    candidate_id: str,
+    db: Session = Depends(get_db)
+):
+    """Get all submitted/completed tasks grouped by project"""
+    
+    # Verify candidate exists
+    candidate = db.query(TeamMember).filter(TeamMember.id == candidate_id).first()
+    if not candidate:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+        
+    # Get all assignments for this candidate
+    assignments = db.query(ProjectAssignment).filter(
+        ProjectAssignment.team_member_id == candidate_id
+    ).all()
+    
+    result = []
+    
+    for assignment in assignments:
+        project = db.query(Project).filter(Project.id == assignment.project_id).first()
+        if not project:
+            continue
+            
+        # Get completed tasks for this assignment
+        completed_instances = db.query(TaskInstance).filter(
+            TaskInstance.assignment_id == assignment.id,
+            TaskInstance.status == 'COMPLETED'
+        ).all()
+        
+        if not completed_instances:
+            continue
+            
+        submissions = []
+        for ti in completed_instances:
+            task = db.query(Task).filter(Task.id == ti.task_id).first()
+            if not task:
+                continue
+                
+            # Extract form data if available
+            form_data = ti.result.get('formData') if ti.result else None
+            
+            submissions.append(SubmittedTaskItem(
+                id=str(ti.id),
+                taskId=str(task.id),
+                taskName=task.name,
+                category=task.category,
+                submittedAt=ti.completed_at.isoformat() if ti.completed_at else None,
+                formData=form_data
+            ))
+            
+        if submissions:
+            result.append(ProjectSubmissionGroup(
+                projectId=str(project.id),
+                projectName=project.name,
+                role=assignment.trade,
+                submissions=submissions
+            ))
+            
+    return result
