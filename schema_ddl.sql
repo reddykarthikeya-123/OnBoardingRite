@@ -169,9 +169,15 @@ CREATE TABLE or_team_members (
     zip_code VARCHAR(20),
     country VARCHAR(100) DEFAULT 'USA',
 
+    -- Authentication
+    password_hash TEXT,
+    is_first_login BOOLEAN DEFAULT TRUE,
+    last_login TIMESTAMP,
+
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
 
 CREATE INDEX idx_team_members_email ON or_team_members(email);
 CREATE INDEX idx_team_members_employee ON or_team_members(employee_id);

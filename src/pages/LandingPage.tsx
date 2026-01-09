@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useEffect } from 'react';
-import { UserCircle, Shield, Sparkles } from 'lucide-react';
+import { UserCircle, Shield } from 'lucide-react';
 import './auth.css';
 
 export function LandingPage() {
@@ -25,7 +25,7 @@ export function LandingPage() {
 
             <div className="landing-content">
                 <div className="landing-logo">
-                    <Sparkles size={48} />
+                    <img src="/src/assets/logo.png" alt="OnboardRite" className="landing-logo-img" />
                 </div>
 
                 <h1 className="landing-title">OnboardRite</h1>
