@@ -21,16 +21,48 @@ export function LandingPage() {
 
     return (
         <div className="landing-page">
-            <div className="landing-bg" />
+            {/* Animated Background */}
+            <div className="landing-bg">
+                <div className="landing-gradient-orb orb-1" />
+                <div className="landing-gradient-orb orb-2" />
+                <div className="landing-gradient-orb orb-3" />
+            </div>
+
+            {/* Floating Particles */}
+            <div className="landing-particles">
+                {[...Array(20)].map((_, i) => (
+                    <div
+                        key={i}
+                        className="particle"
+                        style={{
+                            left: `${Math.random() * 100}%`,
+                            animationDelay: `${Math.random() * 5}s`,
+                            animationDuration: `${15 + Math.random() * 10}s`
+                        }}
+                    />
+                ))}
+            </div>
 
             <div className="landing-content">
-                <div className="landing-logo">
-                    <img src="/src/assets/logo.png" alt="OnboardRite" className="landing-logo-img" />
+                {/* Logo with glow effect */}
+                <div className="landing-logo-container">
+                    <div className="landing-logo-glow" />
+                    <div className="landing-logo">
+                        <img src="/src/assets/logo.png" alt="OnboardRite" className="landing-logo-img" />
+                    </div>
                 </div>
 
-                <h1 className="landing-title">OnboardRite</h1>
-                <p className="landing-subtitle">Streamlined onboarding for everyone</p>
+                {/* Title with animation */}
+                <h1 className="landing-title">
+                    <span className="landing-title-word">Onboard</span>
+                    <span className="landing-title-highlight">Rite</span>
+                </h1>
 
+                <p className="landing-subtitle">
+                    Streamlined onboarding for everyone
+                </p>
+
+                {/* Role Selection Cards */}
                 <div className="landing-cards">
                     <button
                         className="landing-card admin-card"
@@ -55,6 +87,8 @@ export function LandingPage() {
                     </button>
                 </div>
 
+
+                {/* Footer */}
                 <p className="landing-footer">
                     © {new Date().getFullYear()} OnboardRite. All rights reserved.
                 </p>
