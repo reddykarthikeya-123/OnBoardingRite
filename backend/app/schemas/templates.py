@@ -58,8 +58,9 @@ class ReorderGroupsRequest(BaseModel):
 class AddGroupRequest(BaseModel):
     name: str
     description: Optional[str] = None
-    category: str
-    order: int
+    category: Optional[str] = "GENERAL"
+    order: Optional[int] = 0
+
 
 class AddTaskToGroupRequest(BaseModel):
     name: str

@@ -2,7 +2,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
     ArrowLeft,
     Plus,
-    Save,
     GripVertical,
     Pencil,
     Trash2,
@@ -10,6 +9,7 @@ import {
     ChevronRight,
     Loader2
 } from 'lucide-react';
+
 import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { Card, CardBody, Button, Badge, useToast } from '../../../components/ui';
@@ -313,10 +313,9 @@ export function TemplateDetailPage() {
                         </div>
                     </div>
                     <div className="page-actions">
-                        <Button variant="primary" leftIcon={<Save size={16} />}>
-                            Save Changes
-                        </Button>
+                        {/* Changes are saved automatically */}
                     </div>
+
                 </div>
             </div>
 

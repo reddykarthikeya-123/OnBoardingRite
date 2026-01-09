@@ -189,19 +189,26 @@ def add_task_group(template_id: str, data: AddGroupRequest, db: Session = Depend
     t = db.query(ChecklistTemplate).filter(ChecklistTemplate.id == template_id).first()
     if not t:
         raise HTTPException(status_code=404, detail="Template not found")
+    
+    # Auto-calculate order if not provided
+    display_order = data.order
+    if display_order == 0 or display_order is None:
+        existing_groups = db.query(TaskGroup).filter(TaskGroup.template_id == template_id).count()
+        display_order = existing_groups + 1
         
     new_group = TaskGroup(
         id=uuid_lib.uuid4(),
         template_id=template_id,
         name=data.name,
         description=data.description,
-        category=data.category,
-        display_order=data.order,
+        category=data.category or "GENERAL",
+        display_order=display_order,
         created_at=datetime.utcnow()
     )
     db.add(new_group)
     db.commit()
     return new_group
+
 
 @router.post("/{template_id}/groups/reorder")
 def reorder_groups(template_id: str, data: ReorderGroupsRequest, db: Session = Depends(get_db)):
