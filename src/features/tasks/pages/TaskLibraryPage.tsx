@@ -193,9 +193,11 @@ export function TaskLibraryPage() {
             setShowCreateModal(false);
             setSelectedTaskType(null);
             showToast(`Task "${data.name}" created successfully`);
-        } catch (err) {
+        } catch (err: any) {
             console.error('Failed to create task:', err);
-            showToast('Failed to create task', 'danger');
+            // Try to extract detailed error message from API response
+            const errorMessage = err?.message || 'Failed to create task';
+            showToast(errorMessage, 'danger');
         }
     };
 

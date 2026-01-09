@@ -78,6 +78,15 @@ def get_task(task_id: str, db: Session = Depends(get_db)):
 @router.post("/", response_model=TaskLibraryItem)
 def create_task(data: CreateTaskRequest, db: Session = Depends(get_db)):
     """Create a new task in the library"""
+    
+    # Check if a task with the same name already exists
+    existing_task = db.query(Task).filter(Task.name == data.name).first()
+    if existing_task:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"A task with the name '{data.name}' already exists. Please use a different name."
+        )
+    
     new_task = Task(
         id=uuid_lib.uuid4(),
         name=data.name,

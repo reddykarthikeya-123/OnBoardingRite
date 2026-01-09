@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ChevronRight, Mail, Phone, MapPin, Loader2, FileText } from 'lucide-react';
+import { Modal } from '../../../components/ui';
 import { useAuth } from '../../../contexts/AuthContext';
 import { candidateApi } from '../../../services/api';
 import { SubmittedTaskViewer } from '../components/SubmittedTaskViewer';
@@ -222,14 +223,21 @@ export function CandidateProfilePage() {
             </div>
 
             {/* Task Viewer Modal */}
-            {viewTask && (
-                <SubmittedTaskViewer
-                    taskName={viewTask.taskName}
-                    submittedAt={viewTask.submittedAt}
-                    formData={viewTask.formData || {}}
-                    onClose={() => setViewTask(null)}
-                />
-            )}
+            <Modal
+                isOpen={!!viewTask}
+                onClose={() => setViewTask(null)}
+                title={viewTask?.taskName || 'Submitted Form'}
+                size="lg"
+            >
+                {viewTask && (
+                    <SubmittedTaskViewer
+                        taskName={viewTask.taskName}
+                        submittedAt={viewTask.submittedAt}
+                        formData={viewTask.formData || {}}
+                        onClose={() => setViewTask(null)}
+                    />
+                )}
+            </Modal>
         </div>
     );
 }

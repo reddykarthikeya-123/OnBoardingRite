@@ -12,7 +12,18 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
     });
 
     if (!response.ok) {
-        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        // Try to extract detailed error message from response body
+        try {
+            const errorData = await response.json();
+            const detail = errorData.detail || `API Error: ${response.status} ${response.statusText}`;
+            throw new Error(detail);
+        } catch (parseError) {
+            // If parsing fails, use default error message
+            if (parseError instanceof Error && parseError.message !== `Unexpected token`) {
+                throw parseError;
+            }
+            throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        }
     }
 
     // Handle empty responses (e.g., from DELETE requests)
