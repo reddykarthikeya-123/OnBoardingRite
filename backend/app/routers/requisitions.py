@@ -105,7 +105,7 @@ def create_requisition(project_id: str, data: CreateRequisitionRequest, db: Sess
 
 @router.post("/{project_id}/members", response_model=dict)
 def assign_member_to_project(project_id: str, data: AssignMemberRequest, db: Session = Depends(get_db)):
-    from app.models.models import TaskInstance, Template, TemplateTask, Task
+    from app.models.models import TaskInstance, TaskGroup, Task
     
     # Convert string UUIDs to UUID objects
     try:
@@ -148,19 +148,18 @@ def assign_member_to_project(project_id: str, data: AssignMemberRequest, db: Ses
     # Create task instances from project's template
     task_instances_created = 0
     if project.template_id:
-        # Get all tasks from the template
-        template_tasks = db.query(TemplateTask).filter(
-            TemplateTask.template_id == project.template_id
+        # Get all tasks from the template via TaskGroup
+        tasks = db.query(Task).join(TaskGroup).filter(
+            TaskGroup.template_id == project.template_id
         ).all()
         
-        for tt in template_tasks:
-            # Create a task instance for each template task
+        for task in tasks:
+            # Create a task instance for each task
             task_instance = TaskInstance(
                 id=uuid_lib.uuid4(),
-                task_id=tt.task_id,
+                task_id=task.id,
                 assignment_id=assignment.id,
                 status="PENDING",
-                waived=False,
                 created_at=datetime.utcnow()
             )
             db.add(task_instance)
@@ -173,6 +172,7 @@ def assign_member_to_project(project_id: str, data: AssignMemberRequest, db: Ses
         "assignmentId": str(assignment.id),
         "taskInstancesCreated": task_instances_created
     }
+
 
 
 @router.delete("/{project_id}/members/{member_id}")
