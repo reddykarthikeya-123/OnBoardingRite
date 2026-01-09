@@ -2466,6 +2466,50 @@ select {
   background: linear-gradient(180deg, var(--color-neutral-50) 0%, var(--color-background) 100%);
 }
 
+.mobile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-4) var(--spacing-5);
+  background: white;
+  border-bottom: 1px solid var(--color-border-light);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.mobile-header-user {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.mobile-header-greeting {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.mobile-logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: var(--radius-lg);
+  background: var(--color-neutral-100);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.mobile-logout-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+
 .mobile-content {
   flex: 1;
   padding-bottom: 80px;

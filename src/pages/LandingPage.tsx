@@ -14,7 +14,7 @@ export function LandingPage() {
             if (role === 'admin') {
                 navigate('/dashboard', { replace: true });
             } else {
-                navigate('/candidate-v2', { replace: true });
+                navigate('/candidate', { replace: true });
             }
         }
     }, [isAuthenticated, role, navigate]);

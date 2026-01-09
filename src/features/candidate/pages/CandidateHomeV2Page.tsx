@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
     CheckCircle2,
     FileText,
@@ -16,6 +16,8 @@ import {
     Loader2
 } from 'lucide-react';
 import { candidateApi } from '../../../services/api';
+import { useAuth } from '../../../contexts/AuthContext';
+
 
 // Category icon mapping
 const getCategoryIcon = (categoryId: string) => {
@@ -59,18 +61,24 @@ interface DashboardData {
 
 export function CandidateHomeV2Page() {
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
+    const { user } = useAuth();
 
-    // Get assignmentId from URL or use demo value
-    const assignmentId = searchParams.get('assignmentId') || 'demo-assignment';
+    // Get assignmentId from auth context (set during login)
+    const assignmentId = user?.assignmentId || '';
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [dashboard, setDashboard] = useState<DashboardData | null>(null);
 
     useEffect(() => {
-        loadDashboard();
+        if (assignmentId) {
+            loadDashboard();
+        } else {
+            setLoading(false);
+            setError('No active assignment found. Please contact your administrator.');
+        }
     }, [assignmentId]);
+
 
     const loadDashboard = async () => {
         try {

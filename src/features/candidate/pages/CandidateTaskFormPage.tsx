@@ -14,6 +14,7 @@ import {
     Clock
 } from 'lucide-react';
 import { candidateApi } from '../../../services/api';
+import './CandidateForm.css';
 
 interface FormField {
     name: string;

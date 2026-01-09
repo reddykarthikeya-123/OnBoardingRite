@@ -28,7 +28,7 @@ export function CandidateLoginPage() {
                     state: { email }
                 });
             } else {
-                navigate('/candidate-v2', { replace: true });
+                navigate('/candidate', { replace: true });
             }
         } catch (err: any) {
             setError(err.message || 'Invalid email or password');

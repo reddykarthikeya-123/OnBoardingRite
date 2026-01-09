@@ -18,6 +18,7 @@ import {
     Zap
 } from 'lucide-react';
 import { candidateApi } from '../../../services/api';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const CATEGORIES = [
     { id: 'all', label: 'All', emoji: '📋' },
@@ -56,8 +57,10 @@ interface TaskItem {
 export function CandidateTasksV2Page() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
+    const { user } = useAuth();
 
-    const assignmentId = searchParams.get('assignmentId') || 'demo-assignment';
+    // Get assignmentId from auth context
+    const assignmentId = user?.assignmentId || '';
     const initialCategory = searchParams.get('category') || 'all';
 
     const [activeCategory, setActiveCategory] = useState(initialCategory);
@@ -67,7 +70,12 @@ export function CandidateTasksV2Page() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        loadTasks();
+        if (assignmentId) {
+            loadTasks();
+        } else {
+            setLoading(false);
+            setError('No active assignment found.');
+        }
     }, [assignmentId]);
 
     const loadTasks = async () => {
@@ -109,7 +117,7 @@ export function CandidateTasksV2Page() {
 
     const handleTaskClick = (task: TaskItem) => {
         // Navigate to task detail/form page
-        navigate(`/candidate/task/${task.id}?assignmentId=${assignmentId}`);
+        navigate(`/candidate/task/${task.id}`);
     };
 
     if (loading) {
@@ -127,7 +135,7 @@ export function CandidateTasksV2Page() {
             <header className="candidate-v2-page-header">
                 <button
                     className="candidate-v2-back-btn"
-                    onClick={() => navigate(`/candidate-v2?assignmentId=${assignmentId}`)}
+                    onClick={() => navigate('/candidate')}
                 >
                     <ArrowLeft size={22} />
                 </button>

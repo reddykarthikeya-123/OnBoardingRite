@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Home, ClipboardList, User, MessageCircle, Bell } from 'lucide-react';
+import { Home, ClipboardList, User, MessageCircle, Bell, LogOut } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface MobileLayoutProps {
     children: ReactNode;
@@ -17,9 +18,28 @@ const NAV_ITEMS = [
 export function MobileLayout({ children }: MobileLayoutProps) {
     const location = useLocation();
     const navigate = useNavigate();
+    const { user, logout } = useAuth();
+
+    const userName = user
+        ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User'
+        : 'User';
 
     return (
         <div className="mobile-layout">
+            {/* Header with user info and logout */}
+            <header className="mobile-header">
+                <div className="mobile-header-user">
+                    <span className="mobile-header-greeting">Hello, {userName.split(' ')[0]}</span>
+                </div>
+                <button
+                    className="mobile-logout-btn"
+                    onClick={logout}
+                    title="Logout"
+                >
+                    <LogOut size={20} />
+                </button>
+            </header>
+
             <main className="mobile-content">
                 {children}
             </main>

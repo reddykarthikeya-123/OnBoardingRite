@@ -23,23 +23,12 @@ import { TaskLibraryPage } from './features/tasks/pages/TaskLibraryPage';
 import { EligibilityRulesPage } from './features/eligibility/pages/EligibilityRulesPage';
 import { TeamMembersPage } from './features/team/pages/TeamMembersPage';
 
-// Candidate Portal Pages (V1)
-import { CandidateHomePage } from './features/candidate/pages/CandidateHomePage';
-import { CandidateTasksPage } from './features/candidate/pages/CandidateTasksPage';
-import { CandidateProfilePage } from './features/candidate/pages/CandidateProfilePage';
-
-// Candidate Portal Pages (V2 - Mobile-First)
+// Candidate Portal Pages (Consolidated - Using V2 as main)
 import { CandidateHomeV2Page } from './features/candidate/pages/CandidateHomeV2Page';
 import { CandidateTasksV2Page } from './features/candidate/pages/CandidateTasksV2Page';
 import { CandidateTaskFormPage } from './features/candidate/pages/CandidateTaskFormPage';
-
-// Candidate Portal Pages (V3 - Condensed)
-import { CandidateTasksV3Page } from './features/candidate/pages/CandidateTasksV3Page';
-
-// Candidate Chat Page
+import { CandidateProfilePage } from './features/candidate/pages/CandidateProfilePage';
 import { CandidateChatPage } from './features/candidate/pages/CandidateChatPage';
-
-// Candidate Notifications Page
 import { CandidateNotificationsPage } from './features/candidate/pages/CandidateNotificationsPage';
 
 function App() {
@@ -114,20 +103,20 @@ function App() {
                     </ProtectedRoute>
                 } />
 
-                {/* Candidate Portal - Protected (Candidate Only) */}
+                {/* Candidate Portal - Mobile Layout (Protected - Candidate Only) */}
                 <Route path="/candidate" element={
                     <ProtectedRoute allowedRoles={['candidate']}>
-                        <MobileLayout><CandidateHomePage /></MobileLayout>
+                        <MobileLayout><CandidateHomeV2Page /></MobileLayout>
                     </ProtectedRoute>
                 } />
                 <Route path="/candidate/tasks" element={
                     <ProtectedRoute allowedRoles={['candidate']}>
-                        <MobileLayout><CandidateTasksPage /></MobileLayout>
+                        <MobileLayout><CandidateTasksV2Page /></MobileLayout>
                     </ProtectedRoute>
                 } />
-                <Route path="/candidate/tasks/:taskId" element={
+                <Route path="/candidate/task/:taskInstanceId" element={
                     <ProtectedRoute allowedRoles={['candidate']}>
-                        <MobileLayout><CandidateTasksPage /></MobileLayout>
+                        <MobileLayout><CandidateTaskFormPage /></MobileLayout>
                     </ProtectedRoute>
                 } />
                 <Route path="/candidate/chat" element={
@@ -143,30 +132,6 @@ function App() {
                 <Route path="/candidate/profile" element={
                     <ProtectedRoute allowedRoles={['candidate']}>
                         <MobileLayout><CandidateProfilePage /></MobileLayout>
-                    </ProtectedRoute>
-                } />
-
-                {/* Candidate Portal V2 - Mobile-First Design */}
-                <Route path="/candidate-v2" element={
-                    <ProtectedRoute allowedRoles={['candidate']}>
-                        <MobileLayout><CandidateHomeV2Page /></MobileLayout>
-                    </ProtectedRoute>
-                } />
-                <Route path="/candidate-v2/tasks" element={
-                    <ProtectedRoute allowedRoles={['candidate']}>
-                        <MobileLayout><CandidateTasksV2Page /></MobileLayout>
-                    </ProtectedRoute>
-                } />
-                <Route path="/candidate/task/:taskInstanceId" element={
-                    <ProtectedRoute allowedRoles={['candidate']}>
-                        <MobileLayout><CandidateTaskFormPage /></MobileLayout>
-                    </ProtectedRoute>
-                } />
-
-                {/* Candidate Portal V3 - Condensed Design */}
-                <Route path="/candidate-v3/tasks" element={
-                    <ProtectedRoute allowedRoles={['candidate']}>
-                        <MobileLayout><CandidateTasksV3Page /></MobileLayout>
                     </ProtectedRoute>
                 } />
 

@@ -35,7 +35,7 @@ export function SetPasswordPage() {
 
         try {
             await setPassword(email, newPassword, confirmPassword);
-            navigate('/candidate-v2', { replace: true });
+            navigate('/candidate', { replace: true });
         } catch (err: any) {
             setError(err.message || 'Failed to set password');
         } finally {
