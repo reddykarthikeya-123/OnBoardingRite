@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import './SubmittedTaskViewer.css';
 
 interface SubmittedTaskViewerProps {
@@ -33,46 +33,40 @@ export function SubmittedTaskViewer({ taskName, submittedAt, formData, onClose }
     };
 
     return (
-        <div className="viewer-overlay">
-            <div className="viewer-modal">
-                <header className="viewer-header">
-                    <div>
-                        <h2 className="viewer-title">{taskName}</h2>
-                        {submittedAt && (
-                            <p className="viewer-subtitle">
-                                Submitted on {new Date(submittedAt).toLocaleDateString()}
-                            </p>
-                        )}
-                    </div>
-                    <button className="viewer-close-btn" onClick={onClose}>
-                        <X size={20} />
-                    </button>
-                </header>
+        <div className="viewer-inline">
+            <header className="viewer-inline-header">
+                <button className="viewer-back-btn" onClick={onClose}>
+                    <ArrowLeft size={16} />
+                    <span>Back to list</span>
+                </button>
+            </header>
 
-                <div className="viewer-content">
-                    <div className="form-data-grid">
-                        {Object.entries(formData).map(([key, value]) => (
-                            <div key={key} className="form-data-item">
-                                <span className="form-data-label">{formatLabel(key)}</span>
-                                <div className="form-data-value-box">
-                                    {formatValue(value)}
-                                </div>
+            <div className="viewer-inline-title">
+                <h3>{taskName}</h3>
+                {submittedAt && (
+                    <p className="viewer-subtitle">
+                        Submitted on {new Date(submittedAt).toLocaleDateString()}
+                    </p>
+                )}
+            </div>
+
+            <div className="viewer-inline-content">
+                <div className="form-data-grid">
+                    {Object.entries(formData).map(([key, value]) => (
+                        <div key={key} className="form-data-item">
+                            <span className="form-data-label">{formatLabel(key)}</span>
+                            <div className="form-data-value-box">
+                                {formatValue(value)}
                             </div>
-                        ))}
-                    </div>
-
-                    {Object.keys(formData).length === 0 && (
-                        <div className="empty-state">
-                            <p>No form data available for this task.</p>
                         </div>
-                    )}
+                    ))}
                 </div>
 
-                <footer className="viewer-footer">
-                    <button className="viewer-done-btn" onClick={onClose}>
-                        Close
-                    </button>
-                </footer>
+                {Object.keys(formData).length === 0 && (
+                    <div className="empty-state">
+                        <p>No form data available for this task.</p>
+                    </div>
+                )}
             </div>
         </div>
     );

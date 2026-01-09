@@ -19,10 +19,12 @@ import {
     UserPlus,
     Check,
     Search,
-    Trash2
+    Trash2,
+    Eye
 } from 'lucide-react';
 import { Card, CardBody, Button, Badge, Progress, Modal } from '../../../components/ui';
-import { projectsApi, teamMembersApi } from '../../../services/api';
+import { projectsApi, teamMembersApi, candidateApi } from '../../../services/api';
+import { SubmittedTaskViewer } from '../../candidate/components/SubmittedTaskViewer';
 
 interface ProjectDetail {
     id: string;
@@ -75,10 +77,23 @@ export function ProjectDetailPage() {
     // Trade options for dropdown
     const TRADES = ['General', 'Electrician', 'Welder', 'Pipefitter', 'Carpenter', 'Ironworker', 'Millwright', 'Boilermaker', 'Insulator', 'Painter', 'Laborer'];
 
-    // Delete Member modal state
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [memberToDelete, setMemberToDelete] = useState<TeamMember | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // View Submissions modal state
+    const [showSubmissionsModal, setShowSubmissionsModal] = useState(false);
+    const [selectedMemberForSubmissions, setSelectedMemberForSubmissions] = useState<TeamMember | null>(null);
+    const [memberSubmissions, setMemberSubmissions] = useState<Array<{
+        id: string;
+        taskId: string;
+        taskName: string;
+        category: string | null;
+        submittedAt: string | null;
+        formData: Record<string, any> | null;
+    }>>([]);
+    const [viewTask, setViewTask] = useState<any>(null);
+    const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
 
     useEffect(() => {
         if (projectId) {
@@ -251,6 +266,22 @@ export function ProjectDetailPage() {
             console.error('Failed to delete member:', err);
         } finally {
             setIsDeleting(false);
+        }
+    };
+
+    const handleViewSubmissions = async (member: TeamMember) => {
+        if (!projectId) return;
+        setSelectedMemberForSubmissions(member);
+        setIsLoadingSubmissions(true);
+        setShowSubmissionsModal(true);
+        try {
+            const submissions = await candidateApi.getSubmittedTasksByProject(member.id, projectId);
+            setMemberSubmissions(submissions);
+        } catch (err) {
+            console.error('Failed to load submissions:', err);
+            setMemberSubmissions([]);
+        } finally {
+            setIsLoadingSubmissions(false);
         }
     };
 
@@ -661,15 +692,26 @@ export function ProjectDetailPage() {
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="btn-icon text-danger hover:bg-danger-50"
-                                                        onClick={() => handleOpenDeleteConfirm(member)}
-                                                        title="Remove member from project"
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </Button>
+                                                    <div style={{ display: 'flex', gap: '4px' }}>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="btn-icon text-primary hover:bg-primary-50"
+                                                            onClick={() => handleViewSubmissions(member)}
+                                                            title="View submitted forms"
+                                                        >
+                                                            <Eye size={16} />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="btn-icon text-danger hover:bg-danger-50"
+                                                            onClick={() => handleOpenDeleteConfirm(member)}
+                                                            title="Remove member from project"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </Button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))}
@@ -867,6 +909,68 @@ export function ProjectDetailPage() {
                             {isDeleting ? 'Removing...' : 'Remove Member'}
                         </Button>
                     </div>
+                </div>
+            </Modal>
+
+            {/* View Submissions Modal */}
+            <Modal
+                isOpen={showSubmissionsModal}
+                onClose={() => {
+                    setShowSubmissionsModal(false);
+                    setViewTask(null);
+                }}
+                title={`Submitted Forms - ${selectedMemberForSubmissions?.firstName} ${selectedMemberForSubmissions?.lastName}`}
+                size="lg"
+            >
+                <div className="submissions-modal">
+                    {isLoadingSubmissions ? (
+                        <div className="flex items-center justify-center py-8">
+                            <Loader2 className="animate-spin text-primary" size={32} />
+                        </div>
+                    ) : memberSubmissions.length === 0 ? (
+                        <div className="text-center py-8 text-muted">
+                            <FileText size={48} className="mx-auto mb-4 opacity-50" />
+                            <p>No submitted forms yet</p>
+                        </div>
+                    ) : viewTask ? (
+                        <SubmittedTaskViewer
+                            taskName={viewTask.taskName}
+                            submittedAt={viewTask.submittedAt}
+                            formData={viewTask.formData || {}}
+                            onClose={() => setViewTask(null)}
+                        />
+                    ) : (
+                        <div className="submissions-list">
+                            {memberSubmissions.map((submission) => (
+                                <div
+                                    key={submission.id}
+                                    className="submission-item"
+                                    onClick={() => setViewTask(submission)}
+                                    style={{
+                                        padding: '12px 16px',
+                                        borderBottom: '1px solid #f0f0f0',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '12px'
+                                    }}
+                                >
+                                    <FileText size={20} style={{ color: '#4caf50' }} />
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontWeight: 500, color: '#1a1f36' }}>
+                                            {submission.taskName}
+                                        </div>
+                                        <div style={{ fontSize: '0.75rem', color: '#697386' }}>
+                                            {submission.submittedAt
+                                                ? new Date(submission.submittedAt).toLocaleDateString()
+                                                : 'Completed'}
+                                        </div>
+                                    </div>
+                                    <ChevronRight size={16} style={{ color: '#697386' }} />
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </Modal>
         </div>

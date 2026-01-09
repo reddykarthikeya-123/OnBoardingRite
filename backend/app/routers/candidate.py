@@ -530,3 +530,47 @@ def get_submitted_tasks(
             ))
             
     return result
+
+
+@router.get("/profile/submissions/{candidate_id}/project/{project_id}", response_model=List[SubmittedTaskItem])
+def get_submitted_tasks_by_project(
+    candidate_id: str,
+    project_id: str,
+    db: Session = Depends(get_db)
+):
+    """Get submitted/completed tasks for a specific candidate in a specific project"""
+    
+    # Get the assignment for this candidate in this project
+    assignment = db.query(ProjectAssignment).filter(
+        ProjectAssignment.team_member_id == candidate_id,
+        ProjectAssignment.project_id == project_id
+    ).first()
+    
+    if not assignment:
+        return []  # No assignment found, return empty list
+        
+    # Get completed tasks for this assignment
+    completed_instances = db.query(TaskInstance).filter(
+        TaskInstance.assignment_id == assignment.id,
+        TaskInstance.status == 'COMPLETED'
+    ).all()
+    
+    submissions = []
+    for ti in completed_instances:
+        task = db.query(Task).filter(Task.id == ti.task_id).first()
+        if not task:
+            continue
+            
+        # Extract form data if available
+        form_data = ti.result.get('formData') if ti.result else None
+        
+        submissions.append(SubmittedTaskItem(
+            id=str(ti.id),
+            taskId=str(task.id),
+            taskName=task.name,
+            category=task.category,
+            submittedAt=ti.completed_at.isoformat() if ti.completed_at else None,
+            formData=form_data
+        ))
+        
+    return submissions

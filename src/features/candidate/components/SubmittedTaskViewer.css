@@ -141,3 +141,47 @@
         opacity: 1;
     }
 }
+
+/* Inline viewer styles (for use inside parent modals) */
+.viewer-inline {
+    width: 100%;
+}
+
+.viewer-inline-header {
+    margin-bottom: 16px;
+}
+
+.viewer-back-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: #697386;
+    font-size: 0.875rem;
+    cursor: pointer;
+    padding: 4px 0;
+    transition: color 0.2s;
+}
+
+.viewer-back-btn:hover {
+    color: #1a1f36;
+}
+
+.viewer-inline-title {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #eef0f3;
+}
+
+.viewer-inline-title h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1a1f36;
+    margin: 0 0 4px 0;
+}
+
+.viewer-inline-content {
+    max-height: 400px;
+    overflow-y: auto;
+}

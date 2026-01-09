@@ -16,12 +16,17 @@ import {
     MoreHorizontal,
     CheckSquare,
     Square,
-    Minus
+    Minus,
+    Eye,
+    FileText,
+    ChevronRight,
+    Loader2
 } from 'lucide-react';
-import { Card, CardBody, Badge, Progress, Button } from '../../../components/ui';
+import { Card, CardBody, Badge, Progress, Button, Modal } from '../../../components/ui';
 // All data now comes from API
-import { dashboardApi, projectsApi } from '../../../services/api';
+import { dashboardApi, projectsApi, candidateApi } from '../../../services/api';
 import type { TeamMember } from '../../../types';
+import { SubmittedTaskViewer } from '../../candidate/components/SubmittedTaskViewer';
 
 interface StatCardProps {
     title: string;
@@ -144,6 +149,19 @@ export function DashboardPage() {
     const [selectedProject, setSelectedProject] = useState<string>('project-001');
     const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
 
+    // View Submissions Modal State
+    const [showSubmissionsModal, setShowSubmissionsModal] = useState(false);
+    const [selectedMemberForSubmissions, setSelectedMemberForSubmissions] = useState<any>(null);
+    const [memberSubmissions, setMemberSubmissions] = useState<Array<{
+        id: string;
+        taskId: string;
+        taskName: string;
+        category: string | null;
+        submittedAt: string | null;
+        formData: Record<string, any> | null;
+    }>>([]);
+    const [viewTask, setViewTask] = useState<any>(null);
+    const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
 
     // API Data State
     const [apiStats, setApiStats] = useState<{
@@ -313,6 +331,22 @@ export function DashboardPage() {
         console.log(`Sending ${type} to ${targetMembers.length} members:`, targetMembers.map(m => m.email));
         // In real app, would open a compose modal or call API
         alert(`${type.toUpperCase()} will be sent to ${targetMembers.length} team member(s)`);
+    };
+
+    const handleViewSubmissions = async (member: any) => {
+        if (!selectedProject) return;
+        setSelectedMemberForSubmissions(member);
+        setIsLoadingSubmissions(true);
+        setShowSubmissionsModal(true);
+        try {
+            const submissions = await candidateApi.getSubmittedTasksByProject(member.id, selectedProject);
+            setMemberSubmissions(submissions);
+        } catch (err) {
+            console.error('Failed to load submissions:', err);
+            setMemberSubmissions([]);
+        } finally {
+            setIsLoadingSubmissions(false);
+        }
     };
 
     const isAllSelected = selectedMembers.size === projectMembers.length && projectMembers.length > 0;
@@ -644,7 +678,15 @@ export function DashboardPage() {
                                                     </div>
                                                 </td>
                                                 <td className="actions-col">
-                                                    <ActionsDropdown memberId={member.id} />
+                                                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                                        <ActionButton
+                                                            icon={<Eye size={14} />}
+                                                            label="View Submitted Forms"
+                                                            variant="primary"
+                                                            onClick={() => handleViewSubmissions(member)}
+                                                        />
+                                                        <ActionsDropdown memberId={member.id} />
+                                                    </div>
                                                 </td>
                                             </tr>
                                         );
@@ -655,6 +697,68 @@ export function DashboardPage() {
                     </div>
                 </CardBody>
             </Card>
+
+            {/* View Submissions Modal */}
+            <Modal
+                isOpen={showSubmissionsModal}
+                onClose={() => {
+                    setShowSubmissionsModal(false);
+                    setViewTask(null);
+                }}
+                title={`Submitted Forms - ${selectedMemberForSubmissions?.firstName} ${selectedMemberForSubmissions?.lastName}`}
+                size="lg"
+            >
+                <div className="submissions-modal">
+                    {isLoadingSubmissions ? (
+                        <div className="flex items-center justify-center py-8">
+                            <Loader2 className="animate-spin text-primary" size={32} />
+                        </div>
+                    ) : memberSubmissions.length === 0 ? (
+                        <div className="text-center py-8 text-muted">
+                            <FileText size={48} className="mx-auto mb-4 opacity-50" />
+                            <p>No submitted forms yet</p>
+                        </div>
+                    ) : viewTask ? (
+                        <SubmittedTaskViewer
+                            taskName={viewTask.taskName}
+                            submittedAt={viewTask.submittedAt}
+                            formData={viewTask.formData || {}}
+                            onClose={() => setViewTask(null)}
+                        />
+                    ) : (
+                        <div className="submissions-list">
+                            {memberSubmissions.map((submission) => (
+                                <div
+                                    key={submission.id}
+                                    className="submission-item"
+                                    onClick={() => setViewTask(submission)}
+                                    style={{
+                                        padding: '12px 16px',
+                                        borderBottom: '1px solid #f0f0f0',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '12px'
+                                    }}
+                                >
+                                    <FileText size={20} style={{ color: '#4caf50' }} />
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontWeight: 500, color: '#1a1f36' }}>
+                                            {submission.taskName}
+                                        </div>
+                                        <div style={{ fontSize: '0.75rem', color: '#697386' }}>
+                                            {submission.submittedAt
+                                                ? new Date(submission.submittedAt).toLocaleDateString()
+                                                : 'Completed'}
+                                        </div>
+                                    </div>
+                                    <ChevronRight size={16} style={{ color: '#697386' }} />
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </Modal>
         </div >
     );
 }

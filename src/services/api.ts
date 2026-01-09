@@ -404,6 +404,16 @@ export const candidateApi = {
             formData: Record<string, any> | null;
         }>;
     }>>(`/candidate/profile/submissions/${candidateId}`),
+
+    // Get submitted tasks for a specific project
+    getSubmittedTasksByProject: (candidateId: string, projectId: string) => fetchApi<Array<{
+        id: string;
+        taskId: string;
+        taskName: string;
+        category: string | null;
+        submittedAt: string | null;
+        formData: Record<string, any> | null;
+    }>>(`/candidate/profile/submissions/${candidateId}/project/${projectId}`),
 };
 
 export { API_BASE_URL };
