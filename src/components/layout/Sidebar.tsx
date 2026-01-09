@@ -9,9 +9,11 @@ import {
     Settings,
     Filter,
     PanelLeftClose,
-    PanelLeft
+    PanelLeft,
+    LogOut
 } from 'lucide-react';
 import { projectsApi } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface NavItem {
     to: string;
@@ -37,6 +39,7 @@ export function Sidebar() {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [projectCount, setProjectCount] = useState<number | null>(null);
     const location = useLocation();
+    const { user, logout } = useAuth();
 
     useEffect(() => {
         const fetchProjectCount = async () => {
@@ -72,6 +75,13 @@ export function Sidebar() {
     const toggleSidebar = () => {
         setIsCollapsed(!isCollapsed);
     };
+
+    const userInitials = user
+        ? `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase()
+        : 'U';
+    const userName = user
+        ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User'
+        : 'User';
 
     return (
         <aside className={`app-sidebar ${isCollapsed ? 'collapsed' : ''}`}>
@@ -144,13 +154,21 @@ export function Sidebar() {
 
             <div className="sidebar-footer">
                 <div className="sidebar-user">
-                    <div className="avatar avatar-sm">SJ</div>
+                    <div className="avatar avatar-sm">{userInitials}</div>
                     <div className="sidebar-user-info">
-                        <div className="sidebar-user-name">Sarah Johnson</div>
-                        <div className="sidebar-user-role">HR Lead</div>
+                        <div className="sidebar-user-name">{userName}</div>
+                        <div className="sidebar-user-role">{user?.role || 'Admin'}</div>
                     </div>
                 </div>
+                <button
+                    className="sidebar-logout-btn"
+                    onClick={logout}
+                    title="Logout"
+                >
+                    <LogOut size={18} />
+                </button>
             </div>
         </aside>
     );
 }
+

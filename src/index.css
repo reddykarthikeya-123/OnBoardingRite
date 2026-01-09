@@ -1583,12 +1583,17 @@ select {
 .sidebar-footer {
   padding: var(--spacing-4);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .sidebar-user {
   display: flex;
   align-items: center;
   gap: var(--spacing-3);
+  flex: 1;
+  min-width: 0;
 }
 
 .sidebar-user-info {
@@ -1610,6 +1615,27 @@ select {
 .sidebar-user-role {
   font-size: var(--font-size-xs);
   color: rgba(255, 255, 255, 0.5);
+  text-transform: capitalize;
+}
+
+.sidebar-logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.sidebar-logout-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
 }
 
 /* ----- COLLAPSIBLE SIDEBAR (Professional Design) ----- */

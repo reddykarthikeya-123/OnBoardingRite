@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
     ChevronRight,
@@ -6,7 +6,6 @@ import {
     Clock,
     FileText,
     Shield,
-    GraduationCap,
     Upload,
     ArrowLeft,
     Search,
@@ -14,8 +13,11 @@ import {
     Sparkles,
     MessageCircle,
     User,
-    Bell
+    Bell,
+    Loader2,
+    Zap
 } from 'lucide-react';
+import { candidateApi } from '../../../services/api';
 
 const CATEGORIES = [
     { id: 'all', label: 'All', emoji: '📋' },
@@ -25,54 +27,99 @@ const CATEGORIES = [
     { id: 'compliance', label: 'Compliance', emoji: '✅' },
 ];
 
-const MOCK_TASKS = [
-    { id: 'task-001', name: 'Complete W-4 Form', category: 'forms', status: 'pending', type: 'form', dueDate: '2025-12-18', description: 'Federal tax withholding form' },
-    { id: 'task-002', name: 'State Tax Withholding', category: 'forms', status: 'completed', type: 'form', dueDate: '2025-12-15', description: 'State tax form required' },
-    { id: 'task-003', name: 'Direct Deposit Setup', category: 'forms', status: 'in_progress', type: 'form', dueDate: '2025-12-18', description: 'Bank account information' },
-    { id: 'task-004', name: 'Emergency Contact', category: 'forms', status: 'completed', type: 'form', dueDate: '2025-12-14', description: 'Emergency contact details' },
-    { id: 'task-005', name: 'Handbook Acknowledgment', category: 'forms', status: 'pending', type: 'form', dueDate: '2025-12-20', description: 'Review and sign employee handbook' },
-    { id: 'task-010', name: 'Driver\'s License', category: 'documents', status: 'pending', type: 'upload', dueDate: '2025-12-18', description: 'Valid government ID' },
-    { id: 'task-011', name: 'TWIC Card', category: 'documents', status: 'completed', type: 'upload', dueDate: '2025-12-15', description: 'Transportation security card' },
-    { id: 'task-012', name: 'Social Security Card', category: 'documents', status: 'completed', type: 'upload', dueDate: '2025-12-14', description: 'SSN verification' },
-    { id: 'task-013', name: 'DOT Medical Card', category: 'documents', status: 'pending', type: 'upload', dueDate: '2025-12-20', description: 'Medical fitness certificate' },
-    { id: 'task-020', name: 'Drug Test', category: 'compliance', status: 'pending', type: 'schedule', dueDate: '2025-12-17', description: 'Schedule testing appointment' },
-    { id: 'task-021', name: 'Background Check', category: 'compliance', status: 'in_progress', type: 'api', dueDate: '2025-12-18', description: 'Processing background verification' },
-    { id: 'task-022', name: 'Form I-9 Section 1', category: 'compliance', status: 'completed', type: 'form', dueDate: '2025-12-14', description: 'Employment eligibility' },
-    { id: 'task-030', name: 'OSHA 10 Training', category: 'training', status: 'pending', type: 'training', dueDate: '2025-12-22', description: 'Safety certification course' },
-    { id: 'task-031', name: 'H2S Safety Training', category: 'training', status: 'pending', type: 'training', dueDate: '2025-12-22', description: 'Hazardous gas awareness' },
-    { id: 'task-032', name: 'Confined Space Entry', category: 'training', status: 'completed', type: 'training', dueDate: '2025-12-10', description: 'Safety protocols training' },
-];
-
 const getTaskIcon = (type: string) => {
-    switch (type) {
-        case 'form': return FileText;
-        case 'upload': return Upload;
-        case 'training': return GraduationCap;
-        default: return Shield;
+    switch (type?.toUpperCase()) {
+        case 'CUSTOM_FORM': return FileText;
+        case 'DOCUMENT_UPLOAD': return Upload;
+        case 'REST_API': return Zap;
+        case 'REDIRECT': return Shield;
+        default: return FileText;
     }
 };
+
+interface TaskItem {
+    id: string;
+    taskId: string;
+    name: string;
+    description: string | null;
+    type: string;
+    category: string | null;
+    status: string;
+    dueDate: string | null;
+    isRequired: boolean;
+    configuration: any;
+    result: any;
+    startedAt: string | null;
+    completedAt: string | null;
+}
 
 export function CandidateTasksV2Page() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
+
+    const assignmentId = searchParams.get('assignmentId') || 'demo-assignment';
     const initialCategory = searchParams.get('category') || 'all';
+
     const [activeCategory, setActiveCategory] = useState(initialCategory);
     const [searchQuery, setSearchQuery] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [tasks, setTasks] = useState<TaskItem[]>([]);
+    const [error, setError] = useState<string | null>(null);
 
-    const filteredTasks = MOCK_TASKS
-        .filter(task => activeCategory === 'all' || task.category === activeCategory)
+    useEffect(() => {
+        loadTasks();
+    }, [assignmentId]);
+
+    const loadTasks = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await candidateApi.getTasks(assignmentId);
+            setTasks(response.tasks);
+        } catch (err) {
+            console.error('Failed to load tasks:', err);
+            setError('Failed to load tasks');
+            // Fallback mock data
+            setTasks([
+                { id: 'task-001', taskId: 't1', name: 'Complete W-4 Form', category: 'FORMS', status: 'NOT_STARTED', type: 'CUSTOM_FORM', dueDate: '2025-12-18', description: 'Federal tax withholding form', isRequired: true, configuration: {}, result: null, startedAt: null, completedAt: null },
+                { id: 'task-002', taskId: 't2', name: 'State Tax Withholding', category: 'FORMS', status: 'COMPLETED', type: 'CUSTOM_FORM', dueDate: '2025-12-15', description: 'State tax form required', isRequired: true, configuration: {}, result: null, startedAt: null, completedAt: '2025-12-14' },
+                { id: 'task-010', taskId: 't3', name: 'Driver\'s License', category: 'DOCUMENTS', status: 'NOT_STARTED', type: 'DOCUMENT_UPLOAD', dueDate: '2025-12-18', description: 'Valid government ID', isRequired: true, configuration: {}, result: null, startedAt: null, completedAt: null },
+            ]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Filter tasks
+    const filteredTasks = tasks
+        .filter(task => activeCategory === 'all' || task.category?.toLowerCase() === activeCategory.toLowerCase())
         .filter(task => task.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
     // Group by status
-    const pendingTasks = filteredTasks.filter(t => t.status === 'pending' || t.status === 'in_progress');
-    const completedTasks = filteredTasks.filter(t => t.status === 'completed');
+    const pendingTasks = filteredTasks.filter(t => t.status !== 'COMPLETED' && t.status !== 'WAIVED');
+    const completedTasks = filteredTasks.filter(t => t.status === 'COMPLETED');
 
-    const getDaysUntil = (dateStr: string) => {
+    const getDaysUntil = (dateStr: string | null) => {
+        if (!dateStr) return null;
         const date = new Date(dateStr);
         const today = new Date();
         const diff = Math.ceil((date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
         return diff;
     };
+
+    const handleTaskClick = (task: TaskItem) => {
+        // Navigate to task detail/form page
+        navigate(`/candidate/task/${task.id}?assignmentId=${assignmentId}`);
+    };
+
+    if (loading) {
+        return (
+            <div className="candidate-v2 candidate-tasks-v2 candidate-loading">
+                <Loader2 className="spin" size={32} />
+                <p>Loading tasks...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="candidate-v2 candidate-tasks-v2">
@@ -80,7 +127,7 @@ export function CandidateTasksV2Page() {
             <header className="candidate-v2-page-header">
                 <button
                     className="candidate-v2-back-btn"
-                    onClick={() => navigate('/candidate-v2')}
+                    onClick={() => navigate(`/candidate-v2?assignmentId=${assignmentId}`)}
                 >
                     <ArrowLeft size={22} />
                 </button>
@@ -135,17 +182,17 @@ export function CandidateTasksV2Page() {
                             {pendingTasks.map((task, index) => {
                                 const TaskIcon = getTaskIcon(task.type);
                                 const daysLeft = getDaysUntil(task.dueDate);
-                                const isUrgent = daysLeft <= 2;
-                                const isInProgress = task.status === 'in_progress';
+                                const isUrgent = daysLeft !== null && daysLeft <= 2;
+                                const isInProgress = task.status === 'IN_PROGRESS';
 
                                 return (
                                     <button
                                         key={task.id}
                                         className={`candidate-v2-task-card ${isUrgent ? 'urgent' : ''} ${isInProgress ? 'in-progress' : ''}`}
-                                        onClick={() => navigate(`/candidate/tasks/${task.id}`)}
+                                        onClick={() => handleTaskClick(task)}
                                         style={{ animationDelay: `${index * 50}ms` }}
                                     >
-                                        <div className={`candidate-v2-task-icon ${task.category}`}>
+                                        <div className={`candidate-v2-task-icon ${task.category?.toLowerCase() || 'forms'}`}>
                                             <TaskIcon size={22} />
                                         </div>
                                         <div className="candidate-v2-task-info">
@@ -159,7 +206,10 @@ export function CandidateTasksV2Page() {
                                                 ) : (
                                                     <span className={`candidate-v2-task-due ${isUrgent ? 'urgent' : ''}`}>
                                                         <Clock size={12} />
-                                                        {daysLeft <= 0 ? 'Overdue' : `${daysLeft}d left`}
+                                                        {daysLeft !== null
+                                                            ? (daysLeft <= 0 ? 'Overdue' : `${daysLeft}d left`)
+                                                            : 'No due date'
+                                                        }
                                                     </span>
                                                 )}
                                             </div>
@@ -184,26 +234,23 @@ export function CandidateTasksV2Page() {
                         </div>
 
                         <div className="candidate-v2-task-list completed">
-                            {completedTasks.map((task, index) => {
-                                const TaskIcon = getTaskIcon(task.type);
-                                return (
-                                    <button
-                                        key={task.id}
-                                        className="candidate-v2-task-card completed"
-                                        onClick={() => navigate(`/candidate/tasks/${task.id}`)}
-                                        style={{ animationDelay: `${index * 50}ms` }}
-                                    >
-                                        <div className={`candidate-v2-task-icon ${task.category} completed`}>
-                                            <CheckCircle2 size={22} />
-                                        </div>
-                                        <div className="candidate-v2-task-info">
-                                            <h3 className="candidate-v2-task-name">{task.name}</h3>
-                                            <p className="candidate-v2-task-desc">{task.description}</p>
-                                        </div>
-                                        <ChevronRight size={20} className="candidate-v2-task-arrow" />
-                                    </button>
-                                );
-                            })}
+                            {completedTasks.map((task, index) => (
+                                <button
+                                    key={task.id}
+                                    className="candidate-v2-task-card completed"
+                                    onClick={() => handleTaskClick(task)}
+                                    style={{ animationDelay: `${index * 50}ms` }}
+                                >
+                                    <div className={`candidate-v2-task-icon ${task.category?.toLowerCase() || 'forms'} completed`}>
+                                        <CheckCircle2 size={22} />
+                                    </div>
+                                    <div className="candidate-v2-task-info">
+                                        <h3 className="candidate-v2-task-name">{task.name}</h3>
+                                        <p className="candidate-v2-task-desc">{task.description}</p>
+                                    </div>
+                                    <ChevronRight size={20} className="candidate-v2-task-arrow" />
+                                </button>
+                            ))}
                         </div>
                     </section>
                 )}
@@ -222,7 +269,7 @@ export function CandidateTasksV2Page() {
             <nav className="candidate-v2-bottom-nav">
                 <button
                     className="candidate-v2-nav-item"
-                    onClick={() => navigate('/candidate-v2')}
+                    onClick={() => navigate(`/candidate-v2?assignmentId=${assignmentId}`)}
                 >
                     <Sparkles size={22} />
                     <span>Home</span>

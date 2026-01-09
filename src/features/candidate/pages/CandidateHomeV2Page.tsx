@@ -1,4 +1,5 @@
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
     CheckCircle2,
     FileText,
@@ -11,34 +12,148 @@ import {
     User,
     Zap,
     Star,
-    MessageCircle
+    MessageCircle,
+    Loader2
 } from 'lucide-react';
-import { mockTeamMembers } from '../../../data';
+import { candidateApi } from '../../../services/api';
 
-// Get a mock candidate for demo purposes
-const mockCandidate = mockTeamMembers[0];
+// Category icon mapping
+const getCategoryIcon = (categoryId: string) => {
+    switch (categoryId.toLowerCase()) {
+        case 'forms': return FileText;
+        case 'documents': return Shield;
+        case 'training': return GraduationCap;
+        case 'compliance': return CheckCircle2;
+        default: return FileText;
+    }
+};
 
-// Mock priority tasks
-const priorityTasks = [
-    { id: 'task-001', name: 'Complete W-4 Form', type: 'form', dueIn: 2, priority: 'high' },
-    { id: 'task-010', name: 'Upload Driver\'s License', type: 'upload', dueIn: 3, priority: 'medium' },
-    { id: 'task-020', name: 'Drug Test Appointment', type: 'schedule', dueIn: 5, priority: 'low' },
-];
-
-// Task categories with progress
-const categories = [
-    { id: 'forms', name: 'Forms', icon: FileText, completed: 3, total: 5, gradient: 'from-blue-500 to-indigo-600' },
-    { id: 'documents', name: 'Documents', icon: Shield, completed: 2, total: 4, gradient: 'from-emerald-500 to-teal-600' },
-    { id: 'training', name: 'Training', icon: GraduationCap, completed: 1, total: 3, gradient: 'from-purple-500 to-pink-600' },
-    { id: 'compliance', name: 'Compliance', icon: CheckCircle2, completed: 1, total: 3, gradient: 'from-orange-500 to-red-600' },
-];
+interface DashboardData {
+    candidateId: string;
+    candidateName: string;
+    projectName: string;
+    projectId: string;
+    trade: string | null;
+    totalTasks: number;
+    completedTasks: number;
+    remainingTasks: number;
+    progressPercent: number;
+    daysUntilStart: number | null;
+    startDate: string | null;
+    categories: Array<{
+        id: string;
+        name: string;
+        completed: number;
+        total: number;
+    }>;
+    priorityTasks: Array<{
+        id: string;
+        taskId: string;
+        name: string;
+        type: string;
+        dueIn: number | null;
+        priority: string;
+        status: string;
+    }>;
+}
 
 export function CandidateHomeV2Page() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
 
-    const totalTasks = categories.reduce((acc, cat) => acc + cat.total, 0);
-    const completedTasks = categories.reduce((acc, cat) => acc + cat.completed, 0);
-    const progressPercent = Math.round((completedTasks / totalTasks) * 100);
+    // Get assignmentId from URL or use demo value
+    const assignmentId = searchParams.get('assignmentId') || 'demo-assignment';
+
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [dashboard, setDashboard] = useState<DashboardData | null>(null);
+
+    useEffect(() => {
+        loadDashboard();
+    }, [assignmentId]);
+
+    const loadDashboard = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const data = await candidateApi.getDashboard(assignmentId);
+            setDashboard(data);
+        } catch (err) {
+            console.error('Failed to load dashboard:', err);
+            setError('Failed to load dashboard. Please try again.');
+            // Use fallback mock data for demo
+            setDashboard({
+                candidateId: 'demo',
+                candidateName: 'John Rodriguez',
+                projectName: 'Marathon Galveston Turnaround',
+                projectId: 'demo-project',
+                trade: 'Pipefitter',
+                totalTasks: 15,
+                completedTasks: 7,
+                remainingTasks: 8,
+                progressPercent: 47,
+                daysUntilStart: 3,
+                startDate: null,
+                categories: [
+                    { id: 'forms', name: 'Forms', completed: 3, total: 5 },
+                    { id: 'documents', name: 'Documents', completed: 2, total: 4 },
+                    { id: 'training', name: 'Training', completed: 1, total: 3 },
+                    { id: 'compliance', name: 'Compliance', completed: 1, total: 3 },
+                ],
+                priorityTasks: [
+                    { id: 'task-001', taskId: 't1', name: 'Complete W-4 Form', type: 'form', dueIn: 2, priority: 'high', status: 'NOT_STARTED' },
+                    { id: 'task-010', taskId: 't2', name: 'Upload Driver\'s License', type: 'upload', dueIn: 3, priority: 'medium', status: 'NOT_STARTED' },
+                ]
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Get greeting based on time of day
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return 'Good morning';
+        if (hour < 17) return 'Good afternoon';
+        return 'Good evening';
+    };
+
+    // Get initials from name
+    const getInitials = (name: string) => {
+        return name.split(' ').map(n => n[0]).join('').toUpperCase();
+    };
+
+    if (loading) {
+        return (
+            <div className="candidate-v2 candidate-loading">
+                <Loader2 className="spin" size={32} />
+                <p>Loading your dashboard...</p>
+            </div>
+        );
+    }
+
+    if (!dashboard) {
+        return (
+            <div className="candidate-v2 candidate-error">
+                <p>{error || 'Something went wrong'}</p>
+                <button onClick={loadDashboard}>Try Again</button>
+            </div>
+        );
+    }
+
+    const {
+        candidateName,
+        projectName,
+        totalTasks,
+        completedTasks,
+        remainingTasks,
+        progressPercent,
+        daysUntilStart,
+        categories,
+        priorityTasks
+    } = dashboard;
+
+    const firstName = candidateName.split(' ')[0];
 
     return (
         <div className="candidate-v2">
@@ -46,11 +161,11 @@ export function CandidateHomeV2Page() {
             <header className="candidate-v2-header">
                 <div className="candidate-v2-header-left">
                     <div className="candidate-v2-avatar">
-                        {mockCandidate.firstName[0]}{mockCandidate.lastName[0]}
+                        {getInitials(candidateName)}
                     </div>
                     <div>
-                        <span className="candidate-v2-greeting">Good morning</span>
-                        <h1 className="candidate-v2-name">{mockCandidate.firstName}</h1>
+                        <span className="candidate-v2-greeting">{getGreeting()}</span>
+                        <h1 className="candidate-v2-name">{firstName}</h1>
                     </div>
                 </div>
                 <div className="candidate-v2-header-right">
@@ -70,7 +185,7 @@ export function CandidateHomeV2Page() {
                     <div className="candidate-v2-hero-info">
                         <div className="candidate-v2-hero-badge">
                             <Sparkles size={14} />
-                            <span>Onboarding</span>
+                            <span>{projectName}</span>
                         </div>
                         <h2 className="candidate-v2-hero-title">
                             {progressPercent < 100 ? 'Almost there!' : 'All done!'}
@@ -112,13 +227,13 @@ export function CandidateHomeV2Page() {
                 <div className="candidate-v2-quick-stats">
                     <div className="candidate-v2-quick-stat">
                         <Zap size={16} className="text-warning" />
-                        <span className="candidate-v2-quick-stat-value">{totalTasks - completedTasks}</span>
+                        <span className="candidate-v2-quick-stat-value">{remainingTasks}</span>
                         <span className="candidate-v2-quick-stat-label">Pending</span>
                     </div>
                     <div className="candidate-v2-stat-divider" />
                     <div className="candidate-v2-quick-stat">
                         <Clock size={16} className="text-danger" />
-                        <span className="candidate-v2-quick-stat-value">3</span>
+                        <span className="candidate-v2-quick-stat-value">{daysUntilStart ?? '-'}</span>
                         <span className="candidate-v2-quick-stat-label">Days left</span>
                     </div>
                     <div className="candidate-v2-stat-divider" />
@@ -131,33 +246,35 @@ export function CandidateHomeV2Page() {
             </div>
 
             {/* Priority Tasks */}
-            <section className="candidate-v2-section">
-                <div className="candidate-v2-section-header">
-                    <h2 className="candidate-v2-section-title">Priority Tasks</h2>
-                    <span className="candidate-v2-section-badge">{priorityTasks.length}</span>
-                </div>
+            {priorityTasks.length > 0 && (
+                <section className="candidate-v2-section">
+                    <div className="candidate-v2-section-header">
+                        <h2 className="candidate-v2-section-title">Priority Tasks</h2>
+                        <span className="candidate-v2-section-badge">{priorityTasks.length}</span>
+                    </div>
 
-                <div className="candidate-v2-priority-list">
-                    {priorityTasks.map((task, index) => (
-                        <button
-                            key={task.id}
-                            className="candidate-v2-priority-item"
-                            onClick={() => navigate(`/candidate/tasks/${task.id}`)}
-                            style={{ animationDelay: `${index * 50}ms` }}
-                        >
-                            <div className={`candidate-v2-priority-indicator priority-${task.priority}`} />
-                            <div className="candidate-v2-priority-content">
-                                <span className="candidate-v2-priority-name">{task.name}</span>
-                                <span className="candidate-v2-priority-due">
-                                    <Clock size={12} />
-                                    Due in {task.dueIn} days
-                                </span>
-                            </div>
-                            <ChevronRight size={18} className="candidate-v2-priority-arrow" />
-                        </button>
-                    ))}
-                </div>
-            </section>
+                    <div className="candidate-v2-priority-list">
+                        {priorityTasks.map((task, index) => (
+                            <button
+                                key={task.id}
+                                className="candidate-v2-priority-item"
+                                onClick={() => navigate(`/candidate/tasks/${task.id}?assignmentId=${assignmentId}`)}
+                                style={{ animationDelay: `${index * 50}ms` }}
+                            >
+                                <div className={`candidate-v2-priority-indicator priority-${task.priority}`} />
+                                <div className="candidate-v2-priority-content">
+                                    <span className="candidate-v2-priority-name">{task.name}</span>
+                                    <span className="candidate-v2-priority-due">
+                                        <Clock size={12} />
+                                        {task.dueIn !== null ? `Due in ${task.dueIn} days` : 'No due date'}
+                                    </span>
+                                </div>
+                                <ChevronRight size={18} className="candidate-v2-priority-arrow" />
+                            </button>
+                        ))}
+                    </div>
+                </section>
+            )}
 
             {/* Category Cards - Swipeable on Mobile */}
             <section className="candidate-v2-section">
@@ -165,7 +282,7 @@ export function CandidateHomeV2Page() {
                     <h2 className="candidate-v2-section-title">Categories</h2>
                     <button
                         className="candidate-v2-view-all"
-                        onClick={() => navigate('/candidate-v2/tasks')}
+                        onClick={() => navigate(`/candidate-v2/tasks?assignmentId=${assignmentId}`)}
                     >
                         View All
                     </button>
@@ -173,15 +290,17 @@ export function CandidateHomeV2Page() {
 
                 <div className="candidate-v2-categories-scroll">
                     {categories.map((category, index) => {
-                        const Icon = category.icon;
-                        const percent = Math.round((category.completed / category.total) * 100);
-                        const isDone = category.completed === category.total;
+                        const Icon = getCategoryIcon(category.id);
+                        const percent = category.total > 0
+                            ? Math.round((category.completed / category.total) * 100)
+                            : 0;
+                        const isDone = category.completed === category.total && category.total > 0;
 
                         return (
                             <button
                                 key={category.id}
                                 className="candidate-v2-category-card"
-                                onClick={() => navigate(`/candidate-v2/tasks?category=${category.id}`)}
+                                onClick={() => navigate(`/candidate-v2/tasks?category=${category.id}&assignmentId=${assignmentId}`)}
                                 style={{ animationDelay: `${index * 75}ms` }}
                             >
                                 <div className={`candidate-v2-category-icon ${category.id}`}>
@@ -215,7 +334,7 @@ export function CandidateHomeV2Page() {
                 </button>
                 <button
                     className="candidate-v2-nav-item"
-                    onClick={() => navigate('/candidate-v2/tasks')}
+                    onClick={() => navigate(`/candidate-v2/tasks?assignmentId=${assignmentId}`)}
                 >
                     <FileText size={22} />
                     <span>Tasks</span>

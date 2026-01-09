@@ -1,6 +1,13 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/layout';
 import { MobileLayout } from './components/layout/MobileLayout';
+import { AuthProvider, ProtectedRoute } from './contexts/AuthContext';
+
+// Auth Pages
+import { LandingPage } from './pages/LandingPage';
+import { AdminLoginPage } from './pages/AdminLoginPage';
+import { CandidateLoginPage } from './pages/CandidateLoginPage';
+import { SetPasswordPage } from './pages/SetPasswordPage';
 
 // Feature Pages
 import { DashboardPage } from './features/dashboard/pages/DashboardPage';
@@ -24,6 +31,7 @@ import { CandidateProfilePage } from './features/candidate/pages/CandidateProfil
 // Candidate Portal Pages (V2 - Mobile-First)
 import { CandidateHomeV2Page } from './features/candidate/pages/CandidateHomeV2Page';
 import { CandidateTasksV2Page } from './features/candidate/pages/CandidateTasksV2Page';
+import { CandidateTaskFormPage } from './features/candidate/pages/CandidateTaskFormPage';
 
 // Candidate Portal Pages (V3 - Condensed)
 import { CandidateTasksV3Page } from './features/candidate/pages/CandidateTasksV3Page';
@@ -36,40 +44,136 @@ import { CandidateNotificationsPage } from './features/candidate/pages/Candidate
 
 function App() {
     return (
-        <Routes>
-            {/* HR Portal - Desktop Layout */}
-            <Route path="/" element={<Layout><Navigate to="/dashboard" replace /></Layout>} />
-            <Route path="/dashboard" element={<Layout><DashboardPage /></Layout>} />
-            <Route path="/api-test" element={<Layout><ApiTestPage /></Layout>} />
-            <Route path="/projects" element={<Layout><ProjectsPage /></Layout>} />
-            <Route path="/projects/new" element={<Layout><ProjectSetupWizard /></Layout>} />
-            <Route path="/projects/:projectId" element={<Layout><ProjectDetailPage /></Layout>} />
-            <Route path="/projects/:projectId/edit" element={<Layout><ProjectEditPage /></Layout>} />
-            <Route path="/projects/:projectId/dashboard" element={<Layout><OnboardingDashboard /></Layout>} />
-            <Route path="/templates" element={<Layout><TemplatesPage /></Layout>} />
-            <Route path="/templates/:templateId" element={<Layout><TemplateDetailPage /></Layout>} />
-            <Route path="/tasks" element={<Layout><TaskLibraryPage /></Layout>} />
-            <Route path="/eligibility-rules" element={<Layout><EligibilityRulesPage /></Layout>} />
-            <Route path="/team-members" element={<Layout><TeamMembersPage /></Layout>} />
+        <AuthProvider>
+            <Routes>
+                {/* Public Routes - No Auth Required */}
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/login/admin" element={<AdminLoginPage />} />
+                <Route path="/login/candidate" element={<CandidateLoginPage />} />
+                <Route path="/set-password" element={<SetPasswordPage />} />
 
-            {/* Candidate Portal V1 - Mobile Layout */}
-            <Route path="/candidate" element={<MobileLayout><CandidateHomePage /></MobileLayout>} />
-            <Route path="/candidate/tasks" element={<MobileLayout><CandidateTasksPage /></MobileLayout>} />
-            <Route path="/candidate/tasks/:taskId" element={<MobileLayout><CandidateTasksPage /></MobileLayout>} />
-            <Route path="/candidate/chat" element={<MobileLayout><CandidateChatPage /></MobileLayout>} />
-            <Route path="/candidate/notifications" element={<MobileLayout><CandidateNotificationsPage /></MobileLayout>} />
-            <Route path="/candidate/profile" element={<MobileLayout><CandidateProfilePage /></MobileLayout>} />
+                {/* HR Portal - Desktop Layout (Protected - Admin Only) */}
+                <Route path="/dashboard" element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                        <Layout><DashboardPage /></Layout>
+                    </ProtectedRoute>
+                } />
+                <Route path="/api-test" element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                        <Layout><ApiTestPage /></Layout>
+                    </ProtectedRoute>
+                } />
+                <Route path="/projects" element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                        <Layout><ProjectsPage /></Layout>
+                    </ProtectedRoute>
+                } />
+                <Route path="/projects/new" element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                        <Layout><ProjectSetupWizard /></Layout>
+                    </ProtectedRoute>
+                } />
+                <Route path="/projects/:projectId" element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                        <Layout><ProjectDetailPage /></Layout>
+                    </ProtectedRoute>
+                } />
+                <Route path="/projects/:projectId/edit" element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                        <Layout><ProjectEditPage /></Layout>
+                    </ProtectedRoute>
+                } />
+                <Route path="/projects/:projectId/dashboard" element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                        <Layout><OnboardingDashboard /></Layout>
+                    </ProtectedRoute>
+                } />
+                <Route path="/templates" element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                        <Layout><TemplatesPage /></Layout>
+                    </ProtectedRoute>
+                } />
+                <Route path="/templates/:templateId" element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                        <Layout><TemplateDetailPage /></Layout>
+                    </ProtectedRoute>
+                } />
+                <Route path="/tasks" element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                        <Layout><TaskLibraryPage /></Layout>
+                    </ProtectedRoute>
+                } />
+                <Route path="/eligibility-rules" element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                        <Layout><EligibilityRulesPage /></Layout>
+                    </ProtectedRoute>
+                } />
+                <Route path="/team-members" element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                        <Layout><TeamMembersPage /></Layout>
+                    </ProtectedRoute>
+                } />
 
-            {/* Candidate Portal V2 - Mobile-First Design */}
-            <Route path="/candidate-v2" element={<MobileLayout><CandidateHomeV2Page /></MobileLayout>} />
-            <Route path="/candidate-v2/tasks" element={<MobileLayout><CandidateTasksV2Page /></MobileLayout>} />
+                {/* Candidate Portal - Protected (Candidate Only) */}
+                <Route path="/candidate" element={
+                    <ProtectedRoute allowedRoles={['candidate']}>
+                        <MobileLayout><CandidateHomePage /></MobileLayout>
+                    </ProtectedRoute>
+                } />
+                <Route path="/candidate/tasks" element={
+                    <ProtectedRoute allowedRoles={['candidate']}>
+                        <MobileLayout><CandidateTasksPage /></MobileLayout>
+                    </ProtectedRoute>
+                } />
+                <Route path="/candidate/tasks/:taskId" element={
+                    <ProtectedRoute allowedRoles={['candidate']}>
+                        <MobileLayout><CandidateTasksPage /></MobileLayout>
+                    </ProtectedRoute>
+                } />
+                <Route path="/candidate/chat" element={
+                    <ProtectedRoute allowedRoles={['candidate']}>
+                        <MobileLayout><CandidateChatPage /></MobileLayout>
+                    </ProtectedRoute>
+                } />
+                <Route path="/candidate/notifications" element={
+                    <ProtectedRoute allowedRoles={['candidate']}>
+                        <MobileLayout><CandidateNotificationsPage /></MobileLayout>
+                    </ProtectedRoute>
+                } />
+                <Route path="/candidate/profile" element={
+                    <ProtectedRoute allowedRoles={['candidate']}>
+                        <MobileLayout><CandidateProfilePage /></MobileLayout>
+                    </ProtectedRoute>
+                } />
 
-            {/* Candidate Portal V3 - Condensed Design */}
-            <Route path="/candidate-v3/tasks" element={<MobileLayout><CandidateTasksV3Page /></MobileLayout>} />
+                {/* Candidate Portal V2 - Mobile-First Design */}
+                <Route path="/candidate-v2" element={
+                    <ProtectedRoute allowedRoles={['candidate']}>
+                        <MobileLayout><CandidateHomeV2Page /></MobileLayout>
+                    </ProtectedRoute>
+                } />
+                <Route path="/candidate-v2/tasks" element={
+                    <ProtectedRoute allowedRoles={['candidate']}>
+                        <MobileLayout><CandidateTasksV2Page /></MobileLayout>
+                    </ProtectedRoute>
+                } />
+                <Route path="/candidate/task/:taskInstanceId" element={
+                    <ProtectedRoute allowedRoles={['candidate']}>
+                        <MobileLayout><CandidateTaskFormPage /></MobileLayout>
+                    </ProtectedRoute>
+                } />
 
-            {/* Fallback */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
+                {/* Candidate Portal V3 - Condensed Design */}
+                <Route path="/candidate-v3/tasks" element={
+                    <ProtectedRoute allowedRoles={['candidate']}>
+                        <MobileLayout><CandidateTasksV3Page /></MobileLayout>
+                    </ProtectedRoute>
+                } />
+
+                {/* Fallback - Redirect to landing */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+        </AuthProvider>
     );
 }
 

@@ -60,3 +60,7 @@ coverage/
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Status/tracking files
+OnBoardingRite_Status.xlsx
+feature_status.csv

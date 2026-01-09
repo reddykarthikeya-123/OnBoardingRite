@@ -283,5 +283,113 @@ export const teamMembersApi = {
     }),
 };
 
+// Candidate Portal API
+export const candidateApi = {
+    // Get dashboard summary for a candidate
+    getDashboard: (assignmentId: string) => fetchApi<{
+        candidateId: string;
+        candidateName: string;
+        projectName: string;
+        projectId: string;
+        trade: string | null;
+        totalTasks: number;
+        completedTasks: number;
+        remainingTasks: number;
+        progressPercent: number;
+        daysUntilStart: number | null;
+        startDate: string | null;
+        categories: Array<{
+            id: string;
+            name: string;
+            completed: number;
+            total: number;
+        }>;
+        priorityTasks: Array<{
+            id: string;
+            taskId: string;
+            name: string;
+            type: string;
+            dueIn: number | null;
+            priority: string;
+            status: string;
+        }>;
+    }>(`/candidate/dashboard/${assignmentId}`),
+
+    // Get all tasks for assignment
+    getTasks: (assignmentId: string, params?: { category?: string; status?: string }) => {
+        const query = new URLSearchParams();
+        if (params?.category) query.append('category', params.category);
+        if (params?.status) query.append('status', params.status);
+        const queryStr = query.toString();
+        return fetchApi<{
+            assignmentId: string;
+            tasks: Array<{
+                id: string;
+                taskId: string;
+                name: string;
+                description: string | null;
+                type: string;
+                category: string | null;
+                status: string;
+                dueDate: string | null;
+                isRequired: boolean;
+                configuration: any;
+                result: any;
+                startedAt: string | null;
+                completedAt: string | null;
+            }>;
+            totalCount: number;
+            completedCount: number;
+            pendingCount: number;
+        }>(`/candidate/tasks/${assignmentId}${queryStr ? `?${queryStr}` : ''}`);
+    },
+
+    // Get single task detail with form fields
+    getTaskDetail: (assignmentId: string, taskInstanceId: string) => fetchApi<{
+        taskInstance: {
+            id: string;
+            status: string;
+            result: any;
+            startedAt: string | null;
+            completedAt: string | null;
+            dueDate: string | null;
+        };
+        task: {
+            id: string;
+            name: string;
+            description: string | null;
+            type: string;
+            category: string | null;
+            isRequired: boolean;
+            configuration: any;
+        };
+        documents: Array<{
+            id: string;
+            filename: string;
+            mimeType: string;
+            fileSize: number;
+            documentSide: string | null;
+            uploadedAt: string | null;
+        }>;
+    }>(`/candidate/tasks/${assignmentId}/${taskInstanceId}`),
+
+    // Submit form data
+    submitForm: (assignmentId: string, taskInstanceId: string, formData: Record<string, any>) =>
+        fetchApi<{ success: boolean; message: string; taskInstanceId: string; status: string }>(
+            `/candidate/tasks/${assignmentId}/${taskInstanceId}/submit`,
+            {
+                method: 'POST',
+                body: JSON.stringify({ formData }),
+            }
+        ),
+
+    // Start a task
+    startTask: (assignmentId: string, taskInstanceId: string) =>
+        fetchApi<{ success: boolean; status: string; startedAt: string | null }>(
+            `/candidate/tasks/${assignmentId}/${taskInstanceId}/start`,
+            { method: 'POST' }
+        ),
+};
+
 export { API_BASE_URL };
 

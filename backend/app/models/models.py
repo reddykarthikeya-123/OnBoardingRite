@@ -145,10 +145,17 @@ class TeamMember(Base):
     state = Column(String(50))
     zip_code = Column(String(20))
     country = Column(String(100), default='USA')
+    
+    # Authentication fields
+    password_hash = Column(Text)
+    is_first_login = Column(Boolean, default=True)
+    last_login = Column(TIMESTAMP)
+    
     created_at = Column(TIMESTAMP)
     updated_at = Column(TIMESTAMP)
     
     assignments = relationship("ProjectAssignment", back_populates="team_member")
+
 
 class Project(Base):
     __tablename__ = "or_projects"
