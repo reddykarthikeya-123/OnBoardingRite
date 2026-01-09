@@ -89,50 +89,12 @@ export function CandidateTaskFormPage() {
             }
         } catch (err) {
             console.error('Failed to load task:', err);
-            // Fallback mock data for demo
-            setTaskDetail({
-                taskInstance: {
-                    id: taskInstanceId || 'demo',
-                    status: 'IN_PROGRESS',
-                    result: null,
-                    startedAt: new Date().toISOString(),
-                    completedAt: null,
-                    dueDate: '2025-12-20'
-                },
-                task: {
-                    id: 'demo-task',
-                    name: 'W-4 Tax Form',
-                    description: 'Please complete your federal tax withholding form.',
-                    type: 'CUSTOM_FORM',
-                    category: 'FORMS',
-                    isRequired: true,
-                    configuration: {
-                        formFields: [
-                            { name: 'fullName', label: 'Full Legal Name', type: 'TEXT', required: true, placeholder: 'Enter your full legal name' },
-                            { name: 'ssn', label: 'Social Security Number', type: 'TEXT', required: true, placeholder: 'XXX-XX-XXXX' },
-                            { name: 'address', label: 'Home Address', type: 'TEXTAREA', required: true, placeholder: 'Street address, city, state, zip' },
-                            {
-                                name: 'filingStatus', label: 'Filing Status', type: 'SELECT', required: true, options: [
-                                    { value: 'single', label: 'Single' },
-                                    { value: 'married_filing_jointly', label: 'Married Filing Jointly' },
-                                    { value: 'married_filing_separately', label: 'Married Filing Separately' },
-                                    { value: 'head_of_household', label: 'Head of Household' }
-                                ]
-                            },
-                            { name: 'multipleJobs', label: 'Do you have multiple jobs?', type: 'CHECKBOX', required: false },
-                            { name: 'dependents', label: 'Number of Dependents', type: 'NUMBER', required: false, placeholder: '0' },
-                            { name: 'additionalWithholding', label: 'Additional Withholding Amount', type: 'NUMBER', required: false, placeholder: '0.00' },
-                            { name: 'signature', label: 'Electronic Signature', type: 'TEXT', required: true, placeholder: 'Type your full name as signature' },
-                            { name: 'signatureDate', label: 'Date', type: 'DATE', required: true }
-                        ]
-                    }
-                },
-                documents: []
-            });
+            setSubmitError('Failed to load task details. Please try again.');
         } finally {
             setLoading(false);
         }
     };
+
 
     const handleInputChange = (fieldName: string, value: any) => {
         setFormData(prev => ({ ...prev, [fieldName]: value }));
@@ -306,11 +268,12 @@ export function CandidateTaskFormPage() {
         return (
             <div className="candidate-v2 candidate-form-page candidate-error">
                 <AlertCircle size={48} />
-                <p>Task not found</p>
+                <p>{submitError || 'Task not found'}</p>
                 <button onClick={() => navigate(-1)}>Go Back</button>
             </div>
         );
     }
+
 
     const { task, taskInstance } = taskDetail;
     const formFields: FormField[] = task.configuration?.formFields || [];

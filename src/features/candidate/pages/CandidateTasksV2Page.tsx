@@ -116,9 +116,10 @@ export function CandidateTasksV2Page() {
     };
 
     const handleTaskClick = (task: TaskItem) => {
-        // Navigate to task detail/form page
-        navigate(`/candidate/task/${task.id}`);
+        // Navigate to task detail/form page with assignmentId
+        navigate(`/candidate/task/${task.id}?assignmentId=${assignmentId}`);
     };
+
 
     if (loading) {
         return (
