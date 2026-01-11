@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Users, Mail, Phone, MapPin, Loader2, Trash2, Edit, Save, FileText, ChevronRight, ChevronDown } from 'lucide-react';
-import { Card, Button, Badge, Modal, ConfirmDialog } from '../../../components/ui';
+import { Card, Button, Badge, Modal } from '../../../components/ui';
 import { teamMembersApi, candidateApi } from '../../../services/api';
 import { SubmittedTaskViewer } from '../../candidate/components/SubmittedTaskViewer';
 
@@ -55,10 +55,6 @@ export function TeamMembersPage() {
     const [formData, setFormData] = useState<TeamMemberFormData>(emptyFormData);
     const [isSaving, setIsSaving] = useState(false);
     const [formErrors, setFormErrors] = useState<string[]>([]);
-
-    // Delete confirmation state
-    const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
-    const [isDeleting, setIsDeleting] = useState(false);
 
     // Submissions modal state
     const [showSubmissionsModal, setShowSubmissionsModal] = useState(false);
@@ -192,22 +188,15 @@ export function TeamMembersPage() {
     };
 
     // Delete member
-    const handleDelete = async (memberId: string, memberName: string) => {
-        setDeleteConfirm({ id: memberId, name: memberName });
-    };
-
-    const confirmDelete = async () => {
-        if (!deleteConfirm) return;
-        setIsDeleting(true);
-        try {
-            await teamMembersApi.delete(deleteConfirm.id);
-            loadMembers();
-        } catch (error) {
-            console.error('Failed to delete team member:', error);
-            alert('Failed to delete team member.');
-        } finally {
-            setIsDeleting(false);
-            setDeleteConfirm(null);
+    const handleDelete = async (memberId: string) => {
+        if (confirm('Are you sure you want to delete this team member?')) {
+            try {
+                await teamMembersApi.delete(memberId);
+                loadMembers();
+            } catch (error) {
+                console.error('Failed to delete team member:', error);
+                alert('Failed to delete team member.');
+            }
         }
     };
 
@@ -309,9 +298,9 @@ export function TeamMembersPage() {
             {/* Members Grid */}
             {filteredMembers.length === 0 ? (
                 <Card>
-                    <div className="py-16 px-8 flex flex-col items-center justify-center text-center">
+                    <div className="p-12 text-center">
                         <div className="mb-4">
-                            <Users size={48} className="text-muted" style={{ opacity: 0.3 }} />
+                            <Users size={48} className="text-muted mx-auto" style={{ opacity: 0.3 }} />
                         </div>
                         <h3 className="text-lg font-semibold mb-2">
                             {members.length === 0 ? 'No team members yet' : 'No results found'}
@@ -353,7 +342,7 @@ export function TeamMembersPage() {
                                     </button>
                                     <button
                                         className="btn-icon-sm btn-danger-ghost"
-                                        onClick={() => handleDelete(member.id, `${member.firstName} ${member.lastName}`)}
+                                        onClick={() => handleDelete(member.id)}
                                         title="Delete"
                                     >
                                         <Trash2 size={14} />
@@ -646,18 +635,6 @@ export function TeamMembersPage() {
                     </div>
                 )}
             </Modal>
-
-            {/* Delete Confirmation Dialog */}
-            <ConfirmDialog
-                isOpen={!!deleteConfirm}
-                onClose={() => setDeleteConfirm(null)}
-                onConfirm={confirmDelete}
-                title="Delete Team Member"
-                message={`Are you sure you want to delete "${deleteConfirm?.name}"? This will also remove all their project assignments and submissions.`}
-                confirmText="Delete Member"
-                variant="danger"
-                isLoading={isDeleting}
-            />
         </div>
     );
 }
