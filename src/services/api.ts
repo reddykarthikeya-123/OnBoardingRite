@@ -427,5 +427,85 @@ export const candidateApi = {
     }>>(`/candidate/profile/submissions/${candidateId}/project/${projectId}`),
 };
 
+// Documents API - File upload and management
+export const documentsApi = {
+    // Upload a document file
+    upload: async (
+        file: File,
+        taskInstanceId: string,
+        metadata?: {
+            documentSide?: string;
+            documentNumber?: string;
+            expiryDate?: string;
+            uploadedBy?: string;
+        }
+    ): Promise<{
+        success: boolean;
+        document: {
+            id: string;
+            taskInstanceId: string;
+            filename: string;
+            originalFilename: string;
+            mimeType: string;
+            fileSize: number;
+            documentSide?: string;
+            documentNumber?: string;
+            expiryDate?: string;
+        };
+        message: string;
+    }> => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('task_instance_id', taskInstanceId);
+
+        if (metadata?.documentSide) formData.append('document_side', metadata.documentSide);
+        if (metadata?.documentNumber) formData.append('document_number', metadata.documentNumber);
+        if (metadata?.expiryDate) formData.append('expiry_date', metadata.expiryDate);
+        if (metadata?.uploadedBy) formData.append('uploaded_by', metadata.uploadedBy);
+
+        const response = await fetch(`${API_BASE_URL}/documents/upload`, {
+            method: 'POST',
+            body: formData,
+            // Don't set Content-Type header for FormData - browser will set it with boundary
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.detail || `Upload failed: ${response.statusText}`);
+        }
+
+        return response.json();
+    },
+
+    // List documents for a task instance
+    list: (taskInstanceId: string) => fetchApi<{
+        documents: Array<{
+            id: string;
+            taskInstanceId: string;
+            filename: string;
+            originalFilename: string;
+            mimeType: string;
+            fileSize: number;
+            documentSide?: string;
+            documentNumber?: string;
+            expiryDate?: string;
+            uploadedAt: string;
+        }>;
+        total: number;
+    }>(`/documents/task-instance/${taskInstanceId}`),
+
+    // Get document view URL
+    getUrl: (documentId: string) => `${API_BASE_URL}/documents/${documentId}`,
+
+    // Get document download URL
+    getDownloadUrl: (documentId: string) => `${API_BASE_URL}/documents/${documentId}/download`,
+
+    // Delete a document
+    delete: (documentId: string) => fetchApi<{ success: boolean; message: string }>(
+        `/documents/${documentId}`,
+        { method: 'DELETE' }
+    ),
+};
+
 export { API_BASE_URL };
 

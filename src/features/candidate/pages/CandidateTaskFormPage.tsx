@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
     ArrowLeft,
@@ -11,9 +11,13 @@ import {
     MessageCircle,
     Bell,
     User,
-    Clock
+    Clock,
+    Upload,
+    File,
+    Image,
+    Trash2
 } from 'lucide-react';
-import { candidateApi } from '../../../services/api';
+import { candidateApi, documentsApi } from '../../../services/api';
 import './CandidateForm.css';
 
 interface FormField {
@@ -66,6 +70,19 @@ export function CandidateTaskFormPage() {
     const [submitSuccess, setSubmitSuccess] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
 
+    // Document upload state
+    const [uploadedFiles, setUploadedFiles] = useState<Array<{
+        id: string;
+        originalFilename: string;
+        mimeType: string;
+        fileSize: number;
+        documentSide?: string;
+    }>>([]);
+    const [uploading, setUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [dragActive, setDragActive] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
     useEffect(() => {
         if (taskInstanceId) {
             loadTaskDetail();
@@ -95,6 +112,97 @@ export function CandidateTaskFormPage() {
         }
     };
 
+    // File upload handlers
+    const handleFileSelect = async (files: FileList | null) => {
+        if (!files || files.length === 0 || !taskInstanceId) return;
+
+        setUploading(true);
+        setSubmitError(null);
+        setUploadProgress(0);
+
+        try {
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                setUploadProgress(Math.round(((i + 1) / files.length) * 100));
+
+                const result = await documentsApi.upload(file, taskInstanceId);
+
+                setUploadedFiles(prev => [...prev, {
+                    id: result.document.id,
+                    originalFilename: result.document.originalFilename,
+                    mimeType: result.document.mimeType,
+                    fileSize: result.document.fileSize,
+                    documentSide: result.document.documentSide
+                }]);
+            }
+        } catch (err: any) {
+            console.error('Upload failed:', err);
+            setSubmitError(err.message || 'Failed to upload file');
+        } finally {
+            setUploading(false);
+            setUploadProgress(0);
+        }
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragActive(false);
+        handleFileSelect(e.dataTransfer.files);
+    };
+
+    const handleDrag = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.type === 'dragenter' || e.type === 'dragover') {
+            setDragActive(true);
+        } else if (e.type === 'dragleave') {
+            setDragActive(false);
+        }
+    };
+
+    const handleDeleteFile = async (documentId: string) => {
+        try {
+            await documentsApi.delete(documentId);
+            setUploadedFiles(prev => prev.filter(f => f.id !== documentId));
+        } catch (err) {
+            console.error('Failed to delete file:', err);
+        }
+    };
+
+    const formatFileSize = (bytes: number): string => {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    };
+
+    const handleDocumentSubmit = async () => {
+        if (uploadedFiles.length === 0) {
+            setSubmitError('Please upload at least one file');
+            return;
+        }
+
+        try {
+            setSubmitting(true);
+            setSubmitError(null);
+
+            // Submit with reference to uploaded files
+            await candidateApi.submitForm(assignmentId, taskInstanceId!, {
+                documentIds: uploadedFiles.map(f => f.id),
+                documentCount: uploadedFiles.length
+            });
+
+            setSubmitSuccess(true);
+            setTimeout(() => {
+                navigate(`/candidate-v2/tasks?assignmentId=${assignmentId}`);
+            }, 2000);
+        } catch (err) {
+            console.error('Failed to submit:', err);
+            setSubmitError('Failed to submit documents. Please try again.');
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     const handleInputChange = (fieldName: string, value: any) => {
         setFormData(prev => ({ ...prev, [fieldName]: value }));
@@ -337,7 +445,7 @@ export function CandidateTaskFormPage() {
                 )}
 
                 {/* Form Fields */}
-                {!submitSuccess && (
+                {!submitSuccess && task.type !== 'DOCUMENT_UPLOAD' && (
                     <form className="candidate-form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
                         {formFields.map((field, index) => (
                             <div key={field.name} className="candidate-form-field" style={{ animationDelay: `${index * 30}ms` }}>
@@ -384,6 +492,115 @@ export function CandidateTaskFormPage() {
                             </button>
                         </div>
                     </form>
+                )}
+
+                {/* Document Upload UI */}
+                {!submitSuccess && task.type === 'DOCUMENT_UPLOAD' && (
+                    <div className="candidate-upload-container">
+                        {/* Instructions */}
+                        {task.configuration?.instructions && (
+                            <div className="candidate-upload-instructions">
+                                <p>{task.configuration.instructions}</p>
+                            </div>
+                        )}
+
+                        {/* Drag and Drop Zone */}
+                        <div
+                            className={`candidate-upload-dropzone ${dragActive ? 'active' : ''} ${uploading ? 'uploading' : ''}`}
+                            onDragEnter={handleDrag}
+                            onDragLeave={handleDrag}
+                            onDragOver={handleDrag}
+                            onDrop={handleDrop}
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                multiple
+                                accept={task.configuration?.allowedFileTypes?.join(',') || 'image/*,.pdf'}
+                                onChange={(e) => handleFileSelect(e.target.files)}
+                                style={{ display: 'none' }}
+                            />
+
+                            {uploading ? (
+                                <>
+                                    <Loader2 size={48} className="spin" style={{ color: '#667eea' }} />
+                                    <p>Uploading... {uploadProgress}%</p>
+                                </>
+                            ) : (
+                                <>
+                                    <Upload size={48} style={{ color: '#667eea' }} />
+                                    <p><strong>Click to upload</strong> or drag and drop</p>
+                                    <span className="candidate-upload-hint">
+                                        {task.configuration?.allowedFileTypes?.length > 0
+                                            ? `Accepted: ${task.configuration.allowedFileTypes.join(', ')}`
+                                            : 'Images and PDF files accepted'
+                                        }
+                                        {' • Max 5MB'}
+                                    </span>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Uploaded Files List */}
+                        {uploadedFiles.length > 0 && (
+                            <div className="candidate-upload-files">
+                                <h4>Uploaded Files ({uploadedFiles.length})</h4>
+                                {uploadedFiles.map((file) => (
+                                    <div key={file.id} className="candidate-upload-file-item">
+                                        <div className="candidate-upload-file-icon">
+                                            {file.mimeType.startsWith('image/') ? (
+                                                <Image size={24} />
+                                            ) : (
+                                                <File size={24} />
+                                            )}
+                                        </div>
+                                        <div className="candidate-upload-file-info">
+                                            <span className="candidate-upload-file-name">{file.originalFilename}</span>
+                                            <span className="candidate-upload-file-size">{formatFileSize(file.fileSize)}</span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            className="candidate-upload-file-delete"
+                                            onClick={() => handleDeleteFile(file.id)}
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Submit Button */}
+                        <div className="candidate-form-actions">
+                            <button
+                                type="button"
+                                className="candidate-form-btn-secondary"
+                                onClick={() => navigate(-1)}
+                                disabled={submitting || uploading}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                className="candidate-form-btn-primary"
+                                onClick={handleDocumentSubmit}
+                                disabled={submitting || uploading || uploadedFiles.length === 0 || isCompleted}
+                            >
+                                {submitting ? (
+                                    <>
+                                        <Loader2 size={18} className="spin" />
+                                        Submitting...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save size={18} />
+                                        Submit Documents
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
                 )}
             </div>
 

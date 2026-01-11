@@ -16,6 +16,14 @@ interface ProfileData {
     location: string | null;
 }
 
+interface DocumentInfo {
+    id: string;
+    originalFilename: string;
+    mimeType: string;
+    fileSize: number;
+    documentSide?: string;
+}
+
 interface SubmittedTask {
     id: string;
     taskId: string;
@@ -23,6 +31,7 @@ interface SubmittedTask {
     category: string | null;
     submittedAt: string | null;
     formData: Record<string, any> | null;
+    documents?: DocumentInfo[];
 }
 
 interface ProjectSubmissionGroup {
@@ -235,6 +244,7 @@ export function CandidateProfilePage() {
                         submittedAt={viewTask.submittedAt}
                         formData={viewTask.formData || {}}
                         onClose={() => setViewTask(null)}
+                        documents={viewTask.documents}
                     />
                 )}
             </Modal>

@@ -90,6 +90,12 @@ export function ProjectDetailPage() {
         category: string | null;
         submittedAt: string | null;
         formData: Record<string, any> | null;
+        documents?: Array<{
+            id: string;
+            originalFilename: string;
+            mimeType: string;
+            fileSize: number;
+        }>;
     }>>([]);
     const [viewTask, setViewTask] = useState<any>(null);
     const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
@@ -937,6 +943,7 @@ export function ProjectDetailPage() {
                             submittedAt={viewTask.submittedAt}
                             formData={viewTask.formData || {}}
                             onClose={() => setViewTask(null)}
+                            documents={viewTask.documents}
                         />
                     ) : (
                         <div className="submissions-list">

@@ -5,11 +5,9 @@ import {
     FileText,
     File,
     Camera,
-    Calendar,
-    Hash,
     Info
 } from 'lucide-react';
-import { Modal, Button, Badge } from '../../../components/ui';
+import { Modal, Button } from '../../../components/ui';
 import { CollapsibleSection } from './CollapsibleSection';
 import type { TaskCategory } from '../../../types';
 
@@ -32,10 +30,6 @@ export interface DocumentUploadTaskData {
     documentTypePreset: string;
     allowedFileTypes: string[];
     maxFileSize: number;
-    requiresFrontBack: boolean;
-    requiresMultipleFiles: boolean;
-    capturesExpiry: boolean;
-    capturesDocumentNumber: boolean;
 }
 
 const fileTypeOptions = [
@@ -47,15 +41,15 @@ const fileTypeOptions = [
 ];
 
 const documentTypePresets = [
-    { value: 'drivers_license', label: "Driver's License", requiresFrontBack: true },
-    { value: 'passport', label: 'Passport', requiresFrontBack: false },
-    { value: 'id_card', label: 'ID Card', requiresFrontBack: true },
-    { value: 'work_permit', label: 'Work Permit', requiresFrontBack: false },
-    { value: 'visa', label: 'Visa', requiresFrontBack: false },
-    { value: 'birth_certificate', label: 'Birth Certificate', requiresFrontBack: false },
-    { value: 'social_security', label: 'Social Security Card', requiresFrontBack: false },
-    { value: 'degree_certificate', label: 'Degree/Certificate', requiresFrontBack: false },
-    { value: 'custom', label: 'Custom Document', requiresFrontBack: false },
+    { value: 'drivers_license', label: "Driver's License" },
+    { value: 'passport', label: 'Passport' },
+    { value: 'id_card', label: 'ID Card' },
+    { value: 'work_permit', label: 'Work Permit' },
+    { value: 'visa', label: 'Visa' },
+    { value: 'birth_certificate', label: 'Birth Certificate' },
+    { value: 'social_security', label: 'Social Security Card' },
+    { value: 'degree_certificate', label: 'Degree/Certificate' },
+    { value: 'custom', label: 'Custom Document' },
 ];
 
 export function CreateDocumentUploadModal({
@@ -78,10 +72,6 @@ export function CreateDocumentUploadModal({
     const [selectedPreset, setSelectedPreset] = useState('custom');
     const [allowedFileTypes, setAllowedFileTypes] = useState<string[]>(['image/jpeg', 'image/png', 'application/pdf']);
     const [maxFileSize, setMaxFileSize] = useState(10);
-    const [requiresFrontBack, setRequiresFrontBack] = useState(false);
-    const [requiresMultipleFiles, setRequiresMultipleFiles] = useState(false);
-    const [capturesExpiry, setCapturesExpiry] = useState(false);
-    const [capturesDocumentNumber, setCapturesDocumentNumber] = useState(false);
 
     // Validation
     const [errors, setErrors] = useState<{ name?: string; documentTypeName?: string }>({});
@@ -99,10 +89,6 @@ export function CreateDocumentUploadModal({
             setSelectedPreset(initialData.documentTypePreset || 'custom');
             setAllowedFileTypes(initialData.allowedFileTypes);
             setMaxFileSize(initialData.maxFileSize);
-            setRequiresFrontBack(initialData.requiresFrontBack);
-            setRequiresMultipleFiles(initialData.requiresMultipleFiles);
-            setCapturesExpiry(initialData.capturesExpiry);
-            setCapturesDocumentNumber(initialData.capturesDocumentNumber);
         }
     }, [isOpen, initialData]);
 
@@ -117,10 +103,6 @@ export function CreateDocumentUploadModal({
         setSelectedPreset('custom');
         setAllowedFileTypes(['image/jpeg', 'image/png', 'application/pdf']);
         setMaxFileSize(10);
-        setRequiresFrontBack(false);
-        setRequiresMultipleFiles(false);
-        setCapturesExpiry(false);
-        setCapturesDocumentNumber(false);
         setErrors({});
     };
 
@@ -134,10 +116,6 @@ export function CreateDocumentUploadModal({
         const preset = documentTypePresets.find(p => p.value === presetValue);
         if (preset && presetValue !== 'custom') {
             setDocumentTypeName(preset.label);
-            setRequiresFrontBack(preset.requiresFrontBack);
-            if (preset.value === 'passport' || preset.value === 'visa') {
-                setCapturesExpiry(true);
-            }
         }
     };
 
@@ -176,11 +154,7 @@ export function CreateDocumentUploadModal({
             documentTypeName: documentTypeName.trim(),
             documentTypePreset: selectedPreset,
             allowedFileTypes,
-            maxFileSize,
-            requiresFrontBack,
-            requiresMultipleFiles,
-            capturesExpiry,
-            capturesDocumentNumber
+            maxFileSize
         });
         handleClose();
     };
@@ -324,83 +298,6 @@ export function CreateDocumentUploadModal({
                                     className="slider"
                                 />
                                 <span className="file-size-value">{maxFileSize} MB</span>
-                            </div>
-                        </div>
-                    </div>
-                </CollapsibleSection>
-
-                {/* Upload Requirements */}
-                <CollapsibleSection title="Upload Requirements" icon={<Camera size={16} />}>
-                    <div className="form-section">
-                        <div className="upload-options-grid">
-                            <div className="upload-option-card">
-                                <div className="upload-option-header">
-                                    <div className="checkbox">
-                                        <input
-                                            type="checkbox"
-                                            id="front-back"
-                                            checked={requiresFrontBack}
-                                            onChange={(e) => setRequiresFrontBack(e.target.checked)}
-                                        />
-                                        <label htmlFor="front-back">
-                                            <strong>Front & Back Images</strong>
-                                        </label>
-                                    </div>
-                                </div>
-                                <p className="upload-option-desc">Require front and back images of the document</p>
-                            </div>
-
-                            <div className="upload-option-card">
-                                <div className="upload-option-header">
-                                    <div className="checkbox">
-                                        <input
-                                            type="checkbox"
-                                            id="multiple-files"
-                                            checked={requiresMultipleFiles}
-                                            onChange={(e) => setRequiresMultipleFiles(e.target.checked)}
-                                        />
-                                        <label htmlFor="multiple-files">
-                                            <strong>Multiple Files</strong>
-                                        </label>
-                                    </div>
-                                </div>
-                                <p className="upload-option-desc">Allow uploading multiple files for this document</p>
-                            </div>
-
-                            <div className="upload-option-card">
-                                <div className="upload-option-header">
-                                    <div className="checkbox">
-                                        <input
-                                            type="checkbox"
-                                            id="capture-expiry"
-                                            checked={capturesExpiry}
-                                            onChange={(e) => setCapturesExpiry(e.target.checked)}
-                                        />
-                                        <label htmlFor="capture-expiry">
-                                            <Calendar size={14} className="mr-2" style={{ display: 'inline' }} />
-                                            <strong>Capture Expiry Date</strong>
-                                        </label>
-                                    </div>
-                                </div>
-                                <p className="upload-option-desc">Require the document expiration date</p>
-                            </div>
-
-                            <div className="upload-option-card">
-                                <div className="upload-option-header">
-                                    <div className="checkbox">
-                                        <input
-                                            type="checkbox"
-                                            id="capture-number"
-                                            checked={capturesDocumentNumber}
-                                            onChange={(e) => setCapturesDocumentNumber(e.target.checked)}
-                                        />
-                                        <label htmlFor="capture-number">
-                                            <Hash size={14} className="mr-2" style={{ display: 'inline' }} />
-                                            <strong>Capture Document Number</strong>
-                                        </label>
-                                    </div>
-                                </div>
-                                <p className="upload-option-desc">Require the document identification number</p>
                             </div>
                         </div>
                     </div>

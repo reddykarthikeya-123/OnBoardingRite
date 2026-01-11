@@ -70,6 +70,13 @@ export function TeamMembersPage() {
             category: string | null;
             submittedAt: string | null;
             formData: Record<string, any> | null;
+            documents?: Array<{
+                id: string;
+                originalFilename: string;
+                mimeType: string;
+                fileSize: number;
+                documentSide?: string;
+            }>;
         }>;
     }>>([]);
     const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
@@ -78,6 +85,13 @@ export function TeamMembersPage() {
         name: string;
         submittedAt: string | null;
         formData: Record<string, any>;
+        documents?: Array<{
+            id: string;
+            originalFilename: string;
+            mimeType: string;
+            fileSize: number;
+            documentSide?: string;
+        }>;
     } | null>(null);
 
     useEffect(() => {
@@ -540,6 +554,7 @@ export function TeamMembersPage() {
                         submittedAt={viewTask.submittedAt}
                         formData={viewTask.formData}
                         onClose={() => setViewTask(null)}
+                        documents={viewTask.documents}
                     />
                 ) : isLoadingSubmissions ? (
                     <div className="flex items-center justify-center py-8">
@@ -587,7 +602,8 @@ export function TeamMembersPage() {
                                                 onClick={() => setViewTask({
                                                     name: task.taskName,
                                                     submittedAt: task.submittedAt,
-                                                    formData: task.formData || {}
+                                                    formData: task.formData || {},
+                                                    documents: task.documents
                                                 })}
                                                 style={{
                                                     display: 'flex',

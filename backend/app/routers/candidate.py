@@ -82,6 +82,15 @@ class FormSubmissionRequest(BaseModel):
     formData: Dict[str, Any]
 
 
+class DocumentInfo(BaseModel):
+    """Document metadata for display"""
+    id: str
+    originalFilename: str
+    mimeType: str
+    fileSize: int
+    documentSide: Optional[str] = None
+
+
 class SubmittedTaskItem(BaseModel):
     """Details of a submitted task"""
     id: str
@@ -90,6 +99,7 @@ class SubmittedTaskItem(BaseModel):
     category: Optional[str]
     submittedAt: Optional[str]
     formData: Optional[Dict[str, Any]]
+    documents: Optional[List[DocumentInfo]] = []
     
     class Config:
         from_attributes = True
@@ -383,7 +393,7 @@ def submit_candidate_form(
     data: FormSubmissionRequest,
     db: Session = Depends(get_db)
 ):
-    """Submit form data for a custom form task"""
+    """Submit form data for a custom form task or document upload task"""
     
     ti = db.query(TaskInstance).filter(
         TaskInstance.id == task_instance_id,
@@ -394,11 +404,14 @@ def submit_candidate_form(
         raise HTTPException(status_code=404, detail="Task instance not found")
     
     task = db.query(Task).filter(Task.id == ti.task_id).first()
-    if task and task.type != 'CUSTOM_FORM':
-        raise HTTPException(status_code=400, detail="This task is not a form task")
     
-    # Validate required fields if form has configuration
-    if task and task.configuration:
+    # Allow both CUSTOM_FORM and DOCUMENT_UPLOAD task types
+    allowed_types = ['CUSTOM_FORM', 'DOCUMENT_UPLOAD']
+    if task and task.type not in allowed_types:
+        raise HTTPException(status_code=400, detail=f"This task type ({task.type}) does not support submission")
+    
+    # Validate required fields for CUSTOM_FORM tasks only
+    if task and task.type == 'CUSTOM_FORM' and task.configuration:
         form_fields = task.configuration.get('formFields', [])
         errors = []
         
@@ -411,6 +424,12 @@ def submit_candidate_form(
         
         if errors:
             raise HTTPException(status_code=400, detail={"errors": errors})
+    
+    # For DOCUMENT_UPLOAD tasks, verify documents were uploaded
+    if task and task.type == 'DOCUMENT_UPLOAD':
+        document_ids = data.formData.get('documentIds', [])
+        if not document_ids:
+            raise HTTPException(status_code=400, detail="No documents were uploaded")
     
     # Save form data
     ti.result = {
@@ -512,13 +531,29 @@ def get_submitted_tasks(
             # Extract form data if available
             form_data = ti.result.get('formData') if ti.result else None
             
+            # Fetch document details if this is a document upload task
+            documents = []
+            if form_data and 'documentIds' in form_data:
+                document_ids = form_data.get('documentIds', [])
+                for doc_id in document_ids:
+                    doc = db.query(Document).filter(Document.id == doc_id).first()
+                    if doc:
+                        documents.append(DocumentInfo(
+                            id=str(doc.id),
+                            originalFilename=doc.original_filename,
+                            mimeType=doc.mime_type,
+                            fileSize=doc.file_size or 0,
+                            documentSide=doc.document_side
+                        ))
+            
             submissions.append(SubmittedTaskItem(
                 id=str(ti.id),
                 taskId=str(task.id),
                 taskName=task.name,
                 category=task.category,
                 submittedAt=ti.completed_at.isoformat() if ti.completed_at else None,
-                formData=form_data
+                formData=form_data,
+                documents=documents
             ))
             
         if submissions:
@@ -564,13 +599,29 @@ def get_submitted_tasks_by_project(
         # Extract form data if available
         form_data = ti.result.get('formData') if ti.result else None
         
+        # Fetch document details if this is a document upload task
+        documents = []
+        if form_data and 'documentIds' in form_data:
+            document_ids = form_data.get('documentIds', [])
+            for doc_id in document_ids:
+                doc = db.query(Document).filter(Document.id == doc_id).first()
+                if doc:
+                    documents.append(DocumentInfo(
+                        id=str(doc.id),
+                        originalFilename=doc.original_filename,
+                        mimeType=doc.mime_type,
+                        fileSize=doc.file_size or 0,
+                        documentSide=doc.document_side
+                    ))
+        
         submissions.append(SubmittedTaskItem(
             id=str(ti.id),
             taskId=str(task.id),
             taskName=task.name,
             category=task.category,
             submittedAt=ti.completed_at.isoformat() if ti.completed_at else None,
-            formData=form_data
+            formData=form_data,
+            documents=documents
         ))
         
     return submissions
