@@ -101,7 +101,7 @@ export interface FormField {
     id: string;
     name: string;
     label: string;
-    type: 'TEXT' | 'TEXTAREA' | 'NUMBER' | 'EMAIL' | 'PHONE' | 'DATE' | 'SELECT' | 'MULTI_SELECT' | 'RADIO' | 'CHECKBOX' | 'FILE' | 'SIGNATURE' | 'EMBEDDED_PDF';
+    type: 'TEXT' | 'TEXTAREA' | 'NUMBER' | 'EMAIL' | 'PHONE' | 'DATE' | 'SELECT' | 'MULTI_SELECT' | 'RADIO' | 'CHECKBOX';
     required: boolean;
     placeholder?: string;
     helpText?: string;
@@ -111,13 +111,6 @@ export interface FormField {
         max?: number;
         pattern?: string;
         message?: string;
-    };
-    // For EMBEDDED_PDF type
-    pdfConfig?: {
-        url?: string;
-        title?: string;
-        requiresAcknowledgment?: boolean;
-        acknowledgmentText?: string;
     };
 }
 

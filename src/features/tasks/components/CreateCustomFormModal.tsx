@@ -13,9 +13,6 @@ import {
     Calendar,
     ListOrdered,
     CheckSquare,
-    Upload,
-    PenTool,
-    FileText as PdfIcon,
     ChevronDown,
     ChevronUp
 } from 'lucide-react';
@@ -52,9 +49,7 @@ const fieldTypeConfig: Record<FormField['type'], { icon: React.ReactNode; label:
     MULTI_SELECT: { icon: <ListOrdered size={16} />, label: 'Multi-Select', description: 'Multiple selection' },
     RADIO: { icon: <CheckSquare size={16} />, label: 'Radio', description: 'Single choice options' },
     CHECKBOX: { icon: <CheckSquare size={16} />, label: 'Checkbox', description: 'Yes/No checkbox' },
-    FILE: { icon: <Upload size={16} />, label: 'File Upload', description: 'File attachment' },
-    SIGNATURE: { icon: <PenTool size={16} />, label: 'Signature', description: 'Signature capture' },
-    EMBEDDED_PDF: { icon: <PdfIcon size={16} />, label: 'Embedded PDF', description: 'PDF viewer with acknowledgment' },
+    CHECKBOX: { icon: <CheckSquare size={16} />, label: 'Checkbox', description: 'Yes/No checkbox' },
 };
 
 const generateId = () => `field_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -126,9 +121,6 @@ export function CreateCustomFormModal({
             helpText: '',
             options: type === 'SELECT' || type === 'MULTI_SELECT' || type === 'RADIO'
                 ? [{ value: 'option1', label: 'Option 1' }]
-                : undefined,
-            pdfConfig: type === 'EMBEDDED_PDF'
-                ? { url: '', title: 'Document', requiresAcknowledgment: true, acknowledgmentText: 'I have read and agree to the above document' }
                 : undefined,
         };
         setFormFields([...formFields, newField]);
@@ -454,7 +446,7 @@ export function CreateCustomFormModal({
                                         <span className="input-helper">Displayed as label and used for data storage</span>
                                     </div>
 
-                                    {selectedField.type !== 'EMBEDDED_PDF' && selectedField.type !== 'CHECKBOX' && selectedField.type !== 'SIGNATURE' && (
+                                    {selectedField.type !== 'CHECKBOX' && (
                                         <div className="input-group">
                                             <label className="input-label">Placeholder</label>
                                             <input
@@ -523,60 +515,7 @@ export function CreateCustomFormModal({
                                         </div>
                                     )}
 
-                                    {/* PDF Configuration */}
-                                    {selectedField.type === 'EMBEDDED_PDF' && (
-                                        <div className="pdf-config-section">
-                                            <div className="input-group">
-                                                <label className="input-label">PDF URL</label>
-                                                <input
-                                                    type="url"
-                                                    className="input"
-                                                    value={selectedField.pdfConfig?.url || ''}
-                                                    onChange={(e) => updateField(selectedField.id, {
-                                                        pdfConfig: { ...selectedField.pdfConfig, url: e.target.value }
-                                                    })}
-                                                    placeholder="https://example.com/document.pdf"
-                                                />
-                                            </div>
-                                            <div className="input-group">
-                                                <label className="input-label">Document Title</label>
-                                                <input
-                                                    type="text"
-                                                    className="input"
-                                                    value={selectedField.pdfConfig?.title || ''}
-                                                    onChange={(e) => updateField(selectedField.id, {
-                                                        pdfConfig: { ...selectedField.pdfConfig, title: e.target.value }
-                                                    })}
-                                                    placeholder="Terms and Conditions"
-                                                />
-                                            </div>
-                                            <div className="checkbox">
-                                                <input
-                                                    type="checkbox"
-                                                    id="requires-ack"
-                                                    checked={selectedField.pdfConfig?.requiresAcknowledgment ?? true}
-                                                    onChange={(e) => updateField(selectedField.id, {
-                                                        pdfConfig: { ...selectedField.pdfConfig, requiresAcknowledgment: e.target.checked }
-                                                    })}
-                                                />
-                                                <label htmlFor="requires-ack">Require acknowledgment</label>
-                                            </div>
-                                            {selectedField.pdfConfig?.requiresAcknowledgment && (
-                                                <div className="input-group">
-                                                    <label className="input-label">Acknowledgment Text</label>
-                                                    <input
-                                                        type="text"
-                                                        className="input"
-                                                        value={selectedField.pdfConfig?.acknowledgmentText || ''}
-                                                        onChange={(e) => updateField(selectedField.id, {
-                                                            pdfConfig: { ...selectedField.pdfConfig, acknowledgmentText: e.target.value }
-                                                        })}
-                                                        placeholder="I have read and agree..."
-                                                    />
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
+                                    {/* PDF Configuration Removed */}
                                 </div>
                             ) : (
                                 <div className="field-config-empty">
