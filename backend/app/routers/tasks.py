@@ -18,11 +18,14 @@ def list_tasks(
     category: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
-    """List all tasks in the library (tasks without a task_group_id = library tasks)"""
+    """List all tasks in the library (original library tasks only)"""
     query = db.query(Task)
     
-    # Filter to only library tasks (no group assignment) or all tasks
-    # For now, let's return all tasks since they're in the task library
+    # Filter to only library tasks:
+    # - task_group_id is NULL (not assigned to template group)
+    # - source_task_id is NULL (not a reference to another task)
+    query = query.filter(Task.task_group_id == None)
+    query = query.filter(Task.source_task_id == None)
     
     if search:
         search_term = f"%{search}%"

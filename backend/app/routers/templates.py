@@ -68,6 +68,18 @@ def get_template(template_id: str, db: Session = Depends(get_db)):
     # Sort groups
     t.task_groups.sort(key=lambda x: x.display_order)
     
+    # For tasks with source_task_id, merge in the source task's configuration
+    # This allows form fields to be displayed correctly
+    for group in t.task_groups:
+        for task in group.tasks:
+            if task.source_task_id:
+                source_task = db.query(Task).filter(Task.id == task.source_task_id).first()
+                if source_task:
+                    # Merge source task's editable fields
+                    task.name = source_task.name
+                    task.description = source_task.description
+                    task.configuration = source_task.configuration
+    
     # Build response with createdByName
     schema = ChecklistTemplateSchema.model_validate(t)
     schema.createdByName = get_user_name(db, t.created_by)
@@ -253,12 +265,20 @@ def add_task_to_group(
         raise HTTPException(status_code=404, detail="Group not found")
         
     # Calculate order (append to end)
-    # This query counts tasks in this group
     count = db.query(Task).filter(Task.task_group_id == group_id).count()
     
+    # If taskId is provided, create a reference to the library task
+    source_task_id = None
+    if data.taskId:
+        source_task = db.query(Task).filter(Task.id == data.taskId).first()
+        if source_task:
+            source_task_id = source_task.id
+    
+    # Create a new task entry for this template group with reference to source
     new_task = Task(
         id=uuid_lib.uuid4(),
         task_group_id=group_id,
+        source_task_id=source_task_id,  # Reference to library task
         name=data.name,
         description=data.description,
         type=data.type,

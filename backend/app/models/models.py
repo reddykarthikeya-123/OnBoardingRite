@@ -115,6 +115,7 @@ class Task(Base):
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     task_group_id = Column(UUID(as_uuid=True), ForeignKey("or_task_groups.id"))
+    source_task_id = Column(UUID(as_uuid=True), ForeignKey("or_tasks.id"), nullable=True)  # Reference to library task
     name = Column(String(255), nullable=False)
     description = Column(Text)
     type = Column(String(50), nullable=False)
@@ -127,6 +128,7 @@ class Task(Base):
     
     task_group = relationship("TaskGroup", back_populates="tasks")
     task_instances = relationship("TaskInstance", back_populates="task")
+    source_task = relationship("Task", remote_side=[id], foreign_keys=[source_task_id])  # Self-referential
 
 class TeamMember(Base):
     __tablename__ = "or_team_members"

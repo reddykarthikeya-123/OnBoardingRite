@@ -12,7 +12,7 @@ import {
 
 import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Card, CardBody, Button, Badge, useToast } from '../../../components/ui';
+import { Card, CardBody, Button, Badge, useToast, Modal } from '../../../components/ui';
 import { templatesApi, tasksApi } from '../../../services/api'; // Assuming tasksApi exists for task details
 import type { TaskGroup, Task, ChecklistTemplate } from '../../../types';
 
@@ -43,6 +43,9 @@ export function TemplateDetailPage() {
     const [showTaskGroupModal, setShowTaskGroupModal] = useState(false);
     const [taskGroupModalMode, setTaskGroupModalMode] = useState<'create' | 'edit'>('create');
     const [editingTaskGroup, setEditingTaskGroup] = useState<TaskGroup | null>(null);
+
+    // Task Preview state
+    const [previewTask, setPreviewTask] = useState<any>(null);
 
 
 
@@ -148,6 +151,7 @@ export function TemplateDetailPage() {
             // Add interactions sequentially to ensure order or handle errors individually
             for (const task of tasks) {
                 await templatesApi.addTaskToGroup(template.id, selectedGroupForTask, {
+                    taskId: task.id,  // Reference to library task for updates
                     name: task.name,
                     description: task.description,
                     type: task.type,
@@ -408,9 +412,9 @@ export function TemplateDetailPage() {
                                                                                         <div className="text-secondary cursor-grab active:cursor-grabbing">
                                                                                             <GripVertical size={16} />
                                                                                         </div>
-                                                                                        <div className="flex-1">
+                                                                                        <div className="flex-1 cursor-pointer" onClick={() => typeof task === 'object' && setPreviewTask(task)}>
                                                                                             <div className="flex items-center gap-2 mb-1">
-                                                                                                <span className="font-medium text-sm">{typeof task === 'object' ? task.name : `Task ID: ${task}`}</span>
+                                                                                                <span className="font-medium text-sm hover:text-primary">{typeof task === 'object' ? task.name : `Task ID: ${task}`}</span>
                                                                                                 {typeof task === 'object' && task.required && <Badge variant="secondary">Required</Badge>}
                                                                                                 {typeof task === 'object' && <Badge variant="outline">{task.type}</Badge>}
                                                                                             </div>
@@ -483,6 +487,66 @@ export function TemplateDetailPage() {
                 existingTaskIds={new Set(template?.taskGroups?.find(g => g.id === selectedGroupForTask)?.tasks?.map(t => typeof t === 'object' ? t.id : t) || [])}
                 groupName={template?.taskGroups?.find(g => g.id === selectedGroupForTask)?.name || ''}
             />
+
+            {/* Task Preview Modal */}
+            <Modal
+                isOpen={!!previewTask}
+                onClose={() => setPreviewTask(null)}
+                title={previewTask?.name || 'Task Preview'}
+                size="lg"
+            >
+                <div className="space-y-4">
+                    {/* Task Type & Category */}
+                    <div className="flex items-center gap-2">
+                        <Badge variant="outline">{previewTask?.type}</Badge>
+                        {previewTask?.category && <Badge variant="secondary">{previewTask?.category}</Badge>}
+                        {previewTask?.isRequired && <Badge variant="secondary">Required</Badge>}
+                    </div>
+
+                    {/* Description */}
+                    {previewTask?.description && (
+                        <p className="text-secondary">{previewTask.description}</p>
+                    )}
+
+                    {/* Form Fields for CUSTOM_FORM */}
+                    {previewTask?.type === 'CUSTOM_FORM' && previewTask?.configuration?.fields?.length > 0 ? (
+                        <div className="space-y-3">
+                            <h3 className="font-medium text-sm text-secondary uppercase tracking-wide border-b pb-2">Form Fields ({previewTask.configuration.fields.length})</h3>
+                            {previewTask.configuration.fields.map((field: any, idx: number) => (
+                                <div key={idx} className="p-3 border rounded-md bg-neutral-50">
+                                    <div className="flex items-center justify-between mb-1">
+                                        <span className="font-medium">{field.label}</span>
+                                        <Badge variant="outline" className="text-xs">{field.type}</Badge>
+                                    </div>
+                                    {field.placeholder && <p className="text-xs text-secondary">Placeholder: {field.placeholder}</p>}
+                                    {field.required && <Badge variant="secondary" className="mt-1 text-xs">Required</Badge>}
+                                    {field.options && field.options.length > 0 && (
+                                        <div className="mt-2">
+                                            <span className="text-xs text-secondary">Options: </span>
+                                            <span className="text-xs">{field.options.map((o: any) => o.label || o).join(', ')}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    ) : previewTask?.type === 'DOCUMENT_UPLOAD' ? (
+                        <div className="p-4 border rounded-md bg-neutral-50">
+                            <h3 className="font-medium mb-2">Document Upload Task</h3>
+                            <p className="text-sm text-secondary">Candidates will upload documents for this task.</p>
+                            {previewTask?.configuration?.acceptedFormats && (
+                                <p className="text-sm mt-2">Accepted formats: {previewTask.configuration.acceptedFormats.join(', ')}</p>
+                            )}
+                            {previewTask?.configuration?.maxFiles && (
+                                <p className="text-sm mt-1">Max files: {previewTask.configuration.maxFiles}</p>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="p-4 border rounded-md bg-neutral-50 text-center text-secondary">
+                            No form fields configured for this task type.
+                        </div>
+                    )}
+                </div>
+            </Modal>
         </div>
     );
 }

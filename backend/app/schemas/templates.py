@@ -63,6 +63,7 @@ class AddGroupRequest(BaseModel):
 
 
 class AddTaskToGroupRequest(BaseModel):
+    taskId: Optional[str] = None  # If provided, link existing task instead of creating new
     name: str
     description: Optional[str] = None
     type: str

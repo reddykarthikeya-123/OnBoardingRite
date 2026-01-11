@@ -131,6 +131,7 @@ CREATE INDEX idx_task_groups_category ON or_task_groups(category);
 CREATE TABLE or_tasks (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     task_group_id UUID REFERENCES or_task_groups(id) ON DELETE CASCADE,
+    source_task_id UUID REFERENCES or_tasks(id),  -- Reference to library task for updates propagation
     name VARCHAR(255) NOT NULL,
     description TEXT,
     type VARCHAR(50) NOT NULL, -- CUSTOM_FORM, DOCUMENT_UPLOAD, REST_API, REDIRECT
@@ -143,6 +144,7 @@ CREATE TABLE or_tasks (
 );
 
 CREATE INDEX idx_tasks_group ON or_tasks(task_group_id);
+CREATE INDEX idx_tasks_source ON or_tasks(source_task_id);
 CREATE INDEX idx_tasks_type ON or_tasks(type);
 CREATE INDEX idx_tasks_category ON or_tasks(category);
 CREATE INDEX idx_tasks_order ON or_tasks(task_group_id, display_order);

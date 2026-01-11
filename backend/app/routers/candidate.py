@@ -290,17 +290,30 @@ def get_candidate_tasks(
         if status and ti.status != status:
             continue
         
+        # If task has a source_task_id, use source task's editable fields
+        # This allows library task edits to propagate to candidates
+        effective_name = task.name
+        effective_description = task.description
+        effective_configuration = task.configuration
+        
+        if task.source_task_id:
+            source_task = db.query(Task).filter(Task.id == task.source_task_id).first()
+            if source_task:
+                effective_name = source_task.name
+                effective_description = source_task.description
+                effective_configuration = source_task.configuration
+        
         tasks.append(CandidateTaskItem(
             id=str(ti.id),
             taskId=str(task.id),
-            name=task.name,
-            description=task.description,
+            name=effective_name,
+            description=effective_description,
             type=task.type,
             category=task.category,
             status=ti.status,
             dueDate=ti.due_date.isoformat() if ti.due_date else None,
             isRequired=task.is_required if task.is_required is not None else True,
-            configuration=task.configuration,
+            configuration=effective_configuration,
             result=ti.result,
             startedAt=ti.started_at,
             completedAt=ti.completed_at
