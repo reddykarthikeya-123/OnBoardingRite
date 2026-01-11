@@ -4,6 +4,7 @@ export { Badge } from './Badge';
 export { Progress } from './Progress';
 export { StatusIndicator, getStatusLabel } from './StatusIndicator';
 export { Modal } from './Modal';
+export { ConfirmDialog } from './ConfirmDialog';
 export { EmptyState } from './EmptyState';
 export { Stepper } from './Stepper';
 export type { StepperStep } from './Stepper';
