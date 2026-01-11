@@ -244,8 +244,17 @@ def get_project_members(project_id: str, db: Session = Depends(get_db)):
         # Get task instances for this assignment
         task_instances = []
         for ti in assignment.task_instances:
+            # Get task category from the task table
+            task_category = None
+            task_name = None
+            if ti.task:
+                task_category = ti.task.category
+                task_name = ti.task.name
+            
             task_instances.append({
                 "taskId": str(ti.task_id),
+                "taskName": task_name,
+                "taskCategory": task_category,
                 "status": ti.status,
                 "startedAt": ti.started_at.isoformat() if ti.started_at else None,
                 "completedAt": ti.completed_at.isoformat() if ti.completed_at else None

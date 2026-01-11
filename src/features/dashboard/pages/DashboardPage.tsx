@@ -260,27 +260,22 @@ export function DashboardPage() {
         }
     };
 
-    // Calculate task category completions
+    // Calculate task category completions using taskCategory field from API
     const getTaskCategoryStats = (member: TeamMember) => {
-        const formsTasks = member.taskInstances?.filter(t =>
-            ['task-001', 'task-002', 'task-003', 'task-004', 'task-005'].includes(t.taskId)
-        ) || [];
-        const formsCompleted = formsTasks.filter(t => t.status === 'COMPLETED').length;
+        const tasks = member.taskInstances || [];
 
-        const docsTasks = member.taskInstances?.filter(t =>
-            ['task-010', 'task-011', 'task-012', 'task-013'].includes(t.taskId)
-        ) || [];
-        const docsCompleted = docsTasks.filter(t => t.status === 'COMPLETED').length;
+        // Filter by task category (from API)
+        const formsTasks = tasks.filter((t: any) => t.taskCategory === 'FORMS');
+        const formsCompleted = formsTasks.filter((t: any) => t.status === 'COMPLETED').length;
 
-        const complianceTasks = member.taskInstances?.filter(t =>
-            ['task-020', 'task-021', 'task-022'].includes(t.taskId)
-        ) || [];
-        const complianceCompleted = complianceTasks.filter(t => t.status === 'COMPLETED').length;
+        const docsTasks = tasks.filter((t: any) => t.taskCategory === 'DOCUMENTS');
+        const docsCompleted = docsTasks.filter((t: any) => t.status === 'COMPLETED').length;
 
-        const trainingTasks = member.taskInstances?.filter(t =>
-            ['task-030', 'task-031', 'task-032', 'task-033'].includes(t.taskId)
-        ) || [];
-        const trainingCompleted = trainingTasks.filter(t => t.status === 'COMPLETED').length;
+        const complianceTasks = tasks.filter((t: any) => t.taskCategory === 'COMPLIANCE');
+        const complianceCompleted = complianceTasks.filter((t: any) => t.status === 'COMPLETED').length;
+
+        const trainingTasks = tasks.filter((t: any) => t.taskCategory === 'TRAININGS');
+        const trainingCompleted = trainingTasks.filter((t: any) => t.status === 'COMPLETED').length;
 
         return {
             forms: { completed: formsCompleted, total: formsTasks.length },

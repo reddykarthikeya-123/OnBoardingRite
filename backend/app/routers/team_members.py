@@ -44,10 +44,10 @@ def get_team_member(member_id: str, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=TeamMemberSchema)
 def create_team_member(data: TeamMemberCreate, db: Session = Depends(get_db)):
-    # Check for existing email or employee ID
+    # Check for existing email or employee ID (case-insensitive email check)
     existing = db.query(TeamMember).filter(
         or_(
-            TeamMember.email == data.email,
+            TeamMember.email == data.email.lower(),
             TeamMember.employee_id == data.employeeId
         )
     ).first()
@@ -63,7 +63,7 @@ def create_team_member(data: TeamMemberCreate, db: Session = Depends(get_db)):
         employee_id=data.employeeId,
         first_name=data.firstName,
         last_name=data.lastName,
-        email=data.email,
+        email=data.email.lower(),  # Store email as lowercase for consistent login
         phone=data.phone,
         date_of_birth=data.dateOfBirth,
         address_line1=data.addressLine1,
@@ -73,6 +73,8 @@ def create_team_member(data: TeamMemberCreate, db: Session = Depends(get_db)):
         zip_code=data.zipCode,
         country=data.country,
         ssn_encrypted=encrypted_ssn,
+        is_first_login=True,  # Explicit for first-time login flow
+        password_hash=None,   # No password yet
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow()
     )
