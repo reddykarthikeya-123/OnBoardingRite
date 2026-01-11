@@ -528,10 +528,10 @@ export function TemplateDetailPage() {
                     )}
 
                     {/* Form Fields for CUSTOM_FORM */}
-                    {previewTask?.type === 'CUSTOM_FORM' && previewTask?.configuration?.fields?.length > 0 ? (
+                    {previewTask?.type === 'CUSTOM_FORM' && previewTask?.configuration?.formFields?.length > 0 ? (
                         <div className="space-y-3">
-                            <h3 className="font-medium text-sm text-secondary uppercase tracking-wide border-b pb-2">Form Fields ({previewTask.configuration.fields.length})</h3>
-                            {previewTask.configuration.fields.map((field: any, idx: number) => (
+                            <h3 className="font-medium text-sm text-secondary uppercase tracking-wide border-b pb-2">Form Fields ({previewTask.configuration.formFields.length})</h3>
+                            {previewTask.configuration.formFields.map((field: any, idx: number) => (
                                 <div key={idx} className="p-3 border rounded-md bg-neutral-50">
                                     <div className="flex items-center justify-between mb-1">
                                         <span className="font-medium">{field.label}</span>

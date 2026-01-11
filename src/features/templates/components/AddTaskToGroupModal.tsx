@@ -151,10 +151,7 @@ export function AddTaskToGroupModal({
         const selectedTasks = libraryTasks
             .filter(t => selectedTaskIds.has(t.id))
             .map(task => ({
-                ...task,
-                id: generateId(), // New ID for local copy
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
+                ...task
             }));
 
         onAddFromLibrary(selectedTasks);
