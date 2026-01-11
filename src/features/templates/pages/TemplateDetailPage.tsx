@@ -12,7 +12,7 @@ import {
 
 import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Card, CardBody, Button, Badge, useToast, Modal } from '../../../components/ui';
+import { Card, CardBody, Button, Badge, useToast, Modal, ConfirmDialog } from '../../../components/ui';
 import { templatesApi, tasksApi } from '../../../services/api'; // Assuming tasksApi exists for task details
 import type { TaskGroup, Task, ChecklistTemplate } from '../../../types';
 
@@ -46,6 +46,10 @@ export function TemplateDetailPage() {
 
     // Task Preview state
     const [previewTask, setPreviewTask] = useState<any>(null);
+
+    // Delete Confirmation state
+    const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'group' | 'task'; id: string; groupId?: string; name: string } | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
 
 
@@ -125,15 +129,23 @@ export function TemplateDetailPage() {
 
     const handleDeleteTaskGroup = async (group: TaskGroup, e: React.MouseEvent) => {
         e.stopPropagation();
-        if (!template || !window.confirm(`Are you sure you want to delete group "${group.name}"?`)) return;
+        if (!template) return;
+        setDeleteConfirm({ type: 'group', id: group.id, name: group.name });
+    };
 
+    const confirmDeleteGroup = async () => {
+        if (!template || !deleteConfirm || deleteConfirm.type !== 'group') return;
+        setIsDeleting(true);
         try {
-            await templatesApi.deleteGroup(template.id, group.id);
-            showToast({ type: 'success', message: `Task group "${group.name}" deleted` });
+            await templatesApi.deleteGroup(template.id, deleteConfirm.id);
+            showToast({ type: 'success', message: `Task group "${deleteConfirm.name}" deleted` });
             loadTemplate(template.id);
         } catch (err) {
             console.error('Failed to delete group:', err);
             showToast({ type: 'error', message: 'Failed to delete task group' });
+        } finally {
+            setIsDeleting(false);
+            setDeleteConfirm(null);
         }
     };
 
@@ -205,15 +217,22 @@ export function TemplateDetailPage() {
 
     const handleDeleteTask = async (groupId: string, taskId: string, taskName: string) => {
         if (!template) return;
-        if (!window.confirm(`Are you sure you want to remove task "${taskName}"?`)) return;
+        setDeleteConfirm({ type: 'task', id: taskId, groupId, name: taskName });
+    };
 
+    const confirmDeleteTask = async () => {
+        if (!template || !deleteConfirm || deleteConfirm.type !== 'task') return;
+        setIsDeleting(true);
         try {
-            await templatesApi.deleteTaskFromGroup(template.id, groupId, taskId);
-            showToast({ type: 'success', message: `Task "${taskName}" removed` });
+            await templatesApi.deleteTaskFromGroup(template.id, deleteConfirm.groupId!, deleteConfirm.id);
+            showToast({ type: 'success', message: `Task "${deleteConfirm.name}" removed` });
             loadTemplate(template.id);
         } catch (err) {
             console.error('Failed to delete task:', err);
             showToast({ type: 'error', message: 'Failed to remove task' });
+        } finally {
+            setIsDeleting(false);
+            setDeleteConfirm(null);
         }
     };
 
@@ -421,7 +440,7 @@ export function TemplateDetailPage() {
                                                                                             {typeof task === 'object' && task.description && <p className="text-xs text-secondary line-clamp-1">{task.description}</p>}
                                                                                         </div>
                                                                                         <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                                                                                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Edit Task" onClick={() => console.log('Edit task not implemented yet')}>
+                                                                                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Edit Task in Library" onClick={() => navigate(`/tasks?edit=${typeof task === 'object' ? (task.sourceTaskId || task.id) : task}`)}>
                                                                                                 <Pencil size={14} />
                                                                                             </Button>
                                                                                             <Button
@@ -547,6 +566,18 @@ export function TemplateDetailPage() {
                     )}
                 </div>
             </Modal>
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                isOpen={!!deleteConfirm}
+                onClose={() => setDeleteConfirm(null)}
+                onConfirm={() => deleteConfirm?.type === 'group' ? confirmDeleteGroup() : confirmDeleteTask()}
+                title={deleteConfirm?.type === 'group' ? 'Delete Task Group' : 'Remove Task'}
+                message={`Are you sure you want to ${deleteConfirm?.type === 'group' ? 'delete' : 'remove'} "${deleteConfirm?.name}"? This action cannot be undone.`}
+                confirmText={deleteConfirm?.type === 'group' ? 'Delete Group' : 'Remove Task'}
+                variant="danger"
+                isLoading={isDeleting}
+            />
         </div>
     );
 }
