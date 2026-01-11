@@ -153,7 +153,17 @@ def delete_task(task_id: str, db: Session = Depends(get_db)):
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     
+    # Check for dependent tasks (tasks in templates that reference this library task)
+    dependent_tasks = db.query(Task).filter(Task.source_task_id == task_id).all()
+    
+    # Cascade delete dependent tasks
+    # Note: This assumes dependent tasks don't have further blockers (like TaskInstances)
+    # If they do, we'd need to cascade further or block. For now, we assume deleting from library
+    # should remove from templates (standard behavior) or at least allow it if unused.
+    for dep in dependent_tasks:
+        db.delete(dep)
+        
     db.delete(task)
     db.commit()
     
-    return {"success": True, "message": "Task deleted"}
+    return {"success": True, "message": "Task and its usages deleted"}

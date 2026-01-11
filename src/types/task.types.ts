@@ -44,6 +44,7 @@ export interface TaskConfiguration {
     capturesExpiry?: boolean;
     capturesDocumentNumber?: boolean;
     documentTypeName?: string;
+    documentTypePreset?: string;
 
     // REST API specific
     endpoint?: string;

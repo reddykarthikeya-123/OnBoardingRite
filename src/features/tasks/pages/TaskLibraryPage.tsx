@@ -14,7 +14,7 @@ import {
     X,
     Loader2
 } from 'lucide-react';
-import { Card, CardBody, Button, Badge, EmptyState, Modal } from '../../../components/ui';
+import { Card, CardBody, Button, Badge, EmptyState, Modal, ConfirmDialog } from '../../../components/ui';
 import { tasksApi } from '../../../services/api';
 import type { Task, TaskType, TaskCategory } from '../../../types';
 import {
@@ -84,6 +84,10 @@ export function TaskLibraryPage() {
     // Edit modal state
     const [editingTask, setEditingTask] = useState<Task | null>(null);
     const [showEditModal, setShowEditModal] = useState(false);
+
+    // Delete confirmation state
+    const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Toast notifications
     const [toasts, setToasts] = useState<ToastNotification[]>([]);
@@ -287,18 +291,27 @@ export function TaskLibraryPage() {
         }
     };
 
-    // DELETE: Remove task
-    const handleDeleteTask = async (task: Task) => {
-        if (!window.confirm(`Are you sure you want to delete "${task.name}"?`)) return;
+    // DELETE: Initiate delete
+    const handleDeleteTask = (task: Task) => {
+        setDeleteConfirm({ id: task.id, name: task.name });
+        setActiveDropdown(null);
+    };
 
+    // DELETE: Confirm and execute
+    const confirmDeleteTask = async () => {
+        if (!deleteConfirm) return;
+
+        setIsDeleting(true);
         try {
-            await tasksApi.delete(task.id);
+            await tasksApi.delete(deleteConfirm.id);
             await loadTasks();
-            setActiveDropdown(null);
-            showToast(`Task "${task.name}" deleted`, 'success');
+            showToast(`Task "${deleteConfirm.name}" deleted`, 'success');
         } catch (err) {
             console.error('Failed to delete task:', err);
             showToast('Failed to delete task', 'danger');
+        } finally {
+            setIsDeleting(false);
+            setDeleteConfirm(null);
         }
     };
 
@@ -707,6 +720,18 @@ export function TaskLibraryPage() {
                 isOpen={showCreateModal && selectedTaskType === 'REDIRECT'}
                 onClose={() => { setShowCreateModal(false); setSelectedTaskType(null); }}
                 onSave={(data) => handleCreateTask('REDIRECT', data)}
+            />
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                isOpen={!!deleteConfirm}
+                onClose={() => !isDeleting && setDeleteConfirm(null)}
+                onConfirm={confirmDeleteTask}
+                title="Delete Task"
+                message={`Are you sure you want to delete "${deleteConfirm?.name}"? This action cannot be undone.`}
+                confirmText="Delete Task"
+                variant="danger"
+                isLoading={isDeleting}
             />
         </div>
     );
