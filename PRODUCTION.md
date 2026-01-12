@@ -142,18 +142,23 @@ The application requires a PostgreSQL database.
 If you run services on these custom ports (Backend on 9000, Frontend on 9009), you must configure them to talk to each other.
 
 ### 1- Configure Frontend to find Backend
-**When building the frontend**, specify the Backend URL.
+**By default, the frontend connects to `http://localhost:9000/api/v1`.**
+If you are using the default backend port (9000), you can **skip this step** and run `npm run build` directly.
+
+If your backend is on a different port or domain:
 ```bash
-# Example: Backend is running on port 9000
+# Example: Backend is running on port 1234
 # Windows (PowerShell)
-$env:VITE_API_URL="http://localhost:9000/api/v1"; npm run build
+$env:VITE_API_URL="http://localhost:1234/api/v1"; npm run build
 
 # Linux/Mac
-VITE_API_URL=http://localhost:9000/api/v1 npm run build
+VITE_API_URL=http://localhost:1234/api/v1 npm run build
 ```
 
 ### 2- Configure Backend to allow Frontend (CORS)
-**Update `backend/.env`** to allow the frontend's custom port.
+**Update `backend/.env`** if you are using a port other than 9009.
+The default configuration already allows `http://localhost:9009`.
+
 ```env
 # Add the URL where your frontend is running
 FRONTEND_ORIGINS=http://localhost:9009,http://localhost:5173,http://your-production-domain.com
