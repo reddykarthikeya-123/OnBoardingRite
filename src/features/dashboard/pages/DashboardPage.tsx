@@ -148,6 +148,13 @@ export function DashboardPage() {
     const [selectedProject, setSelectedProject] = useState<string>('project-001');
     const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
 
+    // Filter state
+    const [showFilters, setShowFilters] = useState(false);
+    const [statusFilter, setStatusFilter] = useState<string>('ALL');
+    const [progressFilter, setProgressFilter] = useState<string>('ALL');
+    const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
+
+
     // View Submissions Modal State
     const [showSubmissionsModal, setShowSubmissionsModal] = useState(false);
     const [selectedMemberForSubmissions, setSelectedMemberForSubmissions] = useState<any>(null);
@@ -232,6 +239,32 @@ export function DashboardPage() {
     // Team members from API
     const projectMembers = apiMembers;
 
+    // Filter members based on active filters
+    const filteredMembers = useMemo(() => {
+        return projectMembers.filter((member: any) => {
+            // Status filter
+            if (statusFilter !== 'ALL' && member.status !== statusFilter) {
+                return false;
+            }
+            // Progress filter
+            if (progressFilter !== 'ALL') {
+                const progress = member.progressPercentage || 0;
+                if (progressFilter === 'NOT_STARTED' && progress > 0) return false;
+                if (progressFilter === 'IN_PROGRESS' && (progress === 0 || progress === 100)) return false;
+                if (progressFilter === 'COMPLETED' && progress < 100) return false;
+            }
+            // Category filter
+            if (categoryFilter !== 'ALL' && member.category !== categoryFilter) {
+                return false;
+            }
+            return true;
+        });
+    }, [projectMembers, statusFilter, progressFilter, categoryFilter]);
+
+    // Active filter count
+    const activeFilterCount = [statusFilter, progressFilter, categoryFilter].filter(f => f !== 'ALL').length;
+
+
     // Stats from API
     const globalStats = useMemo(() => {
         if (apiStats) {
@@ -305,10 +338,10 @@ export function DashboardPage() {
     };
 
     const selectAllMembers = () => {
-        if (selectedMembers.size === projectMembers.length) {
+        if (selectedMembers.size === filteredMembers.length) {
             setSelectedMembers(new Set());
         } else {
-            setSelectedMembers(new Set(projectMembers.map(m => m.id)));
+            setSelectedMembers(new Set(filteredMembers.map(m => m.id)));
         }
     };
 
@@ -349,8 +382,8 @@ export function DashboardPage() {
         }
     };
 
-    const isAllSelected = selectedMembers.size === projectMembers.length && projectMembers.length > 0;
-    const isSomeSelected = selectedMembers.size > 0 && selectedMembers.size < projectMembers.length;
+    const isAllSelected = selectedMembers.size === filteredMembers.length && filteredMembers.length > 0;
+    const isSomeSelected = selectedMembers.size > 0 && selectedMembers.size < filteredMembers.length;
 
     return (
         <div className="page-enter">
@@ -362,14 +395,121 @@ export function DashboardPage() {
                         <p className="page-description">Monitor team member progress across all active projects</p>
                     </div>
                     <div className="page-actions">
-                        <Button variant="secondary" leftIcon={<Filter size={16} />}>
-                            Filters
-                        </Button>
+                        <div style={{ position: 'relative' }}>
+                            <Button
+                                variant={showFilters ? 'primary' : 'secondary'}
+                                leftIcon={<Filter size={16} />}
+                                onClick={() => setShowFilters(!showFilters)}
+                            >
+                                Filters
+                                {activeFilterCount > 0 && (
+                                    <span style={{
+                                        marginLeft: '6px',
+                                        background: 'var(--color-primary-600)',
+                                        color: 'white',
+                                        borderRadius: '10px',
+                                        padding: '2px 7px',
+                                        fontSize: '11px',
+                                        fontWeight: 600
+                                    }}>
+                                        {activeFilterCount}
+                                    </span>
+                                )}
+                            </Button>
+                        </div>
                         <Button variant="primary" onClick={() => navigate('/projects')}>
                             View All Projects
                         </Button>
                     </div>
                 </div>
+
+                {/* Filter Panel */}
+                {showFilters && (
+                    <div style={{
+                        marginTop: '16px',
+                        padding: '20px',
+                        background: 'white',
+                        borderRadius: '12px',
+                        border: '1px solid var(--color-border-light)',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                            <h3 style={{ fontSize: '14px', fontWeight: 600 }}>Filter Team Members</h3>
+                            {activeFilterCount > 0 && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                        setStatusFilter('ALL');
+                                        setProgressFilter('ALL');
+                                        setCategoryFilter('ALL');
+                                    }}
+                                >
+                                    Clear All
+                                </Button>
+                            )}
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                            {/* Status Filter */}
+                            <div>
+                                <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, marginBottom: '6px', color: 'var(--color-text-secondary)' }}>
+                                    Status
+                                </label>
+                                <select
+                                    className="input"
+                                    value={statusFilter}
+                                    onChange={(e) => setStatusFilter(e.target.value)}
+                                    style={{ fontSize: '13px' }}
+                                >
+                                    <option value="ALL">All Statuses</option>
+                                    <option value="NEW_HIRE">New Hire</option>
+                                    <option value="ONBOARDING_INITIATED">Onboarding Initiated</option>
+                                    <option value="IN_PROGRESS">In Progress</option>
+                                    <option value="COMPLETED">Completed</option>
+                                    <option value="REFERRED_TO_SITE">Referred to Site</option>
+                                    <option value="ARRIVED_TO_SITE">Arrived to Site</option>
+                                </select>
+                            </div>
+
+                            {/* Progress Filter */}
+                            <div>
+                                <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, marginBottom: '6px', color: 'var(--color-text-secondary)' }}>
+                                    Progress
+                                </label>
+                                <select
+                                    className="input"
+                                    value={progressFilter}
+                                    onChange={(e) => setProgressFilter(e.target.value)}
+                                    style={{ fontSize: '13px' }}
+                                >
+                                    <option value="ALL">All Progress</option>
+                                    <option value="NOT_STARTED">Not Started (0%)</option>
+                                    <option value="IN_PROGRESS">In Progress (1-99%)</option>
+                                    <option value="COMPLETED">Completed (100%)</option>
+                                </select>
+                            </div>
+
+                            {/* Category Filter */}
+                            <div>
+                                <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, marginBottom: '6px', color: 'var(--color-text-secondary)' }}>
+                                    Category
+                                </label>
+                                <select
+                                    className="input"
+                                    value={categoryFilter}
+                                    onChange={(e) => setCategoryFilter(e.target.value)}
+                                    style={{ fontSize: '13px' }}
+                                >
+                                    <option value="ALL">All Categories</option>
+                                    <option value="NEW_HIRE">New Hire</option>
+                                    <option value="REHIRE">Rehire</option>
+                                    <option value="TRANSFER">Transfer</option>
+                                    <option value="CONTRACTOR">Contractor</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Stats Row - GLOBAL stats across ALL projects */}
@@ -484,8 +624,8 @@ export function DashboardPage() {
                         <div className="mass-comm-left">
                             <span className="mass-comm-count">
                                 {selectedMembers.size > 0
-                                    ? `${selectedMembers.size} of ${projectMembers.length} selected`
-                                    : `${projectMembers.length} team members`
+                                    ? `${selectedMembers.size} of ${filteredMembers.length} selected`
+                                    : `${filteredMembers.length} team member${filteredMembers.length !== 1 ? 's' : ''}${activeFilterCount > 0 ? ' (filtered)' : ''}`
                                 }
                             </span>
                         </div>
@@ -551,17 +691,17 @@ export function DashboardPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {projectMembers.length === 0 ? (
+                                {filteredMembers.length === 0 ? (
                                     <tr>
                                         <td colSpan={16} className="empty-message">
                                             <div className="empty-state-inline">
                                                 <AlertCircle size={20} />
-                                                <span>No team members in this project yet</span>
+                                                <span>{activeFilterCount > 0 ? 'No members match the current filters' : 'No team members in this project yet'}</span>
                                             </div>
                                         </td>
                                     </tr>
                                 ) : (
-                                    projectMembers.map((member) => {
+                                    filteredMembers.map((member) => {
                                         const categoryStats = getTaskCategoryStats(member);
                                         const lastActivity = getRandomLastActivity(member.id);
                                         const isSelected = selectedMembers.has(member.id);
