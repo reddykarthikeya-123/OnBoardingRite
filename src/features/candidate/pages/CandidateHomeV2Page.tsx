@@ -10,7 +10,6 @@ import {
     User,
     Zap,
     Star,
-    MessageCircle,
     Loader2,
     CheckCircle2
 } from 'lucide-react';
@@ -174,7 +173,7 @@ export function CandidateHomeV2Page() {
                     </div>
                 </div>
                 <div className="candidate-v2-header-right">
-                    <button className="candidate-v2-icon-btn has-badge">
+                    <button className="candidate-v2-icon-btn" onClick={() => navigate('/candidate/notifications')}>
                         <Bell size={22} />
                     </button>
                     <button className="candidate-v2-icon-btn" onClick={() => navigate('/candidate/profile')}>
@@ -331,41 +330,7 @@ export function CandidateHomeV2Page() {
                 </div>
             </section>
 
-            {/* Bottom Navigation */}
-            <nav className="candidate-v2-bottom-nav">
-                <button className="candidate-v2-nav-item active">
-                    <Sparkles size={22} />
-                    <span>Home</span>
-                </button>
-                <button
-                    className="candidate-v2-nav-item"
-                    onClick={() => navigate(`/candidate/tasks?assignmentId=${assignmentId}`)}
-                >
-                    <FileText size={22} />
-                    <span>Tasks</span>
-                </button>
-                <button
-                    className="candidate-v2-nav-item"
-                    onClick={() => navigate('/candidate/chat')}
-                >
-                    <MessageCircle size={22} />
-                    <span>Chat</span>
-                </button>
-                <button
-                    className="candidate-v2-nav-item"
-                    onClick={() => navigate('/candidate/notifications')}
-                >
-                    <Bell size={22} />
-                    <span>Alerts</span>
-                </button>
-                <button
-                    className="candidate-v2-nav-item"
-                    onClick={() => navigate('/candidate/profile')}
-                >
-                    <User size={22} />
-                    <span>Profile</span>
-                </button>
-            </nav>
+
         </div>
     );
 }
