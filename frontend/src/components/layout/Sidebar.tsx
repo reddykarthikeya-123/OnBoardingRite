@@ -88,7 +88,7 @@ export function Sidebar() {
             <div className="sidebar-header">
                 <div className="sidebar-logo">
                     <div className="sidebar-logo-icon">
-                        <img src="/src/assets/logo.png" alt="OnboardRite" className="sidebar-logo-img" />
+                        <img src="/logo.png" alt="OnboardRite" className="sidebar-logo-img" />
                     </div>
                     <div className="sidebar-logo-text">
                         OnboardRite

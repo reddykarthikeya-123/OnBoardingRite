@@ -48,7 +48,7 @@ export function LandingPage() {
                 <div className="landing-logo-container">
                     <div className="landing-logo-glow" />
                     <div className="landing-logo">
-                        <img src="/src/assets/logo.png" alt="OnboardRite" className="landing-logo-img" />
+                        <img src="/logo.png" alt="OnboardRite" className="landing-logo-img" />
                     </div>
                 </div>
 

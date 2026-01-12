@@ -7,6 +7,7 @@ Backend reads from root .env directly (no generation needed).
 import os
 import subprocess
 import sys
+import shutil
 from pathlib import Path
 
 # Get project directories
@@ -30,6 +31,12 @@ def build_frontend(env_vars):
     """Build frontend with correct API URL from .env"""
     api_url = env_vars.get('BACKEND_URL', 'http://localhost:9000/api/v1')
     
+    # Clean old dist folder
+    dist_path = FRONTEND_DIR / "dist"
+    if dist_path.exists():
+        print("🧹 Cleaning old dist folder...")
+        shutil.rmtree(dist_path)
+    
     print(f"🔨 Building frontend (API URL: {api_url})...")
     
     # Set VITE_API_URL and run build
@@ -45,6 +52,7 @@ def build_frontend(env_vars):
     
     if result.returncode == 0:
         print("✅ Frontend build complete")
+        print(f"   Output: {dist_path}")
     else:
         print("❌ Frontend build failed")
         sys.exit(1)
@@ -71,8 +79,6 @@ def main():
     print()
     print("=" * 50)
     print("  ✅ Build Complete!")
-    print()
-    print("  Backend reads from root .env automatically.")
     print()
     print("  To run:")
     print("  1. cd backend && uvicorn app.main:app --host 0.0.0.0 --port 9000")
