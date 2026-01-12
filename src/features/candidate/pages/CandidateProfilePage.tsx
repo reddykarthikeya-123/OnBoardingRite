@@ -15,7 +15,10 @@ import {
     LogOut,
     Lock,
     Eye,
-    EyeOff
+    EyeOff,
+    CheckCircle,
+    XCircle,
+    AlertCircle
 } from 'lucide-react';
 import { Modal } from '../../../components/ui';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -49,6 +52,8 @@ interface SubmittedTask {
     submittedAt: string | null;
     formData: Record<string, any> | null;
     documents?: DocumentInfo[];
+    reviewStatus?: string;
+    adminRemarks?: string;
 }
 
 interface ProjectSubmissionGroup {
@@ -321,19 +326,29 @@ export function CandidateProfilePage() {
                                         className="profile-v2-submission-item"
                                         onClick={() => setViewTask(task)}
                                     >
-                                        <div className="profile-v2-submission-icon">
-                                            <CheckCircle2 size={18} />
+                                        <div className={`profile-v2-submission-icon ${task.reviewStatus === 'APPROVED' ? 'approved' :
+                                                task.reviewStatus === 'REJECTED' ? 'rejected' : ''
+                                            }`}>
+                                            {task.reviewStatus === 'APPROVED' ? (
+                                                <CheckCircle size={18} />
+                                            ) : task.reviewStatus === 'REJECTED' ? (
+                                                <XCircle size={18} />
+                                            ) : (
+                                                <AlertCircle size={18} />
+                                            )}
                                         </div>
                                         <div className="profile-v2-submission-content">
                                             <span className="profile-v2-submission-name">{task.taskName}</span>
                                             <span className="profile-v2-submission-date">
-                                                {task.submittedAt
-                                                    ? new Date(task.submittedAt).toLocaleDateString('en-US', {
-                                                        month: 'short',
-                                                        day: 'numeric',
-                                                        year: 'numeric'
-                                                    })
-                                                    : 'Completed'}
+                                                {task.reviewStatus === 'APPROVED' ? 'Approved' :
+                                                    task.reviewStatus === 'REJECTED' ? 'Rejected - Resubmit' :
+                                                        task.submittedAt
+                                                            ? new Date(task.submittedAt).toLocaleDateString('en-US', {
+                                                                month: 'short',
+                                                                day: 'numeric',
+                                                                year: 'numeric'
+                                                            })
+                                                            : 'Pending Review'}
                                             </span>
                                         </div>
                                         <ChevronRight size={18} className="profile-v2-submission-arrow" />

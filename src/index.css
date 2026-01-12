@@ -14858,3 +14858,216 @@ span.col-name {
   opacity: 0.7;
   cursor: not-allowed;
 }
+
+/* ========================================
+   CANDIDATE NOTIFICATIONS PAGE
+   ======================================== */
+
+.candidate-notifications {
+  min-height: 100vh;
+  background: #f7f8fa;
+  display: flex;
+  flex-direction: column;
+}
+
+.candidate-notifications-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: white;
+  border-bottom: 1px solid #eef0f3;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.candidate-notifications-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.candidate-notifications-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a1f36;
+  margin: 0;
+}
+
+.unread-badge {
+  background: #ef4444;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.mark-all-read-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  color: #697386;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mark-all-read-btn:hover {
+  background: #f3f4f6;
+  color: #1a1f36;
+}
+
+.candidate-notifications-list {
+  flex: 1;
+  padding: 16px;
+  padding-bottom: 100px;
+  overflow-y: auto;
+}
+
+.notifications-loading,
+.notifications-error,
+.notifications-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.notifications-loading .spin {
+  color: #4f46e5;
+  animation: spin 1s linear infinite;
+}
+
+.notifications-loading p,
+.notifications-empty p {
+  color: #697386;
+  margin-top: 12px;
+  font-size: 0.875rem;
+}
+
+.notifications-empty h2 {
+  color: #1a1f36;
+  font-size: 1.25rem;
+  margin: 0 0 8px 0;
+}
+
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.notification-item.unread {
+  background: #f0f7ff;
+  border-left: 3px solid #4f46e5;
+}
+
+.notification-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.notification-icon-wrapper {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+}
+
+.notification-icon-approved {
+  color: #10b981;
+}
+
+.notification-icon-rejected {
+  color: #ef4444;
+}
+
+.notification-icon-info {
+  color: #3b82f6;
+}
+
+.notification-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.notification-title {
+  font-weight: 600;
+  color: #1a1f36;
+  font-size: 0.875rem;
+}
+
+.notification-time {
+  font-size: 0.75rem;
+  color: #8792a2;
+  white-space: nowrap;
+}
+
+.notification-message {
+  font-size: 0.8125rem;
+  color: #4a5568;
+  margin: 0 0 6px 0;
+  line-height: 1.4;
+}
+
+.notification-task-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: #697386;
+  background: #f3f4f6;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.unread-dot {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 8px;
+  height: 8px;
+  background: #4f46e5;
+  border-radius: 50%;
+}
+
+/* Profile Submission Review Status Icons */
+.profile-v2-submission-icon.approved {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.profile-v2-submission-icon.rejected {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}

@@ -559,5 +559,54 @@ export const adminApi = {
         ),
 };
 
+// Task Instances API (Admin Review)
+export const taskInstancesApi = {
+    // Approve a task submission
+    approve: (instanceId: string, reviewedBy: string) =>
+        fetchApi<{ success: boolean; message: string; reviewStatus: string }>(
+            `/task-instances/${instanceId}/approve?reviewed_by=${reviewedBy}`,
+            { method: 'POST' }
+        ),
+
+    // Reject a task submission with remarks
+    reject: (instanceId: string, remarks: string, reviewedBy: string) =>
+        fetchApi<{ success: boolean; message: string; reviewStatus: string }>(
+            `/task-instances/${instanceId}/reject`,
+            {
+                method: 'POST',
+                body: JSON.stringify({ remarks, reviewedBy })
+            }
+        ),
+};
+
+// Notifications API (Candidate Alerts)
+export const notificationsApi = {
+    // List notifications for a team member
+    list: (teamMemberId: string, unreadOnly = false) =>
+        fetchApi<Array<{
+            id: string;
+            type: string;
+            title: string;
+            message: string | null;
+            taskInstanceId: string | null;
+            taskName: string | null;
+            isRead: boolean;
+            createdAt: string | null;
+        }>>(`/notifications?team_member_id=${teamMemberId}&unread_only=${unreadOnly}`),
+
+    // Get unread count
+    getUnreadCount: (teamMemberId: string) =>
+        fetchApi<{ unreadCount: number }>(`/notifications/count?team_member_id=${teamMemberId}`),
+
+    // Mark a single notification as read
+    markAsRead: (notificationId: string) =>
+        fetchApi<{ success: boolean }>(`/notifications/${notificationId}/read`, { method: 'PATCH' }),
+
+    // Mark all notifications as read
+    markAllAsRead: (teamMemberId: string) =>
+        fetchApi<{ success: boolean }>(`/notifications/mark-all-read?team_member_id=${teamMemberId}`, { method: 'PATCH' }),
+};
+
 export { API_BASE_URL };
+
 

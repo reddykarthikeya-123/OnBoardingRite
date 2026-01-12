@@ -1,4 +1,5 @@
-import { ArrowLeft, FileText, Download, Image, ExternalLink } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowLeft, FileText, Download, Image, ExternalLink, CheckCircle, XCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { documentsApi } from '../../../services/api';
 import './SubmittedTaskViewer.css';
 
@@ -13,9 +14,31 @@ interface SubmittedTaskViewerProps {
         mimeType: string;
         fileSize: number;
     }>;
+    // Admin review props
+    isAdmin?: boolean;
+    reviewStatus?: 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED' | null;
+    adminRemarks?: string | null;
+    onApprove?: () => Promise<void>;
+    onReject?: (remarks: string) => Promise<void>;
 }
 
-export function SubmittedTaskViewer({ taskName, submittedAt, formData, onClose, documents }: SubmittedTaskViewerProps) {
+export function SubmittedTaskViewer({
+    taskName,
+    submittedAt,
+    formData,
+    onClose,
+    documents,
+    isAdmin = false,
+    reviewStatus,
+    adminRemarks,
+    onApprove,
+    onReject
+}: SubmittedTaskViewerProps) {
+    const [showRejectModal, setShowRejectModal] = useState(false);
+    const [rejectRemarks, setRejectRemarks] = useState('');
+    const [isApproving, setIsApproving] = useState(false);
+    const [isRejecting, setIsRejecting] = useState(false);
+
     if (!formData && (!documents || documents.length === 0)) return null;
 
     // Helper to format key names to readable labels
@@ -58,6 +81,28 @@ export function SubmittedTaskViewer({ taskName, submittedAt, formData, onClose, 
         return <FileText size={20} />;
     };
 
+    const handleApprove = async () => {
+        if (!onApprove) return;
+        setIsApproving(true);
+        try {
+            await onApprove();
+        } finally {
+            setIsApproving(false);
+        }
+    };
+
+    const handleReject = async () => {
+        if (!onReject || !rejectRemarks.trim()) return;
+        setIsRejecting(true);
+        try {
+            await onReject(rejectRemarks.trim());
+            setShowRejectModal(false);
+            setRejectRemarks('');
+        } finally {
+            setIsRejecting(false);
+        }
+    };
+
     // Filter out internal document tracking fields from formData display
     const displayableFormData = Object.entries(formData || {}).filter(([key, value]) => {
         if (key === 'documentIds' || key === 'documentCount') return false;
@@ -66,6 +111,33 @@ export function SubmittedTaskViewer({ taskName, submittedAt, formData, onClose, 
 
     const hasDocuments = documents && documents.length > 0;
     const hasFormData = displayableFormData.length > 0;
+
+    const getReviewStatusBadge = () => {
+        if (!reviewStatus) return null;
+
+        switch (reviewStatus) {
+            case 'APPROVED':
+                return (
+                    <span className="review-status-badge approved">
+                        <CheckCircle size={14} /> Approved
+                    </span>
+                );
+            case 'REJECTED':
+                return (
+                    <span className="review-status-badge rejected">
+                        <XCircle size={14} /> Rejected
+                    </span>
+                );
+            case 'PENDING_REVIEW':
+                return (
+                    <span className="review-status-badge pending">
+                        <AlertCircle size={14} /> Pending Review
+                    </span>
+                );
+            default:
+                return null;
+        }
+    };
 
     return (
         <div className="viewer-inline">
@@ -77,13 +149,24 @@ export function SubmittedTaskViewer({ taskName, submittedAt, formData, onClose, 
             </header>
 
             <div className="viewer-inline-title">
-                <h3>{taskName}</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <h3>{taskName}</h3>
+                    {getReviewStatusBadge()}
+                </div>
                 {submittedAt && (
                     <p className="viewer-subtitle">
                         Submitted on {new Date(submittedAt).toLocaleDateString()}
                     </p>
                 )}
             </div>
+
+            {/* Admin remarks (if rejected) */}
+            {adminRemarks && reviewStatus === 'REJECTED' && (
+                <div className="admin-remarks-box">
+                    <strong>Admin Remarks:</strong>
+                    <p>{adminRemarks}</p>
+                </div>
+            )}
 
             <div className="viewer-inline-content">
                 {/* Uploaded Documents Section */}
@@ -144,6 +227,56 @@ export function SubmittedTaskViewer({ taskName, submittedAt, formData, onClose, 
                     </div>
                 )}
             </div>
+
+            {/* Admin Review Actions */}
+            {isAdmin && onApprove && onReject && reviewStatus !== 'APPROVED' && (
+                <div className="review-actions">
+                    <button
+                        className="review-btn approve-btn"
+                        onClick={handleApprove}
+                        disabled={isApproving || isRejecting}
+                    >
+                        {isApproving ? <Loader2 size={16} className="spin" /> : <CheckCircle size={16} />}
+                        Approve
+                    </button>
+                    <button
+                        className="review-btn reject-btn"
+                        onClick={() => setShowRejectModal(true)}
+                        disabled={isApproving || isRejecting}
+                    >
+                        <XCircle size={16} />
+                        Reject
+                    </button>
+                </div>
+            )}
+
+            {/* Reject Modal */}
+            {showRejectModal && (
+                <div className="reject-modal-overlay" onClick={() => setShowRejectModal(false)}>
+                    <div className="reject-modal" onClick={e => e.stopPropagation()}>
+                        <h4>Reject Submission</h4>
+                        <p>Please provide remarks explaining why this submission is being rejected. The candidate will see this message.</p>
+                        <textarea
+                            value={rejectRemarks}
+                            onChange={(e) => setRejectRemarks(e.target.value)}
+                            placeholder="Enter rejection reason..."
+                            rows={4}
+                        />
+                        <div className="reject-modal-actions">
+                            <button className="cancel-btn" onClick={() => setShowRejectModal(false)}>
+                                Cancel
+                            </button>
+                            <button
+                                className="confirm-reject-btn"
+                                onClick={handleReject}
+                                disabled={!rejectRemarks.trim() || isRejecting}
+                            >
+                                {isRejecting ? 'Rejecting...' : 'Reject Submission'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

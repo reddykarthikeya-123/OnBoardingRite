@@ -22,8 +22,9 @@ import {
     Trash2
 } from 'lucide-react';
 import { Card, CardBody, Button, Badge, Progress, Modal } from '../../../components/ui';
-import { projectsApi, teamMembersApi, candidateApi } from '../../../services/api';
+import { projectsApi, teamMembersApi, candidateApi, taskInstancesApi } from '../../../services/api';
 import { SubmittedTaskViewer } from '../../candidate/components/SubmittedTaskViewer';
+import { useAuth } from '../../../contexts/AuthContext';
 
 interface ProjectDetail {
     id: string;
@@ -90,6 +91,8 @@ export function ProjectDetailPage() {
         category: string | null;
         submittedAt: string | null;
         formData: Record<string, any> | null;
+        reviewStatus?: 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED' | null;
+        adminRemarks?: string | null;
         documents?: Array<{
             id: string;
             originalFilename: string;
@@ -99,6 +102,8 @@ export function ProjectDetailPage() {
     }>>([]);
     const [viewTask, setViewTask] = useState<any>(null);
     const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
+
+    const { user } = useAuth();
 
     useEffect(() => {
         if (projectId) {
@@ -290,6 +295,32 @@ export function ProjectDetailPage() {
         }
     };
 
+    const handleApproveTask = async () => {
+        if (!viewTask || !user?.id) return;
+        try {
+            await taskInstancesApi.approve(viewTask.id, user.id);
+            // Update local state
+            setMemberSubmissions(prev => prev.map(s =>
+                s.id === viewTask.id ? { ...s, reviewStatus: 'APPROVED' as const, adminRemarks: null } : s
+            ));
+            setViewTask((prev: any) => ({ ...prev, reviewStatus: 'APPROVED', adminRemarks: null }));
+        } catch (err) {
+            console.error('Failed to approve task:', err);
+        }
+    };
+
+    const handleRejectTask = async (remarks: string) => {
+        if (!viewTask || !user?.id) return;
+        try {
+            await taskInstancesApi.reject(viewTask.id, remarks, user.id);
+            // Update local state and remove from submissions (since it's no longer completed)
+            setMemberSubmissions(prev => prev.filter(s => s.id !== viewTask.id));
+            setViewTask(null);
+        } catch (err) {
+            console.error('Failed to reject task:', err);
+        }
+    };
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-[400px] page-enter">
@@ -312,9 +343,13 @@ export function ProjectDetailPage() {
         );
     }
 
-    const progressPercent = project.totalTeamMembers > 0
-        ? Math.round((project.completedOnboarding / project.totalTeamMembers) * 100)
-        : 0;
+    // Calculate overall progress as average of all team members' progress
+    // If teamMembers data is loaded, use that for more accuracy. Fallback to project stats otherwise.
+    const progressPercent = teamMembers.length > 0
+        ? Math.round(teamMembers.reduce((acc, m) => acc + m.progressPercentage, 0) / teamMembers.length)
+        : (project.totalTeamMembers > 0
+            ? Math.round((project.completedOnboarding / project.totalTeamMembers) * 100)
+            : 0);
 
     const totalTasks = project.taskGroups.reduce((acc, group) => acc + group.tasks.length, 0);
     const pendingCount = Math.max(0, project.totalTeamMembers - project.completedOnboarding - project.inProgress);
@@ -944,6 +979,11 @@ export function ProjectDetailPage() {
                             formData={viewTask.formData || {}}
                             onClose={() => setViewTask(null)}
                             documents={viewTask.documents}
+                            isAdmin={true}
+                            reviewStatus={viewTask.reviewStatus}
+                            adminRemarks={viewTask.adminRemarks}
+                            onApprove={handleApproveTask}
+                            onReject={handleRejectTask}
                         />
                     ) : (
                         <div className="submissions-list">

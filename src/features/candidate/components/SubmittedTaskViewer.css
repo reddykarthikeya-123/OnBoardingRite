@@ -277,3 +277,202 @@
     border-color: #4f46e5;
     color: white;
 }
+
+/* ========================================
+   ADMIN REVIEW STYLES
+   ======================================== */
+
+.review-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.review-status-badge.approved {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.review-status-badge.rejected {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.review-status-badge.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.admin-remarks-box {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+}
+
+.admin-remarks-box strong {
+    display: block;
+    color: #991b1b;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.admin-remarks-box p {
+    color: #7f1d1d;
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+.review-actions {
+    display: flex;
+    gap: 12px;
+    padding-top: 16px;
+    margin-top: 16px;
+    border-top: 1px solid #eef0f3;
+}
+
+.review-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.review-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.approve-btn {
+    background: #10b981;
+    color: white;
+}
+
+.approve-btn:hover:not(:disabled) {
+    background: #059669;
+}
+
+.reject-btn {
+    background: #ef4444;
+    color: white;
+}
+
+.reject-btn:hover:not(:disabled) {
+    background: #dc2626;
+}
+
+/* Reject Modal */
+.reject-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.reject-modal {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+}
+
+.reject-modal h4 {
+    margin: 0 0 8px 0;
+    font-size: 1.125rem;
+    color: #1a1f36;
+}
+
+.reject-modal p {
+    margin: 0 0 16px 0;
+    font-size: 0.875rem;
+    color: #697386;
+}
+
+.reject-modal textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    resize: vertical;
+    min-height: 100px;
+    margin-bottom: 16px;
+}
+
+.reject-modal textarea:focus {
+    outline: none;
+    border-color: #4f46e5;
+}
+
+.reject-modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.cancel-btn {
+    padding: 10px 16px;
+    background: #f3f4f6;
+    border: none;
+    border-radius: 8px;
+    color: #374151;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.cancel-btn:hover {
+    background: #e5e7eb;
+}
+
+.confirm-reject-btn {
+    padding: 10px 16px;
+    background: #ef4444;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.confirm-reject-btn:hover:not(:disabled) {
+    background: #dc2626;
+}
+
+.confirm-reject-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}

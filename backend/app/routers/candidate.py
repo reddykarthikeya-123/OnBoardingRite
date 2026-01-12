@@ -100,6 +100,8 @@ class SubmittedTaskItem(BaseModel):
     submittedAt: Optional[str]
     formData: Optional[Dict[str, Any]]
     documents: Optional[List[DocumentInfo]] = []
+    reviewStatus: Optional[str] = None  # PENDING_REVIEW, APPROVED, REJECTED
+    adminRemarks: Optional[str] = None
     
     class Config:
         from_attributes = True
@@ -566,7 +568,9 @@ def get_submitted_tasks(
                 category=task.category,
                 submittedAt=ti.completed_at.isoformat() if ti.completed_at else None,
                 formData=form_data,
-                documents=documents
+                documents=documents,
+                reviewStatus=ti.review_status,
+                adminRemarks=ti.admin_remarks
             ))
             
         if submissions:
@@ -634,7 +638,9 @@ def get_submitted_tasks_by_project(
             category=task.category,
             submittedAt=ti.completed_at.isoformat() if ti.completed_at else None,
             formData=form_data,
-            documents=documents
+            documents=documents,
+            reviewStatus=ti.review_status,
+            adminRemarks=ti.admin_remarks
         ))
         
     return submissions

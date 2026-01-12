@@ -8,7 +8,7 @@ import httpx
 import json
 
 from app.core.database import get_db
-from app.models.models import TaskInstance, Task, ProjectAssignment, Document
+from app.models.models import TaskInstance, Task, ProjectAssignment, Document, Notification
 
 router = APIRouter()
 
@@ -63,6 +63,11 @@ class RestApiExecutionResult(BaseModel):
     statusCode: Optional[int]
     response: Optional[Dict[str, Any]]
     error: Optional[str]
+
+
+class RejectTaskRequest(BaseModel):
+    remarks: str
+    reviewedBy: str  # Admin user ID
 
 
 # =============================================
@@ -630,3 +635,121 @@ def waive_task_instance(
         "message": "Task waived successfully",
         "taskInstanceId": str(ti.id)
     }
+
+
+# =============================================
+# ADMIN REVIEW - APPROVE/REJECT
+# =============================================
+
+@router.post("/{instance_id}/approve")
+def approve_task_instance(
+    instance_id: str,
+    reviewed_by: str,
+    db: Session = Depends(get_db)
+):
+    """Approve a submitted task instance"""
+    ti = db.query(TaskInstance).filter(TaskInstance.id == instance_id).first()
+    if not ti:
+        raise HTTPException(status_code=404, detail="Task instance not found")
+    
+    if ti.status != 'COMPLETED':
+        raise HTTPException(status_code=400, detail="Can only approve completed tasks")
+    
+    ti.review_status = 'APPROVED'
+    ti.reviewed_by = uuid_lib.UUID(reviewed_by)
+    ti.reviewed_at = datetime.utcnow()
+    ti.admin_remarks = None  # Clear any previous rejection remarks
+    ti.updated_at = datetime.utcnow()
+    
+    # Get team member ID for notification
+    assignment = db.query(ProjectAssignment).filter(
+        ProjectAssignment.id == ti.assignment_id
+    ).first()
+    
+    if assignment:
+        # Create approval notification
+        task = db.query(Task).filter(Task.id == ti.task_id).first()
+        notification = Notification(
+            team_member_id=assignment.team_member_id,
+            type='TASK_APPROVED',
+            title='Task Approved',
+            message=f'Your submission for "{task.name if task else "task"}" has been approved.',
+            task_instance_id=ti.id,
+            is_read=False,
+            created_at=datetime.utcnow()
+        )
+        db.add(notification)
+    
+    db.commit()
+    
+    return {
+        "success": True,
+        "message": "Task approved successfully",
+        "taskInstanceId": str(ti.id),
+        "reviewStatus": "APPROVED"
+    }
+
+
+@router.post("/{instance_id}/reject")
+def reject_task_instance(
+    instance_id: str,
+    data: RejectTaskRequest,
+    db: Session = Depends(get_db)
+):
+    """Reject a submitted task instance with remarks for resubmission"""
+    ti = db.query(TaskInstance).filter(TaskInstance.id == instance_id).first()
+    if not ti:
+        raise HTTPException(status_code=404, detail="Task instance not found")
+    
+    if ti.status != 'COMPLETED':
+        raise HTTPException(status_code=400, detail="Can only reject completed tasks")
+    
+    if not data.remarks or len(data.remarks.strip()) == 0:
+        raise HTTPException(status_code=400, detail="Rejection remarks are required")
+    
+    ti.review_status = 'REJECTED'
+    ti.admin_remarks = data.remarks.strip()
+    ti.reviewed_by = uuid_lib.UUID(data.reviewedBy)
+    ti.reviewed_at = datetime.utcnow()
+    # Reset status to allow resubmission
+    ti.status = 'IN_PROGRESS'
+    ti.completed_at = None
+    ti.updated_at = datetime.utcnow()
+    
+    # Get team member ID for notification
+    assignment = db.query(ProjectAssignment).filter(
+        ProjectAssignment.id == ti.assignment_id
+    ).first()
+    
+    if assignment:
+        # Create rejection notification with remarks
+        task = db.query(Task).filter(Task.id == ti.task_id).first()
+        notification = Notification(
+            team_member_id=assignment.team_member_id,
+            type='TASK_REJECTED',
+            title='Task Needs Revision',
+            message=f'Your submission for "{task.name if task else "task"}" was rejected. Reason: {data.remarks.strip()}',
+            task_instance_id=ti.id,
+            is_read=False,
+            created_at=datetime.utcnow()
+        )
+        db.add(notification)
+        
+        # Update assignment progress (decrement completed tasks)
+        if assignment.completed_tasks and assignment.completed_tasks > 0:
+            assignment.completed_tasks -= 1
+            if assignment.total_tasks > 0:
+                assignment.progress_percentage = round(
+                    (assignment.completed_tasks / assignment.total_tasks) * 100, 2
+                )
+            assignment.updated_at = datetime.utcnow()
+    
+    db.commit()
+    
+    return {
+        "success": True,
+        "message": "Task rejected and candidate notified",
+        "taskInstanceId": str(ti.id),
+        "reviewStatus": "REJECTED"
+    }
+

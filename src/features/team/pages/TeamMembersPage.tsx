@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Users, Mail, Phone, MapPin, Loader2, Trash2, Edit, Save, FileText, ChevronRight, ChevronDown } from 'lucide-react';
 import { Card, Button, Badge, Modal, ConfirmDialog } from '../../../components/ui';
-import { teamMembersApi, candidateApi } from '../../../services/api';
+import { teamMembersApi, candidateApi, taskInstancesApi } from '../../../services/api';
 import { SubmittedTaskViewer } from '../../candidate/components/SubmittedTaskViewer';
+import { useAuth } from '../../../contexts/AuthContext';
 
 interface TeamMember {
     id: string;
@@ -48,6 +49,8 @@ export function TeamMembersPage() {
     const [members, setMembers] = useState<TeamMember[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const { user } = useAuth();
+    const isAdmin = user?.role === 'admin';
 
     // Modal state
     const [showModal, setShowModal] = useState(false);
@@ -81,11 +84,14 @@ export function TeamMembersPage() {
                 fileSize: number;
                 documentSide?: string;
             }>;
+            reviewStatus?: string;
+            adminRemarks?: string;
         }>;
     }>>([]);
     const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
     const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
     const [viewTask, setViewTask] = useState<{
+        id: string;
         name: string;
         submittedAt: string | null;
         formData: Record<string, any>;
@@ -96,6 +102,8 @@ export function TeamMembersPage() {
             fileSize: number;
             documentSide?: string;
         }>;
+        reviewStatus?: string;
+        adminRemarks?: string;
     } | null>(null);
 
     useEffect(() => {
@@ -251,6 +259,56 @@ export function TeamMembersPage() {
             }
             return newSet;
         });
+    };
+
+    const handleApproveTask = async (taskId: string) => {
+        if (!user?.id) return;
+        try {
+            await taskInstancesApi.approve(taskId, user.id);
+
+            // Update local state
+            setGroupedSubmissions(prev => prev.map(group => ({
+                ...group,
+                submissions: group.submissions.map(sub =>
+                    sub.id === taskId
+                        ? { ...sub, reviewStatus: 'APPROVED', adminRemarks: undefined }
+                        : sub
+                )
+            })));
+
+            // Update view task state if open
+            if (viewTask && viewTask.id === taskId) {
+                setViewTask(prev => prev ? { ...prev, reviewStatus: 'APPROVED', adminRemarks: undefined } : null);
+            }
+        } catch (error) {
+            console.error('Failed to approve task:', error);
+            alert('Failed to approve task. Please try again.');
+        }
+    };
+
+    const handleRejectTask = async (taskId: string, remarks: string) => {
+        if (!user?.id) return;
+        try {
+            await taskInstancesApi.reject(taskId, user.id, remarks);
+
+            // Update local state
+            setGroupedSubmissions(prev => prev.map(group => ({
+                ...group,
+                submissions: group.submissions.map(sub =>
+                    sub.id === taskId
+                        ? { ...sub, reviewStatus: 'REJECTED', adminRemarks: remarks }
+                        : sub
+                )
+            })));
+
+            // Update view task state if open
+            if (viewTask && viewTask.id === taskId) {
+                setViewTask(prev => prev ? { ...prev, reviewStatus: 'REJECTED', adminRemarks: remarks } : null);
+            }
+        } catch (error) {
+            console.error('Failed to reject task:', error);
+            alert('Failed to reject task. Please try again.');
+        }
     };
 
     if (isLoading) {
@@ -566,6 +624,11 @@ export function TeamMembersPage() {
                         formData={viewTask.formData}
                         onClose={() => setViewTask(null)}
                         documents={viewTask.documents}
+                        isAdmin={isAdmin}
+                        reviewStatus={viewTask.reviewStatus as any}
+                        adminRemarks={viewTask.adminRemarks}
+                        onApprove={() => handleApproveTask(viewTask.id)}
+                        onReject={(remarks) => handleRejectTask(viewTask.id, remarks)}
                     />
                 ) : isLoadingSubmissions ? (
                     <div className="flex items-center justify-center py-8">
@@ -611,10 +674,13 @@ export function TeamMembersPage() {
                                             <div
                                                 key={task.id}
                                                 onClick={() => setViewTask({
+                                                    id: task.id,
                                                     name: task.taskName,
                                                     submittedAt: task.submittedAt,
                                                     formData: task.formData || {},
-                                                    documents: task.documents
+                                                    documents: task.documents,
+                                                    reviewStatus: task.reviewStatus,
+                                                    adminRemarks: task.adminRemarks
                                                 })}
                                                 style={{
                                                     display: 'flex',

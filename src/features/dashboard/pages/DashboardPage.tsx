@@ -15,9 +15,10 @@ import {
 } from 'lucide-react';
 import { Card, CardBody, Badge, Progress, Button, Modal } from '../../../components/ui';
 // All data now comes from API
-import { dashboardApi, projectsApi, candidateApi } from '../../../services/api';
+import { dashboardApi, projectsApi, candidateApi, taskInstancesApi } from '../../../services/api';
 import type { TeamMember } from '../../../types';
 import { SubmittedTaskViewer } from '../../candidate/components/SubmittedTaskViewer';
+import { useAuth } from '../../../contexts/AuthContext';
 
 interface StatCardProps {
     title: string;
@@ -51,6 +52,8 @@ function StatCard({ title, value, change, changeType, icon, iconColor }: StatCar
 
 export function DashboardPage() {
     const navigate = useNavigate();
+    const { user } = useAuth();
+    const isAdmin = user?.role === 'admin';
     const [selectedProject, setSelectedProject] = useState<string>('project-001');
 
     // Filter state
@@ -63,20 +66,7 @@ export function DashboardPage() {
     // View Submissions Modal State
     const [showSubmissionsModal, setShowSubmissionsModal] = useState(false);
     const [selectedMemberForSubmissions, setSelectedMemberForSubmissions] = useState<any>(null);
-    const [memberSubmissions, setMemberSubmissions] = useState<Array<{
-        id: string;
-        taskId: string;
-        taskName: string;
-        category: string | null;
-        submittedAt: string | null;
-        formData: Record<string, any> | null;
-        documents?: Array<{
-            id: string;
-            originalFilename: string;
-            mimeType: string;
-            fileSize: number;
-        }>;
-    }>>([]);
+    const [memberSubmissions, setMemberSubmissions] = useState<any[]>([]);
     const [viewTask, setViewTask] = useState<any>(null);
     const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
 
@@ -229,6 +219,7 @@ export function DashboardPage() {
         setSelectedMemberForSubmissions(member);
         setIsLoadingSubmissions(true);
         setShowSubmissionsModal(true);
+        setViewTask(null);
         try {
             const submissions = await candidateApi.getSubmittedTasksByProject(member.id, selectedProject);
             setMemberSubmissions(submissions);
@@ -237,6 +228,50 @@ export function DashboardPage() {
             setMemberSubmissions([]);
         } finally {
             setIsLoadingSubmissions(false);
+        }
+    };
+
+    const handleApproveTask = async (taskId: string) => {
+        if (!user?.id) return;
+        try {
+            await taskInstancesApi.approve(taskId, user.id);
+
+            // Update local state
+            setMemberSubmissions((prev: any[]) => prev.map((sub: any) =>
+                sub.id === taskId
+                    ? { ...sub, reviewStatus: 'APPROVED', adminRemarks: undefined }
+                    : sub
+            ));
+
+            // Update view task state if open
+            if (viewTask && viewTask.id === taskId) {
+                setViewTask((prev: any) => prev ? { ...prev, reviewStatus: 'APPROVED', adminRemarks: undefined } : null);
+            }
+        } catch (error) {
+            console.error('Failed to approve task:', error);
+            alert('Failed to approve task. Please try again.');
+        }
+    };
+
+    const handleRejectTask = async (taskId: string, remarks: string) => {
+        if (!user?.id) return;
+        try {
+            await taskInstancesApi.reject(taskId, user.id, remarks);
+
+            // Update local state
+            setMemberSubmissions((prev: any[]) => prev.map((sub: any) =>
+                sub.id === taskId
+                    ? { ...sub, reviewStatus: 'REJECTED', adminRemarks: remarks }
+                    : sub
+            ));
+
+            // Update view task state if open
+            if (viewTask && viewTask.id === taskId) {
+                setViewTask((prev: any) => prev ? { ...prev, reviewStatus: 'REJECTED', adminRemarks: remarks } : null);
+            }
+        } catch (error) {
+            console.error('Failed to reject task:', error);
+            alert('Failed to reject task. Please try again.');
         }
     };
 
@@ -618,6 +653,11 @@ export function DashboardPage() {
                             formData={viewTask.formData || {}}
                             onClose={() => setViewTask(null)}
                             documents={viewTask.documents}
+                            isAdmin={isAdmin}
+                            reviewStatus={viewTask.reviewStatus as any}
+                            adminRemarks={viewTask.adminRemarks}
+                            onApprove={() => handleApproveTask(viewTask.id)}
+                            onReject={(remarks) => handleRejectTask(viewTask.id, remarks)}
                         />
                     ) : (
                         <div className="submissions-list">

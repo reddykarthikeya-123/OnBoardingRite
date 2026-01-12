@@ -239,6 +239,13 @@ class TaskInstance(Base):
     waived_by = Column(UUID(as_uuid=True), ForeignKey("or_users.id"))
     waived_at = Column(TIMESTAMP)
     waived_until = Column(TIMESTAMP)
+    
+    # Admin review fields
+    review_status = Column(String(50))  # PENDING_REVIEW, APPROVED, REJECTED
+    admin_remarks = Column(Text)
+    reviewed_by = Column(UUID(as_uuid=True), ForeignKey("or_users.id"))
+    reviewed_at = Column(TIMESTAMP)
+    
     created_at = Column(TIMESTAMP)
     updated_at = Column(TIMESTAMP)
     
@@ -319,3 +326,20 @@ class Document(Base):
     
     task_instance = relationship("TaskInstance", back_populates="documents")
     uploader = relationship("TeamMember")
+
+
+class Notification(Base):
+    __tablename__ = "or_notifications"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    team_member_id = Column(UUID(as_uuid=True), ForeignKey("or_team_members.id"), nullable=False)
+    type = Column(String(50), nullable=False)  # TASK_REJECTED, TASK_APPROVED, SYSTEM
+    title = Column(String(255), nullable=False)
+    message = Column(Text)
+    task_instance_id = Column(UUID(as_uuid=True), ForeignKey("or_task_instances.id"))
+    is_read = Column(Boolean, default=False)
+    created_at = Column(TIMESTAMP)
+    
+    team_member = relationship("TeamMember")
+    task_instance = relationship("TaskInstance")
+
