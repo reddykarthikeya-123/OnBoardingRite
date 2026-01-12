@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    CheckCircle2,
     FileText,
-    GraduationCap,
     Shield,
     Clock,
     ChevronRight,
@@ -13,7 +11,8 @@ import {
     Zap,
     Star,
     MessageCircle,
-    Loader2
+    Loader2,
+    CheckCircle2
 } from 'lucide-react';
 import { candidateApi } from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -24,8 +23,7 @@ const getCategoryIcon = (categoryId: string) => {
     switch (categoryId.toLowerCase()) {
         case 'forms': return FileText;
         case 'documents': return Shield;
-        case 'training': return GraduationCap;
-        case 'compliance': return CheckCircle2;
+        case 'rest_api': return Zap;
         default: return FileText;
     }
 };
@@ -105,8 +103,7 @@ export function CandidateHomeV2Page() {
                 categories: [
                     { id: 'forms', name: 'Forms', completed: 3, total: 5 },
                     { id: 'documents', name: 'Documents', completed: 2, total: 4 },
-                    { id: 'training', name: 'Training', completed: 1, total: 3 },
-                    { id: 'compliance', name: 'Compliance', completed: 1, total: 3 },
+                    { id: 'rest_api', name: 'REST API', completed: 1, total: 5 },
                 ],
                 priorityTasks: [
                     { id: 'task-001', taskId: 't1', name: 'Complete W-4 Form', type: 'form', dueIn: 2, priority: 'high', status: 'NOT_STARTED' },

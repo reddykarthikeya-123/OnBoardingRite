@@ -12,7 +12,10 @@ import {
     MessageCircle,
     User,
     Bell,
-    LogOut
+    LogOut,
+    Lock,
+    Eye,
+    EyeOff
 } from 'lucide-react';
 import { Modal } from '../../../components/ui';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -55,13 +58,31 @@ interface ProjectSubmissionGroup {
     submissions: SubmittedTask[];
 }
 
+const API_BASE = 'http://localhost:8000/api/v1';
+
 export function CandidateProfilePage() {
     const navigate = useNavigate();
-    const { user, logout } = useAuth();
+    const { user, logout, token } = useAuth();
     const [loading, setLoading] = useState(true);
     const [profileData, setProfileData] = useState<ProfileData | null>(null);
     const [submissions, setSubmissions] = useState<ProjectSubmissionGroup[]>([]);
     const [viewTask, setViewTask] = useState<SubmittedTask | null>(null);
+
+    // Change password state
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [passwordForm, setPasswordForm] = useState({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+    });
+    const [showPasswords, setShowPasswords] = useState({
+        current: false,
+        new: false,
+        confirm: false
+    });
+    const [passwordError, setPasswordError] = useState('');
+    const [passwordSuccess, setPasswordSuccess] = useState(false);
+    const [changingPassword, setChangingPassword] = useState(false);
 
     useEffect(() => {
         loadProfile();
@@ -110,6 +131,55 @@ export function CandidateProfilePage() {
     const handleLogout = () => {
         logout();
         navigate('/login');
+    };
+
+    const handleChangePassword = async () => {
+        setPasswordError('');
+        setPasswordSuccess(false);
+
+        // Validation
+        if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+            setPasswordError('All fields are required');
+            return;
+        }
+
+        if (passwordForm.newPassword.length < 6) {
+            setPasswordError('New password must be at least 6 characters');
+            return;
+        }
+
+        if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+            setPasswordError('New passwords do not match');
+            return;
+        }
+
+        setChangingPassword(true);
+
+        try {
+            const response = await fetch(`${API_BASE}/auth/candidate/change-password?token=${token}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(passwordForm)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Failed to change password');
+            }
+
+            setPasswordSuccess(true);
+            setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+
+            // Close modal after success
+            setTimeout(() => {
+                setShowPasswordModal(false);
+                setPasswordSuccess(false);
+            }, 2000);
+        } catch (err: any) {
+            setPasswordError(err.message || 'Failed to change password');
+        } finally {
+            setChangingPassword(false);
+        }
     };
 
     const totalSubmissions = submissions.reduce((acc, group) => acc + group.submissions.length, 0);
@@ -275,8 +345,25 @@ export function CandidateProfilePage() {
                 </div>
             </section>
 
-            {/* Logout Button */}
+            {/* Account Actions */}
             <section className="profile-v2-section">
+                <h2 className="profile-v2-section-title">
+                    <span>Account</span>
+                </h2>
+
+                {/* Change Password Button */}
+                <button
+                    className="profile-v2-action-btn"
+                    onClick={() => setShowPasswordModal(true)}
+                >
+                    <div className="profile-v2-action-icon">
+                        <Lock size={18} />
+                    </div>
+                    <span>Change Password</span>
+                    <ChevronRight size={18} className="profile-v2-action-arrow" />
+                </button>
+
+                {/* Logout Button */}
                 <button className="profile-v2-logout-btn" onClick={handleLogout}>
                     <LogOut size={18} />
                     <span>Sign Out</span>
@@ -335,6 +422,108 @@ export function CandidateProfilePage() {
                         documents={viewTask.documents}
                     />
                 )}
+            </Modal>
+
+            {/* Change Password Modal */}
+            <Modal
+                isOpen={showPasswordModal}
+                onClose={() => {
+                    setShowPasswordModal(false);
+                    setPasswordError('');
+                    setPasswordSuccess(false);
+                    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                }}
+                title="Change Password"
+                size="sm"
+            >
+                <div className="change-password-form">
+                    {passwordSuccess ? (
+                        <div className="change-password-success">
+                            <CheckCircle2 size={48} />
+                            <p>Password changed successfully!</p>
+                        </div>
+                    ) : (
+                        <>
+                            {passwordError && (
+                                <div className="change-password-error">
+                                    {passwordError}
+                                </div>
+                            )}
+
+                            <div className="change-password-field">
+                                <label>Current Password</label>
+                                <div className="change-password-input-wrapper">
+                                    <input
+                                        type={showPasswords.current ? 'text' : 'password'}
+                                        value={passwordForm.currentPassword}
+                                        onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+                                        placeholder="Enter current password"
+                                    />
+                                    <button
+                                        type="button"
+                                        className="change-password-toggle"
+                                        onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))}
+                                    >
+                                        {showPasswords.current ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="change-password-field">
+                                <label>New Password</label>
+                                <div className="change-password-input-wrapper">
+                                    <input
+                                        type={showPasswords.new ? 'text' : 'password'}
+                                        value={passwordForm.newPassword}
+                                        onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                                        placeholder="Enter new password (min 6 characters)"
+                                    />
+                                    <button
+                                        type="button"
+                                        className="change-password-toggle"
+                                        onClick={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))}
+                                    >
+                                        {showPasswords.new ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="change-password-field">
+                                <label>Confirm New Password</label>
+                                <div className="change-password-input-wrapper">
+                                    <input
+                                        type={showPasswords.confirm ? 'text' : 'password'}
+                                        value={passwordForm.confirmPassword}
+                                        onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                                        placeholder="Confirm new password"
+                                    />
+                                    <button
+                                        type="button"
+                                        className="change-password-toggle"
+                                        onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))}
+                                    >
+                                        {showPasswords.confirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button
+                                className="change-password-submit"
+                                onClick={handleChangePassword}
+                                disabled={changingPassword}
+                            >
+                                {changingPassword ? (
+                                    <>
+                                        <Loader2 size={18} className="spin" />
+                                        <span>Changing...</span>
+                                    </>
+                                ) : (
+                                    <span>Change Password</span>
+                                )}
+                            </button>
+                        </>
+                    )}
+                </div>
             </Modal>
         </div>
     );

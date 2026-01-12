@@ -338,3 +338,62 @@ def get_current_user(token: str, db: Session = Depends(get_db)):
 def logout():
     """Logout - client should clear token"""
     return {"success": True, "message": "Logged out successfully"}
+
+
+# =============================================
+# CHANGE PASSWORD (for returning candidates)
+# =============================================
+
+class ChangePasswordRequest(BaseModel):
+    currentPassword: str
+    newPassword: str
+    confirmPassword: str
+
+
+@router.post("/candidate/change-password")
+def change_candidate_password(data: ChangePasswordRequest, token: str, db: Session = Depends(get_db)):
+    """Change password for logged-in candidates"""
+    
+    # Verify token
+    payload = decode_jwt_token(token)
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token"
+        )
+    
+    user_id = payload.get("sub")
+    
+    # Find member
+    member = db.query(TeamMember).filter(TeamMember.id == user_id).first()
+    if not member:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Verify current password
+    if not verify_password(data.currentPassword, member.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect"
+        )
+    
+    # Validate new password
+    if data.newPassword != data.confirmPassword:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New passwords do not match"
+        )
+    
+    if len(data.newPassword) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 6 characters"
+        )
+    
+    # Update password
+    member.password_hash = hash_password(data.newPassword)
+    db.commit()
+    
+    return {"success": True, "message": "Password changed successfully"}

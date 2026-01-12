@@ -24,8 +24,7 @@ const CATEGORIES = [
     { id: 'all', label: 'All', emoji: '📋' },
     { id: 'forms', label: 'Forms', emoji: '📝' },
     { id: 'documents', label: 'Docs', emoji: '📄' },
-    { id: 'training', label: 'Training', emoji: '🎓' },
-    { id: 'compliance', label: 'Compliance', emoji: '✅' },
+    { id: 'rest_api', label: 'REST API', emoji: '🔌' },
 ];
 
 const getTaskIcon = (type: string) => {
@@ -162,6 +161,17 @@ export function CandidateTasksV2Page() {
                     className="candidate-v2-search-input"
                 />
             </div>
+
+
+
+            {/* Error Display */}
+            {
+                error && (
+                    <div style={{ color: '#ef4444', textAlign: 'center', margin: '16px', fontSize: '14px' }}>
+                        {error}
+                    </div>
+                )
+            }
 
             {/* Pill Tabs */}
             <div className="candidate-v2-pill-tabs">
@@ -309,6 +319,6 @@ export function CandidateTasksV2Page() {
                     <span>Profile</span>
                 </button>
             </nav>
-        </div>
+        </div >
     );
 }
