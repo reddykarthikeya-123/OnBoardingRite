@@ -6,8 +6,8 @@ import hashlib
 import sys
 import os
 
-# Add the backend directory to path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Add the backend directory to path (parent of scripts/)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.core.database import SessionLocal, engine
 from app.models.models import User, Base
@@ -20,16 +20,18 @@ def seed_admin():
     
     try:
         # Check if admin already exists
-        existing = db.query(User).filter(User.email == "admin@onboardrite.com").first()
+        email = "admin@rite.com"
+        password = "admin123"
+        
+        existing = db.query(User).filter(User.email == email).first()
         if existing:
-            print("Admin user already exists!")
-            print(f"  Email: admin@onboardrite.com")
+            print(f"Admin user {email} already exists!")
             return
         
         # Create admin user
         admin = User(
-            email="admin@onboardrite.com",
-            password_hash=hash_password("admin123"),
+            email=email,
+            password_hash=hash_password(password),
             first_name="Admin",
             last_name="User",
             role="ADMIN",
@@ -40,8 +42,8 @@ def seed_admin():
         db.commit()
         
         print("✅ Admin user created successfully!")
-        print("  Email: admin@onboardrite.com")
-        print("  Password: admin123")
+        print(f"  Email: {email}")
+        print(f"  Password: {password}")
         print("")
         print("Use these credentials to log in as admin.")
         

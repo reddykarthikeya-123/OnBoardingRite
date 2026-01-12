@@ -79,11 +79,14 @@ The application requires a PostgreSQL database.
     pip install -r requirements.txt
     ```
 
-2.  **Run the Server**:
-    Use `uvicorn` to run the production server.
+    2.  **Run the Server**:
+    Use `uvicorn` to run the production server. The `--port` flag allows you to configure the listening port.
     ```bash
-    # Run on port 8000
+    # Run on port 8000 (default)
     uvicorn app.main:app --host 0.0.0.0 --port 8000
+    
+    # Run on custom port (e.g., 9000)
+    uvicorn app.main:app --host 0.0.0.0 --port 9000
     ```
     *Recommendation: Use a process manager like **PM2** or **Systemd** to keep the backend running.*
 
@@ -96,6 +99,7 @@ The application requires a PostgreSQL database.
     # From the root directory (where package.json is)
     npm install
     ```
+    *Note: This also installs 'serve', a static file server.*
 
 2.  **Build the Application**:
     This compiles the React code into static HTML/CSS/JS.
@@ -105,12 +109,15 @@ The application requires a PostgreSQL database.
     The output will be created in the `dist/` directory.
 
 3.  **Serve the Application**:
-    You can serve the `dist/` folder using any web server (Nginx, Apache, or a simple Node server).
+    You can serve the `dist/` folder using `npx serve`. The `-l` (listen) flag allows you to configure the port.
     
-    **Option A: Using `serve` (Simple)**
+    **Option A: Using `serve` (Single Command)**
     ```bash
-    npm install -g serve
-    serve -s dist -l 80
+    # Serve on port 80 (default HTTP)
+    npx serve -s dist -l 80
+
+    # Serve on custom port (e.g., 5173 or 3000)
+    npx serve -s dist -l 3000
     ```
 
     **Option B: Nginx (Recommended)**
