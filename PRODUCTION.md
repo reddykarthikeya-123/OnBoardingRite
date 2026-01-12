@@ -12,13 +12,17 @@ Server deployment instructions for the OnBoardingRite application.
 
 ---
 
-## Quick Start (Single Configuration File)
+## Configuration (Single .env File)
 
-### Step 1: Configure Environment
+All configuration is in **one file** at the project root: `.env`
 
-Copy `.env.example` to `.env` at the project root and fill in your values:
+Copy `.env.example` to `.env` and fill in your values:
 
 ```env
+# Application
+APP_NAME=OnBoarding App
+DEBUG=False
+
 # Database
 POSTGRES_HOST=your-database-host
 POSTGRES_PORT=5432
@@ -29,61 +33,51 @@ POSTGRES_PASSWORD=your-password
 # Security (generate with: openssl rand -hex 32)
 JWT_SECRET=your-secure-random-string
 
-# URLs (only change if not using defaults)
-BACKEND_URL=http://localhost:9000/api/v1
-FRONTEND_URL=http://localhost:9009
+# URLs
+BACKEND_URL=https://api.yourdomain.com/api/v1
+FRONTEND_ORIGINS=https://yourdomain.com
 ```
 
-> **Note:** For same-server deployment with default ports, you only need to set the database credentials and JWT_SECRET. The URL defaults will work.
+| Variable | Used By | Purpose |
+|----------|---------|---------|
+| `POSTGRES_*` | Backend | Database connection |
+| `JWT_SECRET` | Backend | Authentication tokens |
+| `FRONTEND_ORIGINS` | Backend | CORS - which domains can call the API |
+| `BACKEND_URL` | Frontend | Where to send API requests |
 
-### Step 2: Build
+---
+
+## Build & Run
+
+### Option 1: Using Build Script
 
 ```bash
+# Build frontend with correct API URL
 python build_production.py
-```
 
-This script:
-- Reads your root `.env` file
-- Auto-generates `backend/.env`
-- Builds the frontend with correct API URL
-
-### Step 3: Run
-
-**Terminal 1 - Backend:**
-```bash
+# Run backend
 cd backend
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-python scripts/setup_remote_db.py  # First-time only
 uvicorn app.main:app --host 0.0.0.0 --port 9000
-```
 
-**Terminal 2 - Frontend:**
-```bash
+# Run frontend (in another terminal)
 cd frontend
 npx serve -s dist -l 9009
 ```
 
----
+### Option 2: Manual
 
-## Alternative: Nginx Configuration
+```bash
+# Backend
+cd backend
+pip install -r requirements.txt
+python scripts/setup_remote_db.py  # First-time only
+uvicorn app.main:app --host 0.0.0.0 --port 9000
 
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-
-    location / {
-        root /path/to/frontend/dist;
-        try_files $uri $uri/ /index.html;
-    }
-
-    location /api {
-        proxy_pass http://localhost:9000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-}
+# Frontend (set BACKEND_URL before build)
+cd frontend
+npm install
+VITE_API_URL=https://api.yourdomain.com/api/v1 npm run build
+npx serve -s dist -l 9009
 ```
 
 ---
@@ -99,6 +93,6 @@ server {
 
 | Issue | Solution |
 |-------|----------|
-| Database connection fails | Verify `.env` credentials and firewall allows port 5432 |
-| CORS errors | Add frontend URL to `FRONTEND_URL` in `.env` and rebuild |
-| Login fails | Ensure `JWT_SECRET` is set and consistent |
+| Database connection fails | Verify `.env` credentials |
+| CORS errors | Add frontend URL to `FRONTEND_ORIGINS` |
+| API calls fail | Verify `BACKEND_URL` was set correctly during build |

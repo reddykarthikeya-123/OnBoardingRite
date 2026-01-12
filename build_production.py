@@ -1,6 +1,7 @@
 """
 OnBoardingRite Production Build Script
-Reads from root .env and builds both frontend and backend
+Reads BACKEND_URL from root .env and builds frontend with it.
+Backend reads from root .env directly (no generation needed).
 """
 
 import os
@@ -10,7 +11,6 @@ from pathlib import Path
 
 # Get project directories
 PROJECT_ROOT = Path(__file__).parent.absolute()
-BACKEND_DIR = PROJECT_ROOT / "backend"
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
 ROOT_ENV = PROJECT_ROOT / ".env"
 
@@ -26,32 +26,8 @@ def load_env():
                     env_vars[key.strip()] = value.strip()
     return env_vars
 
-def create_backend_env(env_vars):
-    """Create backend/.env from root .env"""
-    backend_env = BACKEND_DIR / ".env"
-    
-    # Map root env vars to backend format
-    backend_content = f"""APP_NAME={env_vars.get('APP_NAME', 'OnBoarding App')}
-DEBUG={env_vars.get('DEBUG', 'False')}
-
-POSTGRES_HOST={env_vars.get('POSTGRES_HOST', 'localhost')}
-POSTGRES_PORT={env_vars.get('POSTGRES_PORT', '5432')}
-POSTGRES_DB={env_vars.get('POSTGRES_DB', 'postgres')}
-POSTGRES_USER={env_vars.get('POSTGRES_USER', 'postgres')}
-POSTGRES_PASSWORD={env_vars.get('POSTGRES_PASSWORD', '')}
-
-JWT_SECRET={env_vars.get('JWT_SECRET', 'change-me')}
-
-FRONTEND_ORIGINS={env_vars.get('FRONTEND_URL', 'http://localhost:9009')}
-"""
-    
-    with open(backend_env, 'w') as f:
-        f.write(backend_content)
-    
-    print(f"✅ Created {backend_env}")
-
 def build_frontend(env_vars):
-    """Build frontend with correct API URL"""
+    """Build frontend with correct API URL from .env"""
     api_url = env_vars.get('BACKEND_URL', 'http://localhost:9000/api/v1')
     
     print(f"🔨 Building frontend (API URL: {api_url})...")
@@ -89,10 +65,6 @@ def main():
     print("📖 Loading configuration from .env...")
     env_vars = load_env()
     
-    # Create backend .env
-    print("📝 Generating backend/.env...")
-    create_backend_env(env_vars)
-    
     # Build frontend
     build_frontend(env_vars)
     
@@ -100,7 +72,9 @@ def main():
     print("=" * 50)
     print("  ✅ Build Complete!")
     print()
-    print("  Next steps:")
+    print("  Backend reads from root .env automatically.")
+    print()
+    print("  To run:")
     print("  1. cd backend && uvicorn app.main:app --host 0.0.0.0 --port 9000")
     print("  2. cd frontend && npx serve -s dist -l 9009")
     print("=" * 50)
