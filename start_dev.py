@@ -62,13 +62,13 @@ def start_backend():
     
     if sys.platform == "win32":
         return subprocess.Popen(
-            ["python", "-m", "uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", str(BACKEND_PORT)],
+            ["python", "-m", "uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", str(BACKEND_PORT), "--log-level", "warning"],
             cwd=str(BACKEND_DIR),
             creationflags=subprocess.CREATE_NEW_CONSOLE
         )
     else:
         return subprocess.Popen(
-            ["python", "-m", "uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", str(BACKEND_PORT)],
+            ["python", "-m", "uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", str(BACKEND_PORT), "--log-level", "warning"],
             cwd=str(BACKEND_DIR)
         )
 
