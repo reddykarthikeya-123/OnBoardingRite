@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     JWT_SECRET: str = "default-secret-key-change-me"
     
     # CORS
-    FRONTEND_ORIGINS: str = "http://localhost:5173,http://localhost:5174,http://localhost:3000"
+    FRONTEND_ORIGINS: str = "http://localhost:5173,http://localhost:5174,http://localhost:9009"
     
     @property
     def DATABASE_URL(self) -> str:

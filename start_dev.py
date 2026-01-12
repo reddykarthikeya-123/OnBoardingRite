@@ -16,8 +16,8 @@ BACKEND_DIR = PROJECT_ROOT / "backend"
 FRONTEND_DIR = PROJECT_ROOT
 
 # Ports used by the dev servers
-BACKEND_PORT = 8000
-FRONTEND_PORT = 5173
+BACKEND_PORT = 9000
+FRONTEND_PORT = 9009
 
 def kill_process_on_port(port):
     """Kill any process using the specified port (Windows only)"""
@@ -58,23 +58,23 @@ def cleanup_ports():
 
 def start_backend():
     """Start FastAPI backend server"""
-    print("🚀 Starting Backend (FastAPI) on http://localhost:8000...")
+    print(f"🚀 Starting Backend (FastAPI) on http://localhost:{BACKEND_PORT}...")
     
     if sys.platform == "win32":
         return subprocess.Popen(
-            ["python", "-m", "uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"],
+            ["python", "-m", "uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", str(BACKEND_PORT)],
             cwd=str(BACKEND_DIR),
             creationflags=subprocess.CREATE_NEW_CONSOLE
         )
     else:
         return subprocess.Popen(
-            ["python", "-m", "uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"],
+            ["python", "-m", "uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", str(BACKEND_PORT)],
             cwd=str(BACKEND_DIR)
         )
 
 def start_frontend():
     """Start Vite frontend dev server"""
-    print("🚀 Starting Frontend (Vite) on http://localhost:5173...")
+    print(f"🚀 Starting Frontend (Vite) on http://localhost:{FRONTEND_PORT}...")
     
     if sys.platform == "win32":
         return subprocess.Popen(
@@ -109,16 +109,16 @@ def main():
     print("=" * 50)
     print("  ✅ Servers Started Successfully!")
     print()
-    print("  Backend:   http://localhost:8000")
-    print("  Frontend:  http://localhost:5173")
-    print("  API Docs:  http://localhost:8000/docs")
-    print("  API Test:  http://localhost:5173/api-test")
+    print(f"  Backend:   http://localhost:{BACKEND_PORT}")
+    print(f"  Frontend:  http://localhost:{FRONTEND_PORT}")
+    print(f"  API Docs:  http://localhost:{BACKEND_PORT}/docs")
+    print(f"  API Test:  http://localhost:{FRONTEND_PORT}/api-test")
     print()
     print("  Press Ctrl+C to stop all servers")
     print("=" * 50)
     
     # Open browser
-    webbrowser.open("http://localhost:5173")
+    webbrowser.open(f"http://localhost:{FRONTEND_PORT}")
     
     try:
         # Keep running until interrupted

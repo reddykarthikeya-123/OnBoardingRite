@@ -82,10 +82,7 @@ The application requires a PostgreSQL database.
     2.  **Run the Server**:
     Use `uvicorn` to run the production server. The `--port` flag allows you to configure the listening port.
     ```bash
-    # Run on port 8000 (default)
-    uvicorn app.main:app --host 0.0.0.0 --port 8000
-    
-    # Run on custom port (e.g., 9000)
+    # Run on port 9000 (Recommended)
     uvicorn app.main:app --host 0.0.0.0 --port 9000
     ```
     *Recommendation: Use a process manager like **PM2** or **Systemd** to keep the backend running.*
@@ -113,11 +110,8 @@ The application requires a PostgreSQL database.
     
     **Option A: Using `serve` (Single Command)**
     ```bash
-    # Serve on port 80 (default HTTP)
-    npx serve -s dist -l 80
-
-    # Serve on custom port (e.g., 5173 or 3000)
-    npx serve -s dist -l 3000
+    # Serve on port 9009 (Recommended)
+    npx serve -s dist -l 9009
     ```
 
     **Option B: Nginx (Recommended)**
@@ -125,7 +119,7 @@ The application requires a PostgreSQL database.
 
     ```nginx
     server {
-        listen 80;
+        listen 9009;
         server_name your-domain.com;
 
         location / {
@@ -134,7 +128,7 @@ The application requires a PostgreSQL database.
         }
 
         location /api {
-            proxy_pass http://localhost:8000;
+            proxy_pass http://localhost:9000;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
         }
@@ -145,10 +139,10 @@ The application requires a PostgreSQL database.
 
 ## 6. Linking Custom Ports (Important)
 
-If you run services on custom ports (e.g., Backend on 9000, Frontend on 3000), you must configure them to talk to each other.
+If you run services on these custom ports (Backend on 9000, Frontend on 9009), you must configure them to talk to each other.
 
 ### 1- Configure Frontend to find Backend
-**When building the frontend**, specify the Backend URL if it's not the default (localhost:8000).
+**When building the frontend**, specify the Backend URL.
 ```bash
 # Example: Backend is running on port 9000
 # Windows (PowerShell)
@@ -162,14 +156,14 @@ VITE_API_URL=http://localhost:9000/api/v1 npm run build
 **Update `backend/.env`** to allow the frontend's custom port.
 ```env
 # Add the URL where your frontend is running
-FRONTEND_ORIGINS=http://localhost:5173,http://localhost:3000,http://your-production-domain.com
+FRONTEND_ORIGINS=http://localhost:9009,http://localhost:5173,http://your-production-domain.com
 ```
 
 ---
 
 ## 7. Accessing the Application
-- **Frontend**: `http://<your-server-ip>:<frontend-port>`
-- **Backend API Docs**: `http://<your-server-ip>:<backend-port>/docs`
+- **Frontend**: `http://<your-server-ip>:9009`
+- **Backend API Docs**: `http://<your-server-ip>:9000/docs`
 
 ## Troubleshooting
 
