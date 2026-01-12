@@ -13,11 +13,12 @@ import jwt
 
 from app.core.database import get_db
 from app.models.models import User, TeamMember, ProjectAssignment
+from app.core.config import settings
 
 router = APIRouter()
 
 # JWT Configuration
-JWT_SECRET = "onboardrite-secret-key-change-in-production"
+JWT_SECRET = settings.JWT_SECRET
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 24
 
