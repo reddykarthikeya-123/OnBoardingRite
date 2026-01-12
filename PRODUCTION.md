@@ -61,12 +61,15 @@ uvicorn app.main:app --host 0.0.0.0 --port 9000
 ```bash
 cd frontend
 npm install
-
-# If backend is NOT on localhost:9000, set the API URL:
-# VITE_API_URL=https://api.yourdomain.com/api/v1 npm run build
-
 npm run build
 ```
+
+> **Note:** If both frontend and backend run on the **same server**, no additional configuration is needed. The frontend defaults to `http://localhost:9000/api/v1`.
+>
+> Only set `VITE_API_URL` if backend is on a **different server**:
+> ```bash
+> VITE_API_URL=https://api.yourdomain.com/api/v1 npm run build
+> ```
 
 ### 2.2 Serve
 
