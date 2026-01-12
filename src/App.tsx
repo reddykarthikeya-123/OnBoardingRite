@@ -22,6 +22,7 @@ import { TemplateDetailPage } from './features/templates/pages/TemplateDetailPag
 import { TaskLibraryPage } from './features/tasks/pages/TaskLibraryPage';
 import { EligibilityRulesPage } from './features/eligibility/pages/EligibilityRulesPage';
 import { TeamMembersPage } from './features/team/pages/TeamMembersPage';
+import { AdminSettingsPage } from './features/settings/pages/AdminSettingsPage';
 
 // Candidate Portal Pages (Consolidated - Using V2 as main)
 import { CandidateHomeV2Page } from './features/candidate/pages/CandidateHomeV2Page';
@@ -100,6 +101,11 @@ function App() {
                 <Route path="/team-members" element={
                     <ProtectedRoute allowedRoles={['admin']}>
                         <Layout><TeamMembersPage /></Layout>
+                    </ProtectedRoute>
+                } />
+                <Route path="/settings" element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                        <Layout><AdminSettingsPage /></Layout>
                     </ProtectedRoute>
                 } />
 

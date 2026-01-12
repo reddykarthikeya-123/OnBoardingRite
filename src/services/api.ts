@@ -507,5 +507,57 @@ export const documentsApi = {
     ),
 };
 
+// Admin Management API
+export const adminApi = {
+    // Get current admin profile
+    getProfile: (token: string) => fetchApi<{
+        id: string;
+        email: string;
+        firstName: string;
+        lastName: string;
+        role: string;
+        isActive: boolean;
+    }>(`/admin/profile?token=${token}`),
+
+    // Update profile
+    updateProfile: (token: string, data: { firstName: string; lastName: string }) =>
+        fetchApi<{ success: boolean; message: string; user: any }>(
+            `/admin/profile?token=${token}`,
+            { method: 'PUT', body: JSON.stringify(data) }
+        ),
+
+    // Change password
+    changePassword: (token: string, data: { currentPassword: string; newPassword: string; confirmPassword: string }) =>
+        fetchApi<{ success: boolean; message: string }>(
+            `/admin/password?token=${token}`,
+            { method: 'PUT', body: JSON.stringify(data) }
+        ),
+
+    // List all admin users
+    listUsers: (token: string) => fetchApi<Array<{
+        id: string;
+        email: string;
+        firstName: string;
+        lastName: string;
+        role: string;
+        isActive: boolean;
+        createdAt: string | null;
+    }>>(`/admin/users?token=${token}`),
+
+    // Create new admin user
+    createUser: (token: string, data: { email: string; firstName: string; lastName: string; password: string }) =>
+        fetchApi<{ success: boolean; message: string; user: any }>(
+            `/admin/users?token=${token}`,
+            { method: 'POST', body: JSON.stringify(data) }
+        ),
+
+    // Delete admin user
+    deleteUser: (token: string, userId: string) =>
+        fetchApi<{ success: boolean; message: string }>(
+            `/admin/users/${userId}?token=${token}`,
+            { method: 'DELETE' }
+        ),
+};
+
 export { API_BASE_URL };
 
