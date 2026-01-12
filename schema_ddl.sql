@@ -338,6 +338,12 @@ CREATE TABLE or_task_instances (
     waived_by UUID REFERENCES or_users(id),
     waived_at TIMESTAMP,
     waived_until TIMESTAMP,
+    
+    -- Admin review fields
+    review_status VARCHAR(50), -- PENDING_REVIEW, APPROVED, REJECTED
+    admin_remarks TEXT,
+    reviewed_by UUID REFERENCES or_users(id),
+    reviewed_at TIMESTAMP,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -631,3 +637,22 @@ COMMENT ON TABLE or_project_assignments IS 'Team member assignments to or_projec
 COMMENT ON TABLE or_task_instances IS 'Individual task assignments per team member with results';
 COMMENT ON TABLE or_task_comments IS 'Comments and notes on task instances';
 COMMENT ON TABLE or_communications IS 'Communication log for emails, SMS, and in-app messages';
+
+-- =============================================
+-- 18. or_notifications TABLE
+-- =============================================
+CREATE TABLE or_notifications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    team_member_id UUID NOT NULL REFERENCES or_team_members(id) ON DELETE CASCADE,
+    type VARCHAR(50) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    message TEXT,
+    task_instance_id UUID REFERENCES or_task_instances(id) ON DELETE SET NULL,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_notifications_team_member ON or_notifications(team_member_id);
+CREATE INDEX idx_notifications_is_read ON or_notifications(is_read);
+
+COMMENT ON TABLE or_notifications IS 'In-app notifications for team members';
