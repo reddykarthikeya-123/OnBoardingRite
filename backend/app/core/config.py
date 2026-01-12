@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     # Security
     JWT_SECRET: str = "default-secret-key-change-me"
     
+    # CORS
+    FRONTEND_ORIGINS: str = "http://localhost:5173,http://localhost:5174,http://localhost:3000"
+    
     @property
     def DATABASE_URL(self) -> str:
         return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"

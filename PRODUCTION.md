@@ -143,10 +143,33 @@ The application requires a PostgreSQL database.
 
 ---
 
-## 6. Accessing the Application
+## 6. Linking Custom Ports (Important)
 
-- **Frontend**: `http://<your-server-ip>` (or configured domain)
-- **Backend API Docs**: `http://<your-server-ip>:8000/docs`
+If you run services on custom ports (e.g., Backend on 9000, Frontend on 3000), you must configure them to talk to each other.
+
+### 1- Configure Frontend to find Backend
+**When building the frontend**, specify the Backend URL if it's not the default (localhost:8000).
+```bash
+# Example: Backend is running on port 9000
+# Windows (PowerShell)
+$env:VITE_API_URL="http://localhost:9000/api/v1"; npm run build
+
+# Linux/Mac
+VITE_API_URL=http://localhost:9000/api/v1 npm run build
+```
+
+### 2- Configure Backend to allow Frontend (CORS)
+**Update `backend/.env`** to allow the frontend's custom port.
+```env
+# Add the URL where your frontend is running
+FRONTEND_ORIGINS=http://localhost:5173,http://localhost:3000,http://your-production-domain.com
+```
+
+---
+
+## 7. Accessing the Application
+- **Frontend**: `http://<your-server-ip>:<frontend-port>`
+- **Backend API Docs**: `http://<your-server-ip>:<backend-port>/docs`
 
 ## Troubleshooting
 
