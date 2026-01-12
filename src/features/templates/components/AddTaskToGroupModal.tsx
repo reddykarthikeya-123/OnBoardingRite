@@ -367,21 +367,44 @@ export function AddTaskToGroupModal({
                         </p>
 
                         <div className="task-type-grid">
-                            {(Object.entries(taskTypeConfig) as [TaskType, typeof taskTypeConfig[TaskType]][]).map(([type, config]) => (
-                                <button
-                                    key={type}
-                                    className="task-type-card"
-                                    onClick={() => handleSelectTaskType(type)}
-                                >
-                                    <div className={`task-card-type ${config.color}`}>
-                                        {config.icon}
-                                    </div>
-                                    <div className="task-type-card-content">
-                                        <span className="task-type-card-label">{config.label}</span>
-                                        <span className="task-type-card-description">{config.description}</span>
-                                    </div>
-                                </button>
-                            ))}
+                            {(Object.entries(taskTypeConfig) as [TaskType, typeof taskTypeConfig[TaskType]][]).map(([type, config]) => {
+                                const isDisabled = type === 'REDIRECT';
+                                return (
+                                    <button
+                                        key={type}
+                                        className="task-type-card"
+                                        onClick={() => !isDisabled && handleSelectTaskType(type)}
+                                        disabled={isDisabled}
+                                        style={{
+                                            opacity: isDisabled ? 0.5 : 1,
+                                            cursor: isDisabled ? 'not-allowed' : 'pointer',
+                                            background: isDisabled ? 'var(--color-neutral-50)' : undefined
+                                        }}
+                                    >
+                                        <div className={`task-card-type ${config.color}`}>
+                                            {config.icon}
+                                        </div>
+                                        <div className="task-type-card-content">
+                                            <span className="task-type-card-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                {config.label}
+                                                {isDisabled && (
+                                                    <span style={{
+                                                        fontSize: '9px',
+                                                        background: 'var(--color-warning-100)',
+                                                        color: 'var(--color-warning-700)',
+                                                        padding: '2px 5px',
+                                                        borderRadius: '3px',
+                                                        fontWeight: 500
+                                                    }}>
+                                                        Coming Soon
+                                                    </span>
+                                                )}
+                                            </span>
+                                            <span className="task-type-card-description">{config.description}</span>
+                                        </div>
+                                    </button>
+                                );
+                            })}
                         </div>
 
                         <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--color-border-light)' }}>

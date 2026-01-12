@@ -674,22 +674,55 @@ export function TaskLibraryPage() {
                 <div>
                     <p className="text-secondary mb-6">Select the type of task you want to create:</p>
                     <div className="grid grid-cols-2 gap-4">
-                        {(Object.entries(taskTypeConfig) as [TaskType, typeof taskTypeConfig[TaskType]][]).map(([type, config]) => (
-                            <button
-                                key={type}
-                                onClick={() => setSelectedTaskType(type)}
-                                className="p-4 border rounded-xl text-left hover:bg-neutral-50 hover:border-primary-300 transition-all"
-                                style={{ borderColor: 'var(--color-border)' }}
-                            >
-                                <div className="flex items-center gap-3 mb-2">
-                                    <div className={`task-card-type ${config.color}`}>
-                                        {config.icon}
+                        {(Object.entries(taskTypeConfig) as [TaskType, typeof taskTypeConfig[TaskType]][]).map(([type, config]) => {
+                            const isDisabled = type === 'REDIRECT';
+                            return (
+                                <button
+                                    key={type}
+                                    onClick={() => !isDisabled && setSelectedTaskType(type)}
+                                    disabled={isDisabled}
+                                    className="p-4 border rounded-xl text-left transition-all"
+                                    style={{
+                                        borderColor: 'var(--color-border)',
+                                        opacity: isDisabled ? 0.5 : 1,
+                                        cursor: isDisabled ? 'not-allowed' : 'pointer',
+                                        background: isDisabled ? 'var(--color-neutral-50)' : 'white'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        if (!isDisabled) {
+                                            e.currentTarget.style.background = 'var(--color-neutral-50)';
+                                            e.currentTarget.style.borderColor = 'var(--color-primary-300)';
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        if (!isDisabled) {
+                                            e.currentTarget.style.background = 'white';
+                                            e.currentTarget.style.borderColor = 'var(--color-border)';
+                                        }
+                                    }}
+                                >
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className={`task-card-type ${config.color}`}>
+                                            {config.icon}
+                                        </div>
+                                        <span className="font-semibold">{config.label}</span>
+                                        {isDisabled && (
+                                            <span style={{
+                                                fontSize: '10px',
+                                                background: 'var(--color-warning-100)',
+                                                color: 'var(--color-warning-700)',
+                                                padding: '2px 6px',
+                                                borderRadius: '4px',
+                                                fontWeight: 500
+                                            }}>
+                                                Coming Soon
+                                            </span>
+                                        )}
                                     </div>
-                                    <span className="font-semibold">{config.label}</span>
-                                </div>
-                                <p className="text-sm text-secondary">{config.description}</p>
-                            </button>
-                        ))}
+                                    <p className="text-sm text-secondary">{config.description}</p>
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
             </Modal>
