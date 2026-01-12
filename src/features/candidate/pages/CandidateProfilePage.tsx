@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { Modal } from '../../../components/ui';
 import { useAuth } from '../../../contexts/AuthContext';
-import { candidateApi } from '../../../services/api';
+import { candidateApi, API_BASE_URL } from '../../../services/api';
 import { SubmittedTaskViewer } from '../components/SubmittedTaskViewer';
 
 interface ProfileData {
@@ -62,8 +62,6 @@ interface ProjectSubmissionGroup {
     role: string | null;
     submissions: SubmittedTask[];
 }
-
-const API_BASE = 'http://localhost:8000/api/v1';
 
 export function CandidateProfilePage() {
     const navigate = useNavigate();
@@ -161,7 +159,7 @@ export function CandidateProfilePage() {
         setChangingPassword(true);
 
         try {
-            const response = await fetch(`${API_BASE}/auth/candidate/change-password?token=${token}`, {
+            const response = await fetch(`${API_BASE_URL}/auth/candidate/change-password?token=${token}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(passwordForm)

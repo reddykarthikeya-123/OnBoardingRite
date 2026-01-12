@@ -1,5 +1,5 @@
 // API Service Layer - Connects frontend to backend
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9000/api/v1';
 
 // Generic fetch helper
 async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {

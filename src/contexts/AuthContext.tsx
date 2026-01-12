@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { API_BASE_URL } from '../services/api';
 
 // Types
 interface User {
@@ -27,8 +28,6 @@ interface AuthContextType extends AuthState {
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
-
-const API_BASE = 'http://localhost:8000/api/v1';
 
 // Storage keys
 const TOKEN_KEY = 'onboardrite_token';
@@ -58,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (token && savedUser) {
                 try {
                     // Verify token with backend
-                    const response = await fetch(`${API_BASE}/auth/me?token=${token}`);
+                    const response = await fetch(`${API_BASE_URL}/auth/me?token=${token}`);
                     if (response.ok) {
                         const data = await response.json();
                         setState({
@@ -98,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
             const endpoint = role === 'admin' ? '/auth/admin/login' : '/auth/candidate/login';
 
-            const response = await fetch(`${API_BASE}${endpoint}`, {
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
@@ -134,7 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const setPassword = async (email: string, newPassword: string, confirmPassword: string) => {
         try {
-            const response = await fetch(`${API_BASE}/auth/candidate/set-password`, {
+            const response = await fetch(`${API_BASE_URL}/auth/candidate/set-password`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, newPassword, confirmPassword })
