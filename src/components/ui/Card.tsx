@@ -34,10 +34,11 @@ export function CardHeader({ children, className = '' }: CardHeaderProps) {
 interface CardBodyProps {
     children: ReactNode;
     className?: string;
+    style?: React.CSSProperties;
 }
 
-export function CardBody({ children, className = '' }: CardBodyProps) {
-    return <div className={`card-body ${className}`}>{children}</div>;
+export function CardBody({ children, className = '', style }: CardBodyProps) {
+    return <div className={`card-body ${className}`} style={style}>{children}</div>;
 }
 
 interface CardFooterProps {

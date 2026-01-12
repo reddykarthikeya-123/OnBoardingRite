@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Save, Filter, Link, FileText, Trash2, Search, Loader2 } from 'lucide-react';
+import { X, Save, Filter, Link, FileText, Trash2, Search } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import type { EligibilityCriteria, EligibilityCriteriaContext, EligibilityRuleGroup } from '../../../types';
 import { EligibilityCriteriaBuilder } from './EligibilityCriteriaBuilder';
@@ -56,7 +56,7 @@ export function EligibilityCriteriaModal({
     const [selectedNamedRuleId, setSelectedNamedRuleId] = useState<string>('');
     const [namedRuleSearch, setNamedRuleSearch] = useState('');
     const [namedRules, setNamedRules] = useState<NamedRuleListItem[]>([]);
-    const [isLoadingRules, setIsLoadingRules] = useState(false);
+    const [_isLoadingRules, setIsLoadingRules] = useState(false);
 
     // Load named rules from API
     useEffect(() => {

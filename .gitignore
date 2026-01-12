@@ -64,3 +64,5 @@ __pycache__/
 # Status/tracking files
 OnBoardingRite_Status.xlsx
 feature_status.csv
+
+myenv/

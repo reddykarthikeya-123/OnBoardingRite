@@ -16,7 +16,7 @@ interface EligibilityCriteriaBuilderProps {
  */
 export function EligibilityCriteriaBuilder({
     criteria: initialCriteria,
-    context,
+    context: _context,
     onChange,
     showNameDescription = true,
 }: EligibilityCriteriaBuilderProps) {
@@ -74,20 +74,6 @@ export function EligibilityCriteriaBuilder({
             rootGroup,
             updatedAt: new Date().toISOString(),
         }));
-    };
-
-    // Get context label
-    const getContextLabel = () => {
-        switch (context) {
-            case 'TEMPLATE':
-                return 'Template';
-            case 'TASK_GROUP':
-                return 'Task Group';
-            case 'TASK':
-                return 'Task';
-            default:
-                return '';
-        }
     };
 
     return (

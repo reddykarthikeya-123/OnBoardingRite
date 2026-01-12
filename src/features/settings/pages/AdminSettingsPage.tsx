@@ -13,8 +13,7 @@ import {
     AlertCircle,
     Shield,
     Mail,
-    Calendar,
-    MoreVertical
+    Calendar
 } from 'lucide-react';
 import { Card, CardBody, Button, Badge, Modal } from '../../../components/ui';
 import { adminApi } from '../../../services/api';

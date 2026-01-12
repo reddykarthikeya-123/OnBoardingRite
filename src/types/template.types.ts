@@ -10,6 +10,7 @@ export interface ChecklistTemplate {
     isActive: boolean;
     taskGroups: TaskGroup[];
     eligibilityCriteriaId?: string; // Reference to EligibilityCriteria
+    eligibilityRules?: { field: string; operator: string; value: string }[]; // Legacy field
     createdAt: string;
     updatedAt: string;
     createdBy: string;

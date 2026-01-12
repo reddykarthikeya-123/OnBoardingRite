@@ -17,10 +17,10 @@ interface EligibilityCriteriaBadgeProps {
  * If only `criteriaId` is provided without `criteria`, an empty badge is shown.
  */
 export function EligibilityCriteriaBadge({
-    criteriaId,
+    criteriaId: _criteriaId,
     criteria,
     onClick,
-    showDetails = false,
+    showDetails: _showDetails = false,
 }: EligibilityCriteriaBadgeProps) {
     if (!criteria) {
         return (

@@ -7,8 +7,7 @@ import {
     Upload,
     Zap,
     ExternalLink,
-    Check,
-    Loader2
+    Check
 } from 'lucide-react';
 import { Modal, Button, Badge } from '../../../components/ui';
 import {
@@ -93,7 +92,7 @@ export function AddTaskToGroupModal({
     };
 
     const [libraryTasks, setLibraryTasks] = useState<Task[]>([]);
-    const [isLoadingTasks, setIsLoadingTasks] = useState(false);
+    const [_isLoadingTasks, setIsLoadingTasks] = useState(false);
 
     // Load tasks from API when modal opens
     useEffect(() => {

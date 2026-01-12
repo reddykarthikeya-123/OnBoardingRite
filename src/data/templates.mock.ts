@@ -1,6 +1,6 @@
-import type { ChecklistTemplate, TaskGroup } from '../types';
+import type { ChecklistTemplate } from '../types';
 
-const standardTaskGroups: TaskGroup[] = [
+const standardTaskGroups: any[] = [
     {
         id: 'tg-001',
         name: 'Required Forms',
@@ -51,7 +51,7 @@ const standardTaskGroups: TaskGroup[] = [
     },
 ];
 
-const dodTaskGroups: TaskGroup[] = [
+const dodTaskGroups: any[] = [
     ...standardTaskGroups,
     {
         id: 'tg-007',

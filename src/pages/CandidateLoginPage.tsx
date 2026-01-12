@@ -6,7 +6,7 @@ import './auth.css';
 
 export function CandidateLoginPage() {
     const navigate = useNavigate();
-    const { login, user } = useAuth();
+    const { login, user: _user } = useAuth();
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');

@@ -36,7 +36,6 @@ const ROLE_KEY = 'onboardrite_role';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const navigate = useNavigate();
-    const location = useLocation();
 
     const [state, setState] = useState<AuthState>({
         isAuthenticated: false,
@@ -52,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const checkAuth = async () => {
             const token = localStorage.getItem(TOKEN_KEY);
             const savedUser = localStorage.getItem(USER_KEY);
-            const savedRole = localStorage.getItem(ROLE_KEY);
+
 
             if (token && savedUser) {
                 try {

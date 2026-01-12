@@ -101,7 +101,7 @@ export interface FormField {
     id: string;
     name: string;
     label: string;
-    type: 'TEXT' | 'TEXTAREA' | 'NUMBER' | 'EMAIL' | 'PHONE' | 'DATE' | 'SELECT' | 'MULTI_SELECT' | 'RADIO' | 'CHECKBOX';
+    type: 'TEXT' | 'TEXTAREA' | 'NUMBER' | 'EMAIL' | 'PHONE' | 'DATE' | 'SELECT' | 'MULTI_SELECT' | 'RADIO' | 'CHECKBOX' | 'FILE' | 'SIGNATURE';
     required: boolean;
     placeholder?: string;
     helpText?: string;
@@ -121,8 +121,9 @@ export interface TaskGroup {
     description?: string;
     category: TaskCategory;
     order: number;
-    tasks: Task[]; // Full Task objects
+    tasks: Task[];
     eligibilityCriteriaId?: string; // Reference to EligibilityCriteria
+    eligibilityRules?: { field: string; operator: string; value: string }[]; // Legacy field
 }
 
 // Note: EligibilityRule is now defined in eligibility.types.ts with comprehensive support

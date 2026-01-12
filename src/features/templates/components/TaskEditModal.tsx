@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FileText, Upload, Zap, ExternalLink } from 'lucide-react';
-import { Modal, Button, Badge } from '../../../components/ui';
+import { Modal, Button } from '../../../components/ui';
 import type { Task, TaskType } from '../../../types';
 
 interface TaskEditModalProps {

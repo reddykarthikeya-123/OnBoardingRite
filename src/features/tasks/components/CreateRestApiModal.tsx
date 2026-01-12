@@ -5,11 +5,8 @@ import {
     Key,
     Code,
     RefreshCw,
-    CheckCircle,
     Info,
-    Shield,
-    Plus,
-    Trash2
+    Shield
 } from 'lucide-react';
 import { Modal, Button, Badge } from '../../../components/ui';
 import { CollapsibleSection } from './CollapsibleSection';

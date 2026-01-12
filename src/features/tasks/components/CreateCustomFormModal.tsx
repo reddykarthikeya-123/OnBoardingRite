@@ -26,7 +26,9 @@ import {
     Phone,
     Calendar,
     ListOrdered,
-    CheckSquare
+    CheckSquare,
+    Upload,
+    PenTool
 } from 'lucide-react';
 import { Modal, Button, Badge } from '../../../components/ui';
 import { CollapsibleSection } from './CollapsibleSection';
@@ -62,6 +64,8 @@ const fieldTypeConfig: Record<FormField['type'], { icon: React.ReactNode; label:
     MULTI_SELECT: { icon: <ListOrdered size={16} />, label: 'Multi-Select', description: 'Multiple selection' },
     RADIO: { icon: <CheckSquare size={16} />, label: 'Radio', description: 'Single choice options' },
     CHECKBOX: { icon: <CheckSquare size={16} />, label: 'Checkbox', description: 'Yes/No checkbox' },
+    FILE: { icon: <Upload size={16} />, label: 'File Upload', description: 'File upload field' },
+    SIGNATURE: { icon: <PenTool size={16} />, label: 'Signature', description: 'Digital signature capture' },
 };
 
 const generateId = () => `field_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
