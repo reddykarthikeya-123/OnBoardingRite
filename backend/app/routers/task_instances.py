@@ -707,6 +707,14 @@ def reject_task_instance(
     if not data.remarks or len(data.remarks.strip()) == 0:
         raise HTTPException(status_code=400, detail="Rejection remarks are required")
     
+    # Clean up associated documents (orphans)
+    documents = db.query(Document).filter(Document.task_instance_id == instance_id).all()
+    for doc in documents:
+        db.delete(doc)
+
+    # Clear form data
+    ti.result = None
+    
     ti.review_status = 'REJECTED'
     ti.admin_remarks = data.remarks.strip()
     ti.reviewed_by = uuid_lib.UUID(data.reviewedBy)
