@@ -1,8 +1,22 @@
 import { useState, useEffect } from 'react';
 import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent
+} from '@dnd-kit/core';
+import {
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+    arrayMove
+} from '@dnd-kit/sortable';
+import {
     FileText,
     Plus,
-    GripVertical,
     Settings,
     Trash2,
     Type,
@@ -12,12 +26,11 @@ import {
     Phone,
     Calendar,
     ListOrdered,
-    CheckSquare,
-    ChevronDown,
-    ChevronUp
+    CheckSquare
 } from 'lucide-react';
 import { Modal, Button, Badge } from '../../../components/ui';
 import { CollapsibleSection } from './CollapsibleSection';
+import { SortableFieldItem } from './SortableFieldItem';
 import type { FormField, TaskCategory } from '../../../types';
 
 interface CreateCustomFormModalProps {
@@ -48,7 +61,6 @@ const fieldTypeConfig: Record<FormField['type'], { icon: React.ReactNode; label:
     SELECT: { icon: <ListOrdered size={16} />, label: 'Dropdown', description: 'Single select dropdown' },
     MULTI_SELECT: { icon: <ListOrdered size={16} />, label: 'Multi-Select', description: 'Multiple selection' },
     RADIO: { icon: <CheckSquare size={16} />, label: 'Radio', description: 'Single choice options' },
-    CHECKBOX: { icon: <CheckSquare size={16} />, label: 'Checkbox', description: 'Yes/No checkbox' },
     CHECKBOX: { icon: <CheckSquare size={16} />, label: 'Checkbox', description: 'Yes/No checkbox' },
 };
 
@@ -145,10 +157,29 @@ export function CreateCustomFormModal({
         if (direction === 'up' && index === 0) return;
         if (direction === 'down' && index === formFields.length - 1) return;
 
-        const newFields = [...formFields];
-        const swapIndex = direction === 'up' ? index - 1 : index + 1;
-        [newFields[index], newFields[swapIndex]] = [newFields[swapIndex], newFields[index]];
-        setFormFields(newFields);
+        const newIndex = direction === 'up' ? index - 1 : index + 1;
+        setFormFields(arrayMove(formFields, index, newIndex));
+    };
+
+    // Drag and drop sensors
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (over && active.id !== over.id) {
+            const oldIndex = formFields.findIndex(f => f.id === active.id);
+            const newIndex = formFields.findIndex(f => f.id === over.id);
+            setFormFields(arrayMove(formFields, oldIndex, newIndex));
+        }
     };
 
     const updateFieldOption = (fieldId: string, optionIndex: number, updates: { value?: string; label?: string }) => {
@@ -310,60 +341,36 @@ export function CreateCustomFormModal({
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="field-list">
-                                        {formFields.map((field, index) => {
-                                            const config = fieldTypeConfig[field.type];
-                                            const isSelected = field.id === selectedFieldId;
-                                            return (
-                                                <div
-                                                    key={field.id}
-                                                    className={`field-list-item ${isSelected ? 'selected' : ''}`}
-                                                    onClick={() => setSelectedFieldId(field.id)}
-                                                >
-                                                    <div className="field-list-item-drag">
-                                                        <GripVertical size={14} />
-                                                    </div>
-                                                    <div className="field-list-item-icon">
-                                                        {config.icon}
-                                                    </div>
-                                                    <div className="field-list-item-content">
-                                                        <div className="field-list-item-label">{field.label}</div>
-                                                        <div className="field-list-item-type">{config.label}</div>
-                                                    </div>
-                                                    <div className="field-list-item-badges">
-                                                        {field.required && (
-                                                            <Badge variant="danger">Required</Badge>
-                                                        )}
-                                                    </div>
-                                                    <div className="field-list-item-actions">
-                                                        <button
-                                                            type="button"
-                                                            className="btn btn-ghost btn-icon btn-sm"
-                                                            onClick={(e) => { e.stopPropagation(); moveField(field.id, 'up'); }}
-                                                            disabled={index === 0}
-                                                        >
-                                                            <ChevronUp size={14} />
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            className="btn btn-ghost btn-icon btn-sm"
-                                                            onClick={(e) => { e.stopPropagation(); moveField(field.id, 'down'); }}
-                                                            disabled={index === formFields.length - 1}
-                                                        >
-                                                            <ChevronDown size={14} />
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            className="btn btn-ghost btn-icon btn-sm field-delete-btn"
-                                                            onClick={(e) => { e.stopPropagation(); removeField(field.id); }}
-                                                        >
-                                                            <Trash2 size={14} />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
+                                    <DndContext
+                                        sensors={sensors}
+                                        collisionDetection={closestCenter}
+                                        onDragEnd={handleDragEnd}
+                                    >
+                                        <SortableContext
+                                            items={formFields.map(f => f.id)}
+                                            strategy={verticalListSortingStrategy}
+                                        >
+                                            <div className="field-list">
+                                                {formFields.map((field, index) => {
+                                                    const config = fieldTypeConfig[field.type];
+                                                    return (
+                                                        <SortableFieldItem
+                                                            key={field.id}
+                                                            field={field}
+                                                            index={index}
+                                                            totalFields={formFields.length}
+                                                            isSelected={field.id === selectedFieldId}
+                                                            config={config}
+                                                            onSelect={() => setSelectedFieldId(field.id)}
+                                                            onMoveUp={() => moveField(field.id, 'up')}
+                                                            onMoveDown={() => moveField(field.id, 'down')}
+                                                            onRemove={() => removeField(field.id)}
+                                                        />
+                                                    );
+                                                })}
+                                            </div>
+                                        </SortableContext>
+                                    </DndContext>
                                 )}
 
                                 {formFields.length > 0 && (
