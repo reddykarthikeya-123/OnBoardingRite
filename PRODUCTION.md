@@ -44,14 +44,17 @@ The application requires a PostgreSQL database.
     DEBUG=False
     
     # Database Configuration
-    POSTGRES_HOST=129.213.36.70
+    POSTGRES_HOST=YOUR_DATABASE_HOST
     POSTGRES_PORT=5432
-    POSTGRES_DB=postgres
-    POSTGRES_USER=riteonboard
+    POSTGRES_DB=YOUR_DATABASE_NAME
+    POSTGRES_USER=YOUR_DATABASE_USER
     POSTGRES_PASSWORD=YOUR_SECURE_PASSWORD
 
-    # Security (Generate a strong random string)
+    # Security (Generate a strong random string: openssl rand -hex 32)
     JWT_SECRET=CHANGE_THIS_TO_A_VERY_LONG_RANDOM_STRING
+
+    # CORS - Frontend Origins (add your production frontend URL)
+    FRONTEND_ORIGINS=http://localhost:9009,https://YOUR_PRODUCTION_DOMAIN.com
     ```
 
 3.  **Initialize Schema**:
