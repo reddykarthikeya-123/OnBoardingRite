@@ -194,7 +194,7 @@ export function CandidateTaskFormPage() {
 
             setSubmitSuccess(true);
             setTimeout(() => {
-                navigate(`/candidate-v2/tasks?assignmentId=${assignmentId}`);
+                navigate(`/candidate/tasks?assignmentId=${assignmentId}`);
             }, 2000);
         } catch (err) {
             console.error('Failed to submit:', err);
@@ -245,7 +245,7 @@ export function CandidateTaskFormPage() {
 
             // Navigate back after short delay
             setTimeout(() => {
-                navigate(`/candidate-v2/tasks?assignmentId=${assignmentId}`);
+                navigate(`/candidate/tasks?assignmentId=${assignmentId}`);
             }, 2000);
         } catch (err) {
             console.error('Failed to submit form:', err);
@@ -608,14 +608,14 @@ export function CandidateTaskFormPage() {
             <nav className="candidate-v2-bottom-nav">
                 <button
                     className="candidate-v2-nav-item"
-                    onClick={() => navigate(`/candidate-v2?assignmentId=${assignmentId}`)}
+                    onClick={() => navigate(`/candidate?assignmentId=${assignmentId}`)}
                 >
                     <Sparkles size={22} />
                     <span>Home</span>
                 </button>
                 <button
                     className="candidate-v2-nav-item active"
-                    onClick={() => navigate(`/candidate-v2/tasks?assignmentId=${assignmentId}`)}
+                    onClick={() => navigate(`/candidate/tasks?assignmentId=${assignmentId}`)}
                 >
                     <FileText size={22} />
                     <span>Tasks</span>

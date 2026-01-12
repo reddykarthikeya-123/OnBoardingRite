@@ -61,7 +61,7 @@ export function CandidateTasksV3Page() {
             <header className="tasks-v3-header">
                 <button
                     className="tasks-v3-back"
-                    onClick={() => navigate('/candidate-v2')}
+                    onClick={() => navigate('/candidate')}
                 >
                     <ArrowLeft size={20} />
                 </button>

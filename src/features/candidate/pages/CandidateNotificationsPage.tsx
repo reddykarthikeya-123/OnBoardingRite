@@ -18,7 +18,7 @@ export function CandidateNotificationsPage() {
             <header className="candidate-notifications-header">
                 <button
                     className="candidate-v2-back-btn"
-                    onClick={() => navigate('/candidate-v2')}
+                    onClick={() => navigate('/candidate')}
                 >
                     <ArrowLeft size={22} />
                 </button>
@@ -40,14 +40,14 @@ export function CandidateNotificationsPage() {
             <nav className="candidate-v2-bottom-nav">
                 <button
                     className="candidate-v2-nav-item"
-                    onClick={() => navigate('/candidate-v2')}
+                    onClick={() => navigate('/candidate')}
                 >
                     <Sparkles size={22} />
                     <span>Home</span>
                 </button>
                 <button
                     className="candidate-v2-nav-item"
-                    onClick={() => navigate('/candidate-v2/tasks')}
+                    onClick={() => navigate('/candidate/tasks')}
                 >
                     <FileText size={22} />
                     <span>Tasks</span>

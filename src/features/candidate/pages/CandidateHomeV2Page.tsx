@@ -290,7 +290,7 @@ export function CandidateHomeV2Page() {
                     <h2 className="candidate-v2-section-title">Categories</h2>
                     <button
                         className="candidate-v2-view-all"
-                        onClick={() => navigate(`/candidate-v2/tasks?assignmentId=${assignmentId}`)}
+                        onClick={() => navigate(`/candidate/tasks?assignmentId=${assignmentId}`)}
                     >
                         View All
                     </button>
@@ -308,7 +308,7 @@ export function CandidateHomeV2Page() {
                             <button
                                 key={category.id}
                                 className="candidate-v2-category-card"
-                                onClick={() => navigate(`/candidate-v2/tasks?category=${category.id}&assignmentId=${assignmentId}`)}
+                                onClick={() => navigate(`/candidate/tasks?category=${category.id}&assignmentId=${assignmentId}`)}
                                 style={{ animationDelay: `${index * 75}ms` }}
                             >
                                 <div className={`candidate-v2-category-icon ${category.id}`}>
@@ -342,7 +342,7 @@ export function CandidateHomeV2Page() {
                 </button>
                 <button
                     className="candidate-v2-nav-item"
-                    onClick={() => navigate(`/candidate-v2/tasks?assignmentId=${assignmentId}`)}
+                    onClick={() => navigate(`/candidate/tasks?assignmentId=${assignmentId}`)}
                 >
                     <FileText size={22} />
                     <span>Tasks</span>

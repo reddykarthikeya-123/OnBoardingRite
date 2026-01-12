@@ -278,7 +278,7 @@ export function CandidateTasksV2Page() {
             <nav className="candidate-v2-bottom-nav">
                 <button
                     className="candidate-v2-nav-item"
-                    onClick={() => navigate(`/candidate-v2?assignmentId=${assignmentId}`)}
+                    onClick={() => navigate(`/candidate?assignmentId=${assignmentId}`)}
                 >
                     <Sparkles size={22} />
                     <span>Home</span>
