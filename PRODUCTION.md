@@ -15,9 +15,10 @@ Extract the provided zip file. The structure should look like this:
 ```
 /root-dir
   ├── backend/          # FastAPI application
-  ├── src/              # React frontend source
-  ├── package.json      # Frontend dependencies
-  ├── vite.config.ts    # Frontend build config
+  ├── frontend/         # React frontend source
+  │   ├── src/          # React source code
+  │   ├── package.json  # Frontend dependencies
+  │   └── vite.config.ts# Frontend build config
   ├── schema_ddl.sql    # Database Schema
   └── ...
 ```
@@ -93,7 +94,8 @@ The application requires a PostgreSQL database.
 
 1.  **Install Dependencies**:
     ```bash
-    # From the root directory (where package.json is)
+    # Navigate to the frontend directory
+    cd frontend
     npm install
     ```
     *Note: This also installs 'serve', a static file server.*
@@ -103,7 +105,7 @@ The application requires a PostgreSQL database.
     ```bash
     npm run build
     ```
-    The output will be created in the `dist/` directory.
+    The output will be created in the `frontend/dist/` directory.
 
 3.  **Serve the Application**:
     You can serve the `dist/` folder using `npx serve`. The `-l` (listen) flag allows you to configure the port.
@@ -115,7 +117,7 @@ The application requires a PostgreSQL database.
     ```
 
     **Option B: Nginx (Recommended)**
-    Configure Nginx to point to the `dist` folder and proxy `/api` requests to the backend.
+    Configure Nginx to point to the `frontend/dist` folder and proxy `/api` requests to the backend.
 
     ```nginx
     server {
@@ -123,7 +125,7 @@ The application requires a PostgreSQL database.
         server_name your-domain.com;
 
         location / {
-            root /path/to/app/dist;
+            root /path/to/app/frontend/dist;
             try_files $uri $uri/ /index.html;
         }
 

@@ -13,7 +13,7 @@ from pathlib import Path
 # Get project root directory
 PROJECT_ROOT = Path(__file__).parent.absolute()
 BACKEND_DIR = PROJECT_ROOT / "backend"
-FRONTEND_DIR = PROJECT_ROOT
+FRONTEND_DIR = PROJECT_ROOT / "frontend"
 
 # Ports used by the dev servers
 BACKEND_PORT = 9000
