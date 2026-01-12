@@ -229,12 +229,12 @@ export function SubmittedTaskViewer({
             </div>
 
             {/* Admin Review Actions */}
-            {isAdmin && onApprove && onReject && reviewStatus !== 'APPROVED' && (
+            {isAdmin && onApprove && onReject && (
                 <div className="review-actions">
                     <button
                         className="review-btn approve-btn"
                         onClick={handleApprove}
-                        disabled={isApproving || isRejecting}
+                        disabled={isApproving || isRejecting || reviewStatus === 'APPROVED'}
                     >
                         {isApproving ? <Loader2 size={16} className="spin" /> : <CheckCircle size={16} />}
                         Approve
