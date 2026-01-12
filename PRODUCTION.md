@@ -1,6 +1,6 @@
 # Production Deployment Guide
 
-Server deployment instructions for the OnBoardingRite application (FastAPI Backend + React Frontend).
+Server deployment instructions for the OnBoardingRite application.
 
 ---
 
@@ -12,73 +12,62 @@ Server deployment instructions for the OnBoardingRite application (FastAPI Backe
 
 ---
 
-## 1. Backend Deployment
+## Quick Start (Single Configuration File)
 
-### 1.1 Configure Environment
+### Step 1: Configure Environment
 
-Create `backend/.env`:
+Copy `.env.example` to `.env` at the project root and fill in your values:
+
 ```env
-APP_NAME=OnBoarding App
-DEBUG=False
-
 # Database
-POSTGRES_HOST=YOUR_DATABASE_HOST
+POSTGRES_HOST=your-database-host
 POSTGRES_PORT=5432
-POSTGRES_DB=YOUR_DATABASE_NAME
-POSTGRES_USER=YOUR_DATABASE_USER
-POSTGRES_PASSWORD=YOUR_SECURE_PASSWORD
+POSTGRES_DB=your-database-name
+POSTGRES_USER=your-database-user
+POSTGRES_PASSWORD=your-password
 
 # Security (generate with: openssl rand -hex 32)
-JWT_SECRET=YOUR_SECURE_RANDOM_STRING
+JWT_SECRET=your-secure-random-string
 
-# CORS - Add your production frontend URL
-FRONTEND_ORIGINS=https://YOUR_PRODUCTION_DOMAIN.com
+# URLs (only change if not using defaults)
+BACKEND_URL=http://localhost:9000/api/v1
+FRONTEND_URL=http://localhost:9009
 ```
 
-### 1.2 Install & Run
+> **Note:** For same-server deployment with default ports, you only need to set the database credentials and JWT_SECRET. The URL defaults will work.
+
+### Step 2: Build
 
 ```bash
+python build_production.py
+```
+
+This script:
+- Reads your root `.env` file
+- Auto-generates `backend/.env`
+- Builds the frontend with correct API URL
+
+### Step 3: Run
+
+**Terminal 1 - Backend:**
+```bash
 cd backend
-python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-
-# Initialize database (first-time only - DROPS existing tables)
-python scripts/setup_remote_db.py
-
-# Start server
+python scripts/setup_remote_db.py  # First-time only
 uvicorn app.main:app --host 0.0.0.0 --port 9000
 ```
 
-**Recommendation:** Use PM2 or Systemd to keep the backend running.
-
----
-
-## 2. Frontend Deployment
-
-### 2.1 Build
-
+**Terminal 2 - Frontend:**
 ```bash
 cd frontend
-npm install
-npm run build
-```
-
-> **Note:** If both frontend and backend run on the **same server**, no additional configuration is needed. The frontend defaults to `http://localhost:9000/api/v1`.
->
-> Only set `VITE_API_URL` if backend is on a **different server**:
-> ```bash
-> VITE_API_URL=https://api.yourdomain.com/api/v1 npm run build
-> ```
-
-### 2.2 Serve
-
-**Option A: Using serve**
-```bash
 npx serve -s dist -l 9009
 ```
 
-**Option B: Nginx (Recommended)**
+---
+
+## Alternative: Nginx Configuration
+
 ```nginx
 server {
     listen 80;
@@ -99,9 +88,9 @@ server {
 
 ---
 
-## 3. Verification
+## Verification
 
-- **Frontend**: `http://<server-ip>:9009` (or port 80 with Nginx)
+- **Frontend**: `http://<server-ip>:9009`
 - **Backend API Docs**: `http://<server-ip>:9000/docs`
 
 ---
@@ -111,5 +100,5 @@ server {
 | Issue | Solution |
 |-------|----------|
 | Database connection fails | Verify `.env` credentials and firewall allows port 5432 |
-| CORS errors | Add frontend URL to `FRONTEND_ORIGINS` in `.env` |
+| CORS errors | Add frontend URL to `FRONTEND_URL` in `.env` and rebuild |
 | Login fails | Ensure `JWT_SECRET` is set and consistent |
