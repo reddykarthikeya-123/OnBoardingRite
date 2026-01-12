@@ -179,8 +179,15 @@ def submit_form(
     ti.status = 'COMPLETED'
     ti.completed_at = datetime.utcnow()
     
+    
     if not ti.started_at:
         ti.started_at = datetime.utcnow()
+        
+    # Reset review status on new submission
+    ti.review_status = 'PENDING_REVIEW'
+    ti.admin_remarks = None
+    ti.reviewed_by = None
+    ti.reviewed_at = None
     
     db.commit()
     db.refresh(ti)
@@ -230,8 +237,15 @@ def complete_document_upload(
     ti.status = 'COMPLETED'
     ti.completed_at = datetime.utcnow()
     
+    
     if not ti.started_at:
         ti.started_at = datetime.utcnow()
+
+    # Reset review status on new submission
+    ti.review_status = 'PENDING_REVIEW'
+    ti.admin_remarks = None
+    ti.reviewed_by = None
+    ti.reviewed_at = None
     
     db.commit()
     

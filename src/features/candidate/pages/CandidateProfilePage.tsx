@@ -327,7 +327,7 @@ export function CandidateProfilePage() {
                                         onClick={() => setViewTask(task)}
                                     >
                                         <div className={`profile-v2-submission-icon ${task.reviewStatus === 'APPROVED' ? 'approved' :
-                                                task.reviewStatus === 'REJECTED' ? 'rejected' : ''
+                                            task.reviewStatus === 'REJECTED' ? 'rejected' : ''
                                             }`}>
                                             {task.reviewStatus === 'APPROVED' ? (
                                                 <CheckCircle size={18} />
@@ -342,13 +342,14 @@ export function CandidateProfilePage() {
                                             <span className="profile-v2-submission-date">
                                                 {task.reviewStatus === 'APPROVED' ? 'Approved' :
                                                     task.reviewStatus === 'REJECTED' ? 'Rejected - Resubmit' :
-                                                        task.submittedAt
-                                                            ? new Date(task.submittedAt).toLocaleDateString('en-US', {
-                                                                month: 'short',
-                                                                day: 'numeric',
-                                                                year: 'numeric'
-                                                            })
-                                                            : 'Pending Review'}
+                                                        task.reviewStatus === 'PENDING_REVIEW' ? 'Pending Review' :
+                                                            task.submittedAt
+                                                                ? new Date(task.submittedAt).toLocaleDateString('en-US', {
+                                                                    month: 'short',
+                                                                    day: 'numeric',
+                                                                    year: 'numeric'
+                                                                })
+                                                                : 'Pending Review'}
                                             </span>
                                         </div>
                                         <ChevronRight size={18} className="profile-v2-submission-arrow" />
