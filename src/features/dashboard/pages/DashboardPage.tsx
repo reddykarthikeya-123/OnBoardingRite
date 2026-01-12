@@ -9,14 +9,6 @@ import {
     AlertCircle,
     ArrowRight,
     Filter,
-    Mail,
-    Phone,
-    Send,
-    MessageCircle,
-    MoreHorizontal,
-    CheckSquare,
-    Square,
-    Minus,
     FileText,
     ChevronRight,
     Loader2
@@ -56,97 +48,10 @@ function StatCard({ title, value, change, changeType, icon, iconColor }: StatCar
     );
 }
 
-// Mock last activity data
-const LAST_ACTIVITIES = [
-    'Completed W-4 form',
-    'Uploaded driver license',
-    'Started background check',
-    'Viewed safety training video',
-    'Signed I-9 form',
-    'Updated personal info',
-    'Completed drug screening consent',
-    'Downloaded dispatch sheet'
-];
-
-const getRandomLastActivity = (memberId: string) => {
-    const index = memberId.charCodeAt(memberId.length - 1) % LAST_ACTIVITIES.length;
-    const hoursAgo = Math.floor(Math.random() * 48) + 1;
-    return {
-        description: LAST_ACTIVITIES[index],
-        timeAgo: hoursAgo < 24 ? `${hoursAgo}h ago` : `${Math.floor(hoursAgo / 24)}d ago`
-    };
-};
-
-// Action button component
-const ActionButton = ({ icon, label, variant = 'default', onClick }: {
-    icon: React.ReactNode;
-    label: string;
-    variant?: 'default' | 'primary' | 'success' | 'warning';
-    onClick?: () => void;
-}) => (
-    <button
-        className={`action-icon-btn ${variant}`}
-        title={label}
-        onClick={(e) => {
-            e.stopPropagation();
-            onClick?.();
-        }}
-    >
-        {icon}
-    </button>
-);
-
-// Actions dropdown component
-const ActionsDropdown = ({ memberId }: { memberId: string }) => {
-    const [isOpen, setIsOpen] = useState(false);
-
-    const actions = [
-        { label: 'View Profile', action: () => console.log('View profile', memberId) },
-        { label: 'Edit Details', action: () => console.log('Edit', memberId) },
-        { label: 'Reassign Processor', action: () => console.log('Reassign', memberId) },
-        { label: 'View Task History', action: () => console.log('History', memberId) },
-        { label: 'Export Data', action: () => console.log('Export', memberId) },
-        { label: 'Remove from Project', action: () => console.log('Remove', memberId), danger: true }
-    ];
-
-    return (
-        <div className="actions-dropdown-wrapper">
-            <button
-                className="action-icon-btn"
-                onClick={(e) => {
-                    e.stopPropagation();
-                    setIsOpen(!isOpen);
-                }}
-            >
-                <MoreHorizontal size={16} />
-            </button>
-            {isOpen && (
-                <>
-                    <div className="actions-dropdown-backdrop" onClick={() => setIsOpen(false)} />
-                    <div className="actions-dropdown-menu">
-                        {actions.map((action, index) => (
-                            <button
-                                key={index}
-                                className={`actions-dropdown-item ${action.danger ? 'danger' : ''}`}
-                                onClick={() => {
-                                    action.action();
-                                    setIsOpen(false);
-                                }}
-                            >
-                                {action.label}
-                            </button>
-                        ))}
-                    </div>
-                </>
-            )}
-        </div>
-    );
-};
 
 export function DashboardPage() {
     const navigate = useNavigate();
     const [selectedProject, setSelectedProject] = useState<string>('project-001');
-    const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
 
     // Filter state
     const [showFilters, setShowFilters] = useState(false);
@@ -280,12 +185,6 @@ export function DashboardPage() {
         return { total: 0, completed: 0, inProgress: 0, blocked: 0, activeProjects: activeProjects.length };
     }, [apiStats, activeProjects.length]);
 
-    // Stats for selected project (used in table header)
-    const selectedProjectStats = useMemo(() => {
-        const members = projectMembers;
-        const blocked = members.filter((m: any) => m.taskInstances?.some((t: any) => t.status === 'BLOCKED')).length;
-        return { blocked };
-    }, [projectMembers]);
 
     const getStatusVariant = (status: string) => {
         switch (status) {
@@ -324,47 +223,6 @@ export function DashboardPage() {
         };
     };
 
-    // Selection handlers
-    const toggleMemberSelection = (memberId: string) => {
-        setSelectedMembers(prev => {
-            const next = new Set(prev);
-            if (next.has(memberId)) {
-                next.delete(memberId);
-            } else {
-                next.add(memberId);
-            }
-            return next;
-        });
-    };
-
-    const selectAllMembers = () => {
-        if (selectedMembers.size === filteredMembers.length) {
-            setSelectedMembers(new Set());
-        } else {
-            setSelectedMembers(new Set(filteredMembers.map(m => m.id)));
-        }
-    };
-
-    const handleSendReminder = (memberId: string, type: 'email' | 'sms' | 'both') => {
-        console.log(`Sending ${type} reminder to ${memberId}`);
-    };
-
-    const handleContact = (memberId: string, type: 'email' | 'phone') => {
-        console.log(`Contacting ${memberId} via ${type}`);
-    };
-
-    const handleChat = (memberId: string) => {
-        console.log(`Opening chat with ${memberId}`);
-    };
-
-    const handleMassCommunication = (type: 'email' | 'sms', recipients: 'selected' | 'all') => {
-        const targetMembers = recipients === 'all'
-            ? projectMembers
-            : projectMembers.filter(m => selectedMembers.has(m.id));
-        console.log(`Sending ${type} to ${targetMembers.length} members:`, targetMembers.map(m => m.email));
-        // In real app, would open a compose modal or call API
-        alert(`${type.toUpperCase()} will be sent to ${targetMembers.length} team member(s)`);
-    };
 
     const handleViewSubmissions = async (member: any) => {
         if (!selectedProject) return;
@@ -382,8 +240,6 @@ export function DashboardPage() {
         }
     };
 
-    const isAllSelected = selectedMembers.size === filteredMembers.length && filteredMembers.length > 0;
-    const isSomeSelected = selectedMembers.size > 0 && selectedMembers.size < filteredMembers.length;
 
     return (
         <div className="page-enter">
@@ -563,10 +419,7 @@ export function DashboardPage() {
                             return (
                                 <button
                                     key={project.id}
-                                    onClick={() => {
-                                        setSelectedProject(project.id);
-                                        setSelectedMembers(new Set()); // Clear selections when switching projects
-                                    }}
+                                    onClick={() => setSelectedProject(project.id)}
                                     className={`project-selector-card ${isSelected ? 'selected' : ''}`}
                                 >
                                     {isSelected && <div className="selected-indicator" />}
@@ -619,42 +472,12 @@ export function DashboardPage() {
                         </div>
                     </div>
 
-                    {/* Mass Communication Toolbar */}
+                    {/* Member Count */}
                     <div className="mass-comm-toolbar">
                         <div className="mass-comm-left">
                             <span className="mass-comm-count">
-                                {selectedMembers.size > 0
-                                    ? `${selectedMembers.size} of ${filteredMembers.length} selected`
-                                    : `${filteredMembers.length} team member${filteredMembers.length !== 1 ? 's' : ''}${activeFilterCount > 0 ? ' (filtered)' : ''}`
-                                }
+                                {`${filteredMembers.length} team member${filteredMembers.length !== 1 ? 's' : ''}${activeFilterCount > 0 ? ' (filtered)' : ''}`}
                             </span>
-                        </div>
-                        <div className="mass-comm-actions">
-                            <Button
-                                variant="secondary"
-                                size="sm"
-                                leftIcon={<Mail size={14} />}
-                                onClick={() => handleMassCommunication('email', selectedMembers.size > 0 ? 'selected' : 'all')}
-                            >
-                                {selectedMembers.size > 0 ? `Email Selected (${selectedMembers.size})` : 'Email All'}
-                            </Button>
-                            <Button
-                                variant="secondary"
-                                size="sm"
-                                leftIcon={<Send size={14} />}
-                                onClick={() => handleMassCommunication('sms', selectedMembers.size > 0 ? 'selected' : 'all')}
-                            >
-                                {selectedMembers.size > 0 ? `SMS Selected (${selectedMembers.size})` : 'SMS All'}
-                            </Button>
-                            {selectedMembers.size > 0 && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setSelectedMembers(new Set())}
-                                >
-                                    Clear Selection
-                                </Button>
-                            )}
                         </div>
                     </div>
 
@@ -662,17 +485,6 @@ export function DashboardPage() {
                         <table className="table members-detailed-table">
                             <thead>
                                 <tr>
-                                    <th className="checkbox-col">
-                                        <button
-                                            className="table-checkbox"
-                                            onClick={selectAllMembers}
-                                            title={isAllSelected ? "Deselect all" : "Select all"}
-                                        >
-                                            {isAllSelected ? <CheckSquare size={18} /> :
-                                                isSomeSelected ? <Minus size={18} /> :
-                                                    <Square size={18} />}
-                                        </button>
-                                    </th>
                                     <th>Team Member</th>
                                     <th>Trade</th>
                                     <th>Category</th>
@@ -683,17 +495,13 @@ export function DashboardPage() {
                                     <th>Compliance</th>
                                     <th>Training</th>
                                     <th>Processor</th>
-                                    <th className="communication-col">Reminder</th>
-                                    <th className="communication-col">Contact</th>
-                                    <th className="communication-col">Chat</th>
-                                    <th>Last Activity</th>
-                                    <th className="actions-col">Actions</th>
+                                    <th>Submissions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredMembers.length === 0 ? (
                                     <tr>
-                                        <td colSpan={16} className="empty-message">
+                                        <td colSpan={11} className="empty-message">
                                             <div className="empty-state-inline">
                                                 <AlertCircle size={20} />
                                                 <span>{activeFilterCount > 0 ? 'No members match the current filters' : 'No team members in this project yet'}</span>
@@ -703,19 +511,9 @@ export function DashboardPage() {
                                 ) : (
                                     filteredMembers.map((member) => {
                                         const categoryStats = getTaskCategoryStats(member);
-                                        const lastActivity = getRandomLastActivity(member.id);
-                                        const isSelected = selectedMembers.has(member.id);
 
                                         return (
-                                            <tr key={member.id} className={`cursor-pointer ${isSelected ? 'row-selected' : ''}`}>
-                                                <td className="checkbox-col">
-                                                    <button
-                                                        className="table-checkbox"
-                                                        onClick={() => toggleMemberSelection(member.id)}
-                                                    >
-                                                        {isSelected ? <CheckSquare size={18} /> : <Square size={18} />}
-                                                    </button>
-                                                </td>
+                                            <tr key={member.id}>
                                                 <td>
                                                     <div className="flex items-center gap-3">
                                                         <div className="avatar avatar-sm">
@@ -773,60 +571,15 @@ export function DashboardPage() {
                                                 <td>
                                                     <span className="text-sm text-secondary">{member.assignedProcessorName}</span>
                                                 </td>
-                                                <td className="communication-col">
-                                                    <div className="communication-actions">
-                                                        <ActionButton
-                                                            icon={<Mail size={14} />}
-                                                            label="Send Email Reminder"
-                                                            variant="primary"
-                                                            onClick={() => handleSendReminder(member.id, 'email')}
-                                                        />
-                                                        <ActionButton
-                                                            icon={<Send size={14} />}
-                                                            label="Send SMS Reminder"
-                                                            variant="success"
-                                                            onClick={() => handleSendReminder(member.id, 'sms')}
-                                                        />
-                                                    </div>
-                                                </td>
-                                                <td className="communication-col">
-                                                    <div className="communication-actions">
-                                                        <ActionButton
-                                                            icon={<Mail size={14} />}
-                                                            label="Email Contact"
-                                                            onClick={() => handleContact(member.id, 'email')}
-                                                        />
-                                                        <ActionButton
-                                                            icon={<Phone size={14} />}
-                                                            label="Phone Contact"
-                                                            onClick={() => handleContact(member.id, 'phone')}
-                                                        />
-                                                    </div>
-                                                </td>
-                                                <td className="communication-col">
-                                                    <ActionButton
-                                                        icon={<MessageCircle size={16} />}
-                                                        label="Open In-App Chat"
-                                                        variant="primary"
-                                                        onClick={() => handleChat(member.id)}
-                                                    />
-                                                </td>
                                                 <td>
-                                                    <div className="last-activity">
-                                                        <span className="activity-text">{lastActivity.description}</span>
-                                                        <span className="activity-time">{lastActivity.timeAgo}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="actions-col">
-                                                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                                                        <ActionButton
-                                                            icon={<FileText size={14} />}
-                                                            label="View Submitted Forms"
-                                                            variant="primary"
-                                                            onClick={() => handleViewSubmissions(member)}
-                                                        />
-                                                        <ActionsDropdown memberId={member.id} />
-                                                    </div>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        leftIcon={<FileText size={14} />}
+                                                        onClick={() => handleViewSubmissions(member)}
+                                                    >
+                                                        View
+                                                    </Button>
                                                 </td>
                                             </tr>
                                         );
