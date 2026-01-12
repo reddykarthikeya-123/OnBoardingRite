@@ -4,7 +4,7 @@
 -- =============================================
 
 -- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+-- CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- =============================================
 -- 1. or_clients TABLE
@@ -21,8 +21,8 @@ CREATE TABLE or_clients (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_clients_code ON or_clients(code);
-CREATE INDEX idx_clients_active ON or_clients(is_active);
+CREATE INDEX IF NOT EXISTS idx_clients_code ON or_clients(code);
+CREATE INDEX IF NOT EXISTS idx_clients_active ON or_clients(is_active);
 
 -- =============================================
 -- 2. or_users TABLE (HR Staff, Processors, Admins)
@@ -40,9 +40,9 @@ CREATE TABLE or_users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_users_email ON or_users(email);
-CREATE INDEX idx_users_role ON or_users(role);
-CREATE INDEX idx_users_active ON or_users(is_active);
+CREATE INDEX IF NOT EXISTS idx_users_email ON or_users(email);
+CREATE INDEX IF NOT EXISTS idx_users_role ON or_users(role);
+CREATE INDEX IF NOT EXISTS idx_users_active ON or_users(is_active);
 
 -- =============================================
 -- 3. ELIGIBILITY CRITERIA TABLE
@@ -57,7 +57,7 @@ CREATE TABLE or_eligibility_criteria (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_eligibility_active ON or_eligibility_criteria(is_active);
+CREATE INDEX IF NOT EXISTS idx_eligibility_active ON or_eligibility_criteria(is_active);
 
 -- =============================================
 -- 4. ELIGIBILITY RULES TABLE
@@ -83,9 +83,9 @@ CREATE TABLE or_eligibility_rules (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_eligibility_rules_criteria ON or_eligibility_rules(criteria_id);
-CREATE INDEX idx_eligibility_rules_parent ON or_eligibility_rules(parent_group_id);
-CREATE INDEX idx_eligibility_rules_type ON or_eligibility_rules(rule_type);
+CREATE INDEX IF NOT EXISTS idx_eligibility_rules_criteria ON or_eligibility_rules(criteria_id);
+CREATE INDEX IF NOT EXISTS idx_eligibility_rules_parent ON or_eligibility_rules(parent_group_id);
+CREATE INDEX IF NOT EXISTS idx_eligibility_rules_type ON or_eligibility_rules(rule_type);
 
 -- =============================================
 -- 5. CHECKLIST TEMPLATES TABLE
@@ -103,9 +103,9 @@ CREATE TABLE or_checklist_templates (
     created_by UUID REFERENCES or_users(id)
 );
 
-CREATE INDEX idx_templates_client ON or_checklist_templates(client_id);
-CREATE INDEX idx_templates_active ON or_checklist_templates(is_active);
-CREATE INDEX idx_templates_eligibility ON or_checklist_templates(eligibility_criteria_id);
+CREATE INDEX IF NOT EXISTS idx_templates_client ON or_checklist_templates(client_id);
+CREATE INDEX IF NOT EXISTS idx_templates_active ON or_checklist_templates(is_active);
+CREATE INDEX IF NOT EXISTS idx_templates_eligibility ON or_checklist_templates(eligibility_criteria_id);
 
 -- =============================================
 -- 6. TASK GROUPS TABLE
@@ -121,9 +121,9 @@ CREATE TABLE or_task_groups (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_task_groups_template ON or_task_groups(template_id);
-CREATE INDEX idx_task_groups_order ON or_task_groups(template_id, display_order);
-CREATE INDEX idx_task_groups_category ON or_task_groups(category);
+CREATE INDEX IF NOT EXISTS idx_task_groups_template ON or_task_groups(template_id);
+CREATE INDEX IF NOT EXISTS idx_task_groups_order ON or_task_groups(template_id, display_order);
+CREATE INDEX IF NOT EXISTS idx_task_groups_category ON or_task_groups(category);
 
 -- =============================================
 -- 7. or_tasks TABLE
@@ -143,12 +143,12 @@ CREATE TABLE or_tasks (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_tasks_group ON or_tasks(task_group_id);
-CREATE INDEX idx_tasks_source ON or_tasks(source_task_id);
-CREATE INDEX idx_tasks_type ON or_tasks(type);
-CREATE INDEX idx_tasks_category ON or_tasks(category);
-CREATE INDEX idx_tasks_order ON or_tasks(task_group_id, display_order);
-CREATE INDEX idx_tasks_config ON or_tasks USING GIN (configuration);
+CREATE INDEX IF NOT EXISTS idx_tasks_group ON or_tasks(task_group_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_source ON or_tasks(source_task_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_type ON or_tasks(type);
+CREATE INDEX IF NOT EXISTS idx_tasks_category ON or_tasks(category);
+CREATE INDEX IF NOT EXISTS idx_tasks_order ON or_tasks(task_group_id, display_order);
+CREATE INDEX IF NOT EXISTS idx_tasks_config ON or_tasks USING GIN (configuration);
 
 -- =============================================
 -- 8. TEAM MEMBERS TABLE
@@ -181,9 +181,9 @@ CREATE TABLE or_team_members (
 );
 
 
-CREATE INDEX idx_team_members_email ON or_team_members(email);
-CREATE INDEX idx_team_members_employee ON or_team_members(employee_id);
-CREATE INDEX idx_team_members_name ON or_team_members(last_name, first_name);
+CREATE INDEX IF NOT EXISTS idx_team_members_email ON or_team_members(email);
+CREATE INDEX IF NOT EXISTS idx_team_members_employee ON or_team_members(employee_id);
+CREATE INDEX IF NOT EXISTS idx_team_members_name ON or_team_members(last_name, first_name);
 
 -- =============================================
 -- 9. PPM or_projects TABLE
@@ -201,8 +201,8 @@ CREATE TABLE or_ppm_projects (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_ppm_projects_external ON or_ppm_projects(external_id);
-CREATE INDEX idx_ppm_projects_status ON or_ppm_projects(sync_status);
+CREATE INDEX IF NOT EXISTS idx_ppm_projects_external ON or_ppm_projects(external_id);
+CREATE INDEX IF NOT EXISTS idx_ppm_projects_status ON or_ppm_projects(sync_status);
 
 -- =============================================
 -- 10. or_requisitions TABLE
@@ -218,8 +218,8 @@ CREATE TABLE or_requisitions (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_requisitions_ppm ON or_requisitions(ppm_project_id);
-CREATE INDEX idx_requisitions_status ON or_requisitions(status);
+CREATE INDEX IF NOT EXISTS idx_requisitions_ppm ON or_requisitions(ppm_project_id);
+CREATE INDEX IF NOT EXISTS idx_requisitions_status ON or_requisitions(status);
 
 -- =============================================
 -- 11. REQUISITION LINE ITEMS TABLE
@@ -235,8 +235,8 @@ CREATE TABLE or_requisition_line_items (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_req_line_items_req ON or_requisition_line_items(requisition_id);
-CREATE INDEX idx_req_line_items_trade ON or_requisition_line_items(trade);
+CREATE INDEX IF NOT EXISTS idx_req_line_items_req ON or_requisition_line_items(requisition_id);
+CREATE INDEX IF NOT EXISTS idx_req_line_items_trade ON or_requisition_line_items(trade);
 
 -- =============================================
 -- 12. or_projects TABLE
@@ -260,12 +260,12 @@ CREATE TABLE or_projects (
     created_by UUID REFERENCES or_users(id)
 );
 
-CREATE INDEX idx_projects_status ON or_projects(status);
-CREATE INDEX idx_projects_client ON or_projects(client_id);
-CREATE INDEX idx_projects_dates ON or_projects(start_date, end_date);
-CREATE INDEX idx_projects_template ON or_projects(template_id);
-CREATE INDEX idx_projects_ppm ON or_projects(ppm_project_id);
-CREATE INDEX idx_projects_flags ON or_projects(is_dod, is_odrisa);
+CREATE INDEX IF NOT EXISTS idx_projects_status ON or_projects(status);
+CREATE INDEX IF NOT EXISTS idx_projects_client ON or_projects(client_id);
+CREATE INDEX IF NOT EXISTS idx_projects_dates ON or_projects(start_date, end_date);
+CREATE INDEX IF NOT EXISTS idx_projects_template ON or_projects(template_id);
+CREATE INDEX IF NOT EXISTS idx_projects_ppm ON or_projects(ppm_project_id);
+CREATE INDEX IF NOT EXISTS idx_projects_flags ON or_projects(is_dod, is_odrisa);
 
 -- =============================================
 -- 13. PROJECT CONTACTS TABLE
@@ -280,8 +280,8 @@ CREATE TABLE or_project_contacts (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_project_contacts_project ON or_project_contacts(project_id);
-CREATE INDEX idx_project_contacts_type ON or_project_contacts(contact_type);
+CREATE INDEX IF NOT EXISTS idx_project_contacts_project ON or_project_contacts(project_id);
+CREATE INDEX IF NOT EXISTS idx_project_contacts_type ON or_project_contacts(contact_type);
 
 -- =============================================
 -- 14. PROJECT ASSIGNMENTS TABLE (Many-to-Many)
@@ -308,12 +308,12 @@ CREATE TABLE or_project_assignments (
     UNIQUE(project_id, team_member_id)
 );
 
-CREATE INDEX idx_assignments_project ON or_project_assignments(project_id);
-CREATE INDEX idx_assignments_member ON or_project_assignments(team_member_id);
-CREATE INDEX idx_assignments_status ON or_project_assignments(status);
-CREATE INDEX idx_assignments_processor ON or_project_assignments(processor_id);
-CREATE INDEX idx_assignments_trade ON or_project_assignments(trade);
-CREATE INDEX idx_assignments_category ON or_project_assignments(category);
+CREATE INDEX IF NOT EXISTS idx_assignments_project ON or_project_assignments(project_id);
+CREATE INDEX IF NOT EXISTS idx_assignments_member ON or_project_assignments(team_member_id);
+CREATE INDEX IF NOT EXISTS idx_assignments_status ON or_project_assignments(status);
+CREATE INDEX IF NOT EXISTS idx_assignments_processor ON or_project_assignments(processor_id);
+CREATE INDEX IF NOT EXISTS idx_assignments_trade ON or_project_assignments(trade);
+CREATE INDEX IF NOT EXISTS idx_assignments_category ON or_project_assignments(category);
 
 -- =============================================
 -- 15. TASK INSTANCES TABLE
@@ -351,12 +351,12 @@ CREATE TABLE or_task_instances (
     UNIQUE(task_id, assignment_id)
 );
 
-CREATE INDEX idx_task_instances_task ON or_task_instances(task_id);
-CREATE INDEX idx_task_instances_assignment ON or_task_instances(assignment_id);
-CREATE INDEX idx_task_instances_status ON or_task_instances(status);
-CREATE INDEX idx_task_instances_due ON or_task_instances(due_date);
-CREATE INDEX idx_task_instances_result ON or_task_instances USING GIN (result);
-CREATE INDEX idx_task_instances_waived ON or_task_instances(is_waived);
+CREATE INDEX IF NOT EXISTS idx_task_instances_task ON or_task_instances(task_id);
+CREATE INDEX IF NOT EXISTS idx_task_instances_assignment ON or_task_instances(assignment_id);
+CREATE INDEX IF NOT EXISTS idx_task_instances_status ON or_task_instances(status);
+CREATE INDEX IF NOT EXISTS idx_task_instances_due ON or_task_instances(due_date);
+CREATE INDEX IF NOT EXISTS idx_task_instances_result ON or_task_instances USING GIN (result);
+CREATE INDEX IF NOT EXISTS idx_task_instances_waived ON or_task_instances(is_waived);
 
 -- =============================================
 -- 16. TASK COMMENTS TABLE
@@ -372,10 +372,10 @@ CREATE TABLE or_task_comments (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_comments_instance ON or_task_comments(task_instance_id);
-CREATE INDEX idx_comments_author ON or_task_comments(author_id);
-CREATE INDEX idx_comments_created ON or_task_comments(created_at DESC);
-CREATE INDEX idx_comments_internal ON or_task_comments(is_internal);
+CREATE INDEX IF NOT EXISTS idx_comments_instance ON or_task_comments(task_instance_id);
+CREATE INDEX IF NOT EXISTS idx_comments_author ON or_task_comments(author_id);
+CREATE INDEX IF NOT EXISTS idx_comments_created ON or_task_comments(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_comments_internal ON or_task_comments(is_internal);
 
 -- =============================================
 -- 17. DOCUMENTS TABLE (File BLOB Storage)
@@ -402,10 +402,10 @@ CREATE TABLE or_documents (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_documents_task_instance ON or_documents(task_instance_id);
-CREATE INDEX idx_documents_uploaded_by ON or_documents(uploaded_by);
-CREATE INDEX idx_documents_mime_type ON or_documents(mime_type);
-CREATE INDEX idx_documents_uploaded_at ON or_documents(uploaded_at DESC);
+CREATE INDEX IF NOT EXISTS idx_documents_task_instance ON or_documents(task_instance_id);
+CREATE INDEX IF NOT EXISTS idx_documents_uploaded_by ON or_documents(uploaded_by);
+CREATE INDEX IF NOT EXISTS idx_documents_mime_type ON or_documents(mime_type);
+CREATE INDEX IF NOT EXISTS idx_documents_uploaded_at ON or_documents(uploaded_at DESC);
 
 -- =============================================
 -- 17. or_communications LOG TABLE
@@ -429,11 +429,11 @@ CREATE TABLE or_communications (
     status VARCHAR(50) DEFAULT 'SENT' -- SENT, DELIVERED, FAILED, READ
 );
 
-CREATE INDEX idx_communications_project ON or_communications(project_id);
-CREATE INDEX idx_communications_member ON or_communications(team_member_id);
-CREATE INDEX idx_communications_type ON or_communications(type);
-CREATE INDEX idx_communications_date ON or_communications(sent_at DESC);
-CREATE INDEX idx_communications_status ON or_communications(status);
+CREATE INDEX IF NOT EXISTS idx_communications_project ON or_communications(project_id);
+CREATE INDEX IF NOT EXISTS idx_communications_member ON or_communications(team_member_id);
+CREATE INDEX IF NOT EXISTS idx_communications_type ON or_communications(type);
+CREATE INDEX IF NOT EXISTS idx_communications_date ON or_communications(sent_at DESC);
+CREATE INDEX IF NOT EXISTS idx_communications_status ON or_communications(status);
 
 -- =============================================
 -- VIEWS FOR COMMON QUERIES
@@ -652,7 +652,7 @@ CREATE TABLE or_notifications (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX idx_notifications_team_member ON or_notifications(team_member_id);
-CREATE INDEX idx_notifications_is_read ON or_notifications(is_read);
+CREATE INDEX IF NOT EXISTS idx_notifications_team_member ON or_notifications(team_member_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON or_notifications(is_read);
 
 COMMENT ON TABLE or_notifications IS 'In-app notifications for team members';

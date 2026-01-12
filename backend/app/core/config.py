@@ -6,11 +6,11 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     
     # PostgreSQL Database
-    POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = "1234"
-    POSTGRES_HOST: str = "localhost"
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_HOST: str
     POSTGRES_PORT: int = 5432
-    POSTGRES_DB: str = "OnBoarding"
+    POSTGRES_DB: str
     
     @property
     def DATABASE_URL(self) -> str:
