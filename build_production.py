@@ -44,7 +44,7 @@ def build_frontend(env_vars):
     build_env['VITE_API_URL'] = api_url
     
     result = subprocess.run(
-        ['npm', 'run', 'build'],
+        'npm run build',
         cwd=str(FRONTEND_DIR),
         env=build_env,
         shell=True

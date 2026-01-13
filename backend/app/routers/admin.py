@@ -64,7 +64,8 @@ def verify_password(password: str, password_hash: str) -> bool:
 def get_user_from_token(token: str, db: Session) -> Optional[User]:
     """Get user from JWT token"""
     import jwt
-    JWT_SECRET = "onboardrite-secret-key-change-in-production"
+    from app.core.config import settings
+    JWT_SECRET = settings.JWT_SECRET
     JWT_ALGORITHM = "HS256"
     
     if not token:
