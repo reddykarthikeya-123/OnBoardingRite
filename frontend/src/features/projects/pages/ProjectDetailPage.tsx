@@ -165,7 +165,8 @@ export function ProjectDetailPage() {
     // Load all team members and filter out already-assigned ones
     const loadAvailableMembers = async () => {
         try {
-            const allMembers = await teamMembersApi.list();
+            // Only show active members when adding to projects
+            const allMembers = await teamMembersApi.list({ status: 'active' });
             const assignedIds = new Set(teamMembers.map(m => m.id));
             const available = allMembers
                 .filter((m: any) => !assignedIds.has(m.id))

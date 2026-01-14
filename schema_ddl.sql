@@ -171,6 +171,9 @@ CREATE TABLE or_team_members (
     zip_code VARCHAR(20),
     country VARCHAR(100) DEFAULT 'USA',
 
+    -- Status
+    is_active BOOLEAN DEFAULT TRUE,
+
     -- Authentication
     password_hash TEXT,
     is_first_login BOOLEAN DEFAULT TRUE,
@@ -184,6 +187,7 @@ CREATE TABLE or_team_members (
 CREATE INDEX IF NOT EXISTS idx_team_members_email ON or_team_members(email);
 CREATE INDEX IF NOT EXISTS idx_team_members_employee ON or_team_members(employee_id);
 CREATE INDEX IF NOT EXISTS idx_team_members_name ON or_team_members(last_name, first_name);
+CREATE INDEX IF NOT EXISTS idx_team_members_active ON or_team_members(is_active);
 
 -- =============================================
 -- 9. PPM or_projects TABLE

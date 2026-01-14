@@ -262,8 +262,11 @@ export const tasksApi = {
 
 // Team Members API
 export const teamMembersApi = {
-    list: (params?: { search?: string }) => {
-        const query = params?.search ? `?search=${encodeURIComponent(params.search)}` : '';
+    list: (params?: { search?: string; status?: 'active' | 'inactive' | 'all' }) => {
+        const queryParts: string[] = [];
+        if (params?.search) queryParts.push(`search=${encodeURIComponent(params.search)}`);
+        if (params?.status) queryParts.push(`status=${params.status}`);
+        const query = queryParts.length > 0 ? `?${queryParts.join('&')}` : '';
         return fetchApi<Array<{
             id: string;
             employeeId: string;
@@ -274,6 +277,7 @@ export const teamMembersApi = {
             city: string;
             state: string;
             createdAt: string;
+            isActive?: boolean;
         }>>(`/team-members/${query}`);
     },
 
@@ -291,6 +295,11 @@ export const teamMembersApi = {
 
     delete: (id: string) => fetchApi<{ message: string }>(`/team-members/${id}`, {
         method: 'DELETE',
+    }),
+
+    updateStatus: (id: string, isActive: boolean) => fetchApi<{ success: boolean; isActive: boolean }>(`/team-members/${id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ isActive }),
     }),
 };
 

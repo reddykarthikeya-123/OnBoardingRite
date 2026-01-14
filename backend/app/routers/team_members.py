@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from typing import List, Optional
 from datetime import datetime
+from pydantic import BaseModel
 import uuid as uuid_lib
 
 from app.core.database import get_db
@@ -16,11 +17,19 @@ router = APIRouter()
 @router.get("/", response_model=List[TeamMemberSchema])
 def list_team_members(
     search: Optional[str] = None,
+    status: Optional[str] = Query(None, description="Filter by status: active, inactive, or all"),
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db)
 ):
     query = db.query(TeamMember)
+    
+    # Filter by active status
+    if status == "active":
+        query = query.filter(TeamMember.is_active == True)
+    elif status == "inactive":
+        query = query.filter(TeamMember.is_active == False)
+    # "all" or None returns all members
     
     if search:
         search_term = f"%{search}%"
@@ -73,6 +82,7 @@ def create_team_member(data: TeamMemberCreate, db: Session = Depends(get_db)):
         zip_code=data.zipCode,
         country=data.country,
         ssn_encrypted=encrypted_ssn,
+        is_active=True,  # New members are active by default
         is_first_login=True,  # Explicit for first-time login flow
         password_hash=None,   # No password yet
         created_at=datetime.utcnow(),
@@ -110,6 +120,72 @@ def update_team_member(member_id: str, data: TeamMemberUpdate, db: Session = Dep
     db.commit()
     db.refresh(member)
     return member
+
+
+# =============================================
+# TOGGLE MEMBER STATUS (Active/Inactive)
+# =============================================
+
+class UpdateStatusRequest(BaseModel):
+    isActive: bool
+
+@router.patch("/{member_id}/status")
+def update_member_status(
+    member_id: str, 
+    data: UpdateStatusRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Toggle a team member's active/inactive status.
+    
+    When DEACTIVATING:
+    - All project assignments are archived (status='ARCHIVED')
+    - Submitted form data remains accessible via history
+    - Member cannot see projects in candidate portal
+    
+    When REACTIVATING:
+    - Member starts fresh with NO projects
+    - Must be manually assigned to new projects
+    - Historical submissions still visible in profile
+    """
+    from app.models.models import ProjectAssignment
+    
+    member = db.query(TeamMember).filter(TeamMember.id == member_id).first()
+    if not member:
+        raise HTTPException(status_code=404, detail="Team member not found")
+    
+    assignments_archived = 0
+    
+    # When deactivating, archive all project assignments and wipe login credentials
+    if not data.isActive:
+        assignments_archived = db.query(ProjectAssignment).filter(
+            ProjectAssignment.team_member_id == member.id,
+            ProjectAssignment.status != 'ARCHIVED'
+        ).update(
+            {"status": "ARCHIVED", "updated_at": datetime.utcnow()},
+            synchronize_session=False
+        )
+        # Wipe login credentials - they'll need to do first-time login again if reactivated
+        member.password_hash = None
+        member.is_first_login = True
+    
+    member.is_active = data.isActive
+    member.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(member)
+    
+    status_text = "active" if data.isActive else "inactive"
+    result = {
+        "success": True,
+        "message": f"Member status changed to {status_text}",
+        "isActive": member.is_active
+    }
+    
+    if assignments_archived > 0:
+        result["assignmentsArchived"] = assignments_archived
+        result["message"] += f". {assignments_archived} project assignment(s) archived."
+    
+    return result
 
 @router.delete("/{member_id}")
 def delete_team_member(member_id: str, db: Session = Depends(get_db)):

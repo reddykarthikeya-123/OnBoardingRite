@@ -17,8 +17,8 @@ def get_global_stats(db: Session = Depends(get_db)):
     # 1. Active Projects
     active_projects_count = db.query(Project).filter(Project.status == 'ACTIVE').count()
     
-    # 2. Team Members (Total) from TeamMember table
-    total_members = db.query(TeamMember).count()
+    # 2. Team Members (Active only)
+    total_members = db.query(TeamMember).filter(TeamMember.is_active == True).count()
     
     # 3. Completion Stats
     completed = db.query(ProjectAssignment).filter(ProjectAssignment.status == 'COMPLETED').count()

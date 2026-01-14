@@ -162,6 +162,13 @@ def candidate_login(data: CandidateLoginRequest, db: Session = Depends(get_db)):
             detail="Invalid email or password"
         )
     
+    # Block inactive members from logging in
+    if member.is_active == False:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account is inactive. Please contact your administrator."
+        )
+    
     # Check if first login (no password set yet)
     if member.is_first_login or not member.password_hash:
         # For first login, we just verify the email exists
@@ -175,7 +182,8 @@ def candidate_login(data: CandidateLoginRequest, db: Session = Depends(get_db)):
                 "id": str(member.id),
                 "email": member.email,
                 "firstName": member.first_name,
-                "lastName": member.last_name
+                "lastName": member.last_name,
+                "isActive": member.is_active if member.is_active is not None else True
             },
             role="candidate",
             isFirstLogin=True
@@ -192,10 +200,13 @@ def candidate_login(data: CandidateLoginRequest, db: Session = Depends(get_db)):
     member.last_login = datetime.utcnow()
     db.commit()
     
-    # Get assignment info
-    assignment = db.query(ProjectAssignment).filter(
-        ProjectAssignment.team_member_id == member.id
-    ).first()
+    # Get assignment info - only for active members, exclude archived
+    assignment = None
+    if member.is_active:
+        assignment = db.query(ProjectAssignment).filter(
+            ProjectAssignment.team_member_id == member.id,
+            ProjectAssignment.status != 'ARCHIVED'
+        ).first()
     
     # Create token
     token = create_jwt_token(str(member.id), "candidate", member.email)
@@ -208,7 +219,8 @@ def candidate_login(data: CandidateLoginRequest, db: Session = Depends(get_db)):
             "email": member.email,
             "firstName": member.first_name,
             "lastName": member.last_name,
-            "assignmentId": str(assignment.id) if assignment else None
+            "assignmentId": str(assignment.id) if assignment else None,
+            "isActive": member.is_active if member.is_active is not None else True
         },
         role="candidate",
         isFirstLogin=False

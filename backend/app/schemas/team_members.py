@@ -48,6 +48,7 @@ class TeamMember(BaseModel):
     phone: Optional[str] = None
     city: Optional[str] = None
     state: Optional[str] = None
+    isActive: Optional[bool] = Field(True, validation_alias="is_active")
     createdAt: Optional[datetime] = Field(None, validation_alias="created_at")
     updatedAt: Optional[datetime] = Field(None, validation_alias="updated_at")
     

@@ -148,6 +148,9 @@ class TeamMember(Base):
     zip_code = Column(String(20))
     country = Column(String(100), default='USA')
     
+    # Status field for active/inactive members
+    is_active = Column(Boolean, default=True)
+    
     # Authentication fields
     password_hash = Column(Text)
     is_first_login = Column(Boolean, default=True)

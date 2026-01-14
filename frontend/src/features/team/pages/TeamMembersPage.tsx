@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Users, Mail, Phone, MapPin, Loader2, Trash2, Edit, Save, FileText, ChevronRight, ChevronDown } from 'lucide-react';
+import { Search, Plus, Users, Mail, Phone, MapPin, Loader2, Trash2, Edit, Save, FileText, ChevronRight, ChevronDown, UserCheck, UserX } from 'lucide-react';
 import { Card, Button, Badge, Modal, ConfirmDialog } from '../../../components/ui';
 import { teamMembersApi, candidateApi, taskInstancesApi } from '../../../services/api';
 import { SubmittedTaskViewer } from '../../candidate/components/SubmittedTaskViewer';
@@ -15,6 +15,7 @@ interface TeamMember {
     city: string;
     state: string;
     createdAt: string;
+    isActive?: boolean;
 }
 
 interface TeamMemberFormData {
@@ -49,6 +50,7 @@ export function TeamMembersPage() {
     const [members, setMembers] = useState<TeamMember[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
     const { user } = useAuth();
     const isAdmin = user?.role === 'admin';
 
@@ -62,6 +64,10 @@ export function TeamMembersPage() {
     // Delete confirmation state
     const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [togglingStatus, setTogglingStatus] = useState<string | null>(null);
+
+    // Deactivation confirmation state
+    const [deactivateConfirm, setDeactivateConfirm] = useState<TeamMember | null>(null);
 
     // Submissions modal state
     const [showSubmissionsModal, setShowSubmissionsModal] = useState(false);
@@ -122,12 +128,50 @@ export function TeamMembersPage() {
         }
     };
 
-    // Filter members by search
-    const filteredMembers = members.filter(member =>
-        `${member.firstName} ${member.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        member.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (member.employeeId || '').toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    // Filter members by search and status
+    const filteredMembers = members.filter(member => {
+        const matchesSearch =
+            `${member.firstName} ${member.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            member.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (member.employeeId || '').toLowerCase().includes(searchQuery.toLowerCase());
+
+        const matchesStatus =
+            statusFilter === 'all' ||
+            (statusFilter === 'active' && member.isActive !== false) ||
+            (statusFilter === 'inactive' && member.isActive === false);
+
+        return matchesSearch && matchesStatus;
+    });
+
+    // Toggle member active/inactive status
+    const handleToggleStatus = async (member: TeamMember) => {
+        // If currently active, show confirmation dialog before deactivating
+        if (member.isActive !== false) {
+            setDeactivateConfirm(member);
+            return;
+        }
+        // If already inactive, just activate (no confirmation needed)
+        await performStatusToggle(member);
+    };
+
+    // Perform the actual status toggle after confirmation
+    const performStatusToggle = async (member: TeamMember) => {
+        try {
+            setTogglingStatus(member.id);
+            setDeactivateConfirm(null);
+            const newStatus = member.isActive === false ? true : false;
+            await teamMembersApi.updateStatus(member.id, newStatus);
+            // Update local state
+            setMembers(prev => prev.map(m =>
+                m.id === member.id ? { ...m, isActive: newStatus } : m
+            ));
+        } catch (error) {
+            console.error('Failed to toggle status:', error);
+            alert('Failed to update member status.');
+        } finally {
+            setTogglingStatus(null);
+        }
+    };
 
     // Open modal for new member
     const handleAddNew = () => {
@@ -342,9 +386,9 @@ export function TeamMembersPage() {
                 </div>
             </div>
 
-            {/* Search Bar */}
-            <div className="mb-6">
-                <div className="search-input-wrapper" style={{ maxWidth: '400px' }}>
+            {/* Search Bar and Filters */}
+            <div className="mb-6" style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <div className="search-input-wrapper" style={{ maxWidth: '400px', flex: 1 }}>
                     <Search size={18} className="search-input-icon" />
                     <input
                         type="text"
@@ -354,10 +398,28 @@ export function TeamMembersPage() {
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
                 </div>
+                <select
+                    className="input"
+                    style={{ width: '150px' }}
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
+                >
+                    <option value="all">All Members</option>
+                    <option value="active">Active Only</option>
+                    <option value="inactive">Inactive Only</option>
+                </select>
             </div>
 
             {/* Stats */}
             <div className="stats-row mb-6">
+                <div className="stat-card">
+                    <div className="stat-value">{members.filter(m => m.isActive !== false).length}</div>
+                    <div className="stat-label">Active Members</div>
+                </div>
+                <div className="stat-card">
+                    <div className="stat-value">{members.filter(m => m.isActive === false).length}</div>
+                    <div className="stat-label">Inactive Members</div>
+                </div>
                 <div className="stat-card">
                     <div className="stat-value">{members.length}</div>
                     <div className="stat-label">Total Members</div>
@@ -410,6 +472,20 @@ export function TeamMembersPage() {
                                         <Edit size={14} />
                                     </button>
                                     <button
+                                        className={`btn-icon-sm ${member.isActive === false ? 'btn-success-ghost' : 'btn-warning-ghost'}`}
+                                        onClick={() => handleToggleStatus(member)}
+                                        title={member.isActive === false ? 'Activate' : 'Deactivate'}
+                                        disabled={togglingStatus === member.id}
+                                    >
+                                        {togglingStatus === member.id ? (
+                                            <Loader2 size={14} className="animate-spin" />
+                                        ) : member.isActive === false ? (
+                                            <UserCheck size={14} />
+                                        ) : (
+                                            <UserX size={14} />
+                                        )}
+                                    </button>
+                                    <button
                                         className="btn-icon-sm btn-danger-ghost"
                                         onClick={() => handleDelete(member.id, `${member.firstName} ${member.lastName}`)}
                                         title="Delete"
@@ -419,9 +495,14 @@ export function TeamMembersPage() {
                                 </div>
                             </div>
                             <div className="team-member-card-body">
-                                <h3 className="team-member-card-name">
-                                    {member.firstName} {member.lastName}
-                                </h3>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                    <h3 className="team-member-card-name" style={{ margin: 0 }}>
+                                        {member.firstName} {member.lastName}
+                                    </h3>
+                                    <Badge variant={member.isActive === false ? 'warning' : 'success'}>
+                                        {member.isActive === false ? 'Inactive' : 'Active'}
+                                    </Badge>
+                                </div>
                                 {member.employeeId && (
                                     <Badge variant="secondary" className="mb-2">
                                         ID: {member.employeeId}
@@ -723,6 +804,18 @@ export function TeamMembersPage() {
                 confirmText="Delete Member"
                 variant="danger"
                 isLoading={isDeleting}
+            />
+
+            {/* Deactivation Confirmation Dialog */}
+            <ConfirmDialog
+                isOpen={!!deactivateConfirm}
+                onClose={() => setDeactivateConfirm(null)}
+                onConfirm={() => deactivateConfirm && performStatusToggle(deactivateConfirm)}
+                title="Deactivate Team Member"
+                message={`Are you sure you want to deactivate "${deactivateConfirm?.firstName} ${deactivateConfirm?.lastName}"? This will:\n\n• Archive all their project assignments\n• Block them from logging in\n• Reset their login credentials (they'll need to set up a new password if reactivated)`}
+                confirmText="Deactivate Member"
+                variant="warning"
+                isLoading={togglingStatus === deactivateConfirm?.id}
             />
         </div>
     );
